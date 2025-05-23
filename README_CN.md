@@ -79,5 +79,6 @@ SDK运行依赖终端的DC、屏幕共享、拓展能力、AR等服务，需终�
 
 
 ## 八、联系方式
+xuq17@chinatelecom.cn
 
 
