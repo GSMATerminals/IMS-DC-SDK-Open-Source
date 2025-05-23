@@ -99,4 +99,4 @@ export default {
 ```
 
 ## Runtime Environment
-The WebRTC interfaces in webrtcDC.js are implemented based on the JS API provided by China Telecom's 5G Enhanced Call SDK. Therefore, IMS DC Applications developed using this library need to run in an environment with the 5G Enhanced Call SDK.
+The WebRTC interfaces in webrtcDC.js are implemented based on the JS API provided by IMS DC SDK. Therefore, IMS DC Applications developed using this library need to run in an environment with the IMS DC SDK.
