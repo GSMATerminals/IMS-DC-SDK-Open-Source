@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+
+    <FrameLayout
+        android:layout_marginTop="10dp"
+        android:id="@+id/box1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <FrameLayout
+            android:background="@drawable/mini_apps_view_bg"
+            android:layout_gravity="center"
+            android:layout_width="40dp"
+            android:layout_height="40dp">
+            <ImageView
+                android:layout_margin="6dp"
+                android:id="@+id/miniapp_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+            <View
+                android:visibility="gone"
+                android:layout_gravity="bottom|right"
+                android:id="@+id/disable_view"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/icon_disabled_grey"
+                android:scaleType="fitCenter"/>
+        </FrameLayout>
+
+        <com.ct.ertclib.dc.core.ui.widget.CircleProgressBar
+            android:layout_gravity="center"
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            android:visibility="gone"
+            app:radius="15dp" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_marginBottom="10dp"
+        android:id="@+id/miniapp_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/box1"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/black"
+        android:textSize="11sp" />
+
+</RelativeLayout>

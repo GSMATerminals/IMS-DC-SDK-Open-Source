@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ims_data_channel_service_package_name" translatable="false"></string>
+    <string name="ims_data_channel_service_cls" translatable="false"></string>
+    <string name="ims_data_channel_service_action" translatable="false"></string>
+    <string name="screenshareservice_package_name" translatable="false"></string>
+    <string name="screenshareservice_name" translatable="false"></string>
+    <string name="screenshareservice_action" translatable="false"></string>
+    <string name="arcall_package_name" translatable="false">com.huawei.ims</string>
+    <string name="arcall_name" translatable="false">com.huawei.ims.ARCallService</string>
+    <string name="arcall_action" translatable="false">com.newcalllib.arcall.ARCaliService</string>
+    <string name="arcall_oem_package_name" translatable="false">com.android.incallui</string>
+    <string name="arcall_oem_name" translatable="false">com.android.incallui.ARCalTOEMService</string>
+    <string name="arcall_oem_action" translatable="false">com.newcalib.arcall.ARCallOEMService</string>
+    <string name="expand_capacity_service_package_name" translatable="false"></string>
+    <string name="expand_capacity_service_cls" translatable="false"></string>
+    <string name="expand_capacity_service_action" translatable="false"></string>
+
+    <string name="request_nc_permission_dialog_content">使用新通话功能需要显示在其他应用上层和读取通话的权限</string>
+    <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
+    <string name="request_nc_permission_dialog_user">《用户协议》</string>
+    <string name="request_nc_permission_dialog_title">需要授予新通话权限</string>
+
+    <string name="cancel_btn">Cancel</string>
+    <string name="ok_btn">OK</string>
+    <string name="permission_request_title">The following permissions are required for "%s"</string>
+    <string name="permission_allowed">Allowed</string>
+    <string name="permission_denied">Denied</string>
+
+    <string name="camera_title">Camera</string>
+    <string name="vibrate_title">Vibrate</string>
+    <string name="read_contact_title">Read contact</string>
+    <string name="record_audio_title">Record audio</string>
+    <string name="external_storage_title">Storage</string>
+    <string name="location_title">Location</string>
+    <string name="call_state_title">Call status</string>
+    <string name="contacts">Contacts</string>
+
+    <string name="camera_description">For taking photos or videos</string>
+    <string name="vibrate_description">For reminding</string>
+    <string name="read_contact_description">For reading and saving contacts</string>
+    <string name="record_audio_description">For recording audio </string>
+    <string name="external_storage_description">For storing files</string>
+    <string name="location_description">For providing location services</string>
+    <string name="call_state_description">For providing new call services</string>
+    <string name="contact_description">For providing contact info</string>
+
+    <string name="permission_preference_title">Permission settings</string>
+    <string name="version_preference_title">Version</string>
+    <string name="setting_preference_title">Settings</string>
+    <string name="setting_permission_tips">This applet does not use system permissions and cannot be set.</string>
+
+    <string name="open_permission_title">Open Permissions</string>
+    <string name="open_permission_tips">To use %s, you need to enable the following permissions:</string>
+    <string name="open_permission_setting">Setting</string>
+    <string name="open_permission_exit">Exit</string>
+    <string name="permission_not_grant_tips">The mini program is exited because all permissions required by the mini program are not granted.</string>
+
+    <string name="setting">setting</string>
+    <string name="back_text">back</string>
+    <string name="style_text">style</string>
+
+    <string name="style_black">Classic style</string>
+    <string name="style_white">White style</string>
+    <string name="request_dialog_title">Information request</string>
+    <string name="request_dialog_message">MiniApp wants to obtain the peer mobile phone number to provide related services, do you agree?</string>
+    <string name="btn_agree">Agree</string>
+    <string name="btn_refuse">Refuse</string>
+
+    <string name="holder_call_state_tips">The relevant call is in holding, and the Mini-App can continue to be used after the call is resumed.</string>
+    <string name="save">save</string>
+    <string name="start_miniapp_tips">The other party invites you to use the %s mini program.</string>
+
+    <string name="expanded_menu_title">My miniApps</string>
+
+    <string name="toast_download_mini_app_failed">The download of the mini program failed. Please try again later.</string>
+    <string name="recently_used_mini_app">The Mini App used in this call</string>
+</resources>

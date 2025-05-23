@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/expanded_dialog_parent_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:orientation="vertical"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/miniapp_layout"
+        android:layout_width="@dimen/expanded_menu_height_width"
+        android:layout_height="@dimen/expanded_menu_height_width"
+        android:background="@drawable/expanded_menu_dialog_bg"
+        android:paddingBottom="12dp">
+        <TextView
+            android:id="@+id/mini_app_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="12dp"
+            android:gravity="start"
+            android:text="@string/expanded_menu_title"
+            android:textColor="@color/miniapp_name_title_color"
+            android:textSize="12sp"
+            />
+        <com.scwang.smart.refresh.layout.SmartRefreshLayout
+            android:id="@+id/refreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintHeight_max="240dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mini_app_title"
+            app:layout_constraintBottom_toTopOf="@id/history_title_layout"
+            app:layout_constraintEnd_toEndOf="parent">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview"
+                android:requiresFadingEdge="vertical"
+                android:fadingEdgeLength="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/mini_app_item_margin_start_end"
+                android:paddingEnd="@dimen/mini_app_item_margin_start_end"
+                />
+        </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+        
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/history_title_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/history_recyclerview"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/first_divider"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/common_divider_height"
+                android:background="@color/miniapp_name_title_color"
+                android:layout_marginStart="@dimen/common_margin_start_end"
+                android:layout_marginEnd="12dp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/history_title"
+                app:layout_constraintTop_toTopOf="parent"
+                />
+
+            <TextView
+                android:id="@+id/history_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/recently_used_mini_app"
+                android:textColor="@color/miniapp_name_title_color"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                />
+
+            <View
+                android:id="@+id/second_divider"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/common_divider_height"
+                android:background="@color/miniapp_name_title_color"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="@dimen/common_margin_start_end"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/history_title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/history_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constrainedHeight="true"
+            android:paddingStart="@dimen/mini_app_item_margin_start_end"
+            android:paddingEnd="@dimen/mini_app_item_margin_start_end"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/miniapp_setting_layout"
+        android:background="@drawable/expanded_menu_dialog_bg"
+        android:layout_marginTop="@dimen/expanded_margin_bottom"
+        android:layout_marginBottom="@dimen/expanded_margin_bottom"
+        android:layout_width="@dimen/expanded_menu_height_width"
+        android:layout_height="@dimen/expanded_menu_setting_height">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/exit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/back_text"
+            android:clickable="true"
+            android:focusable="true"
+            android:textColor="@color/miniapp_name_title_color"
+            android:drawableTop="@drawable/icon_back_expanded"
+            app:layout_constraintEnd_toStartOf="@id/setting"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setting"
+            android:clickable="true"
+            android:focusable="true"
+            android:textColor="@color/miniapp_name_title_color"
+            android:drawableTop="@drawable/icon_setting_res"
+            app:layout_constraintStart_toEndOf="@id/exit"
+            app:layout_constraintEnd_toStartOf="@id/skin"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/skin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/style_text"
+            android:clickable="true"
+            android:focusable="true"
+            android:textColor="@color/miniapp_name_title_color"
+            android:drawableTop="@drawable/icon_skin_normal"
+            app:layout_constraintStart_toEndOf="@id/setting"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

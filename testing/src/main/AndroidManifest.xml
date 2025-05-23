@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.ct.ertclib.dc.feature.testing">
+
+    <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
+
+    <application
+        android:allowBackup="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="false"
+        tools:replace="android:supportsRtl,android:allowBackup">
+        <activity
+            android:name=".LocalTestingMainActivity"
+            android:exported="true"
+            android:permission="com.ct.ertclib.dc.GET_FEATURE">
+            <intent-filter>
+                <action android:name="com.ct.ertclib.dc.TEST_ACTIVITY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".LocalTestingSettingActivity"
+            android:exported="false" />
+
+        <service
+            android:name=".TestImsDataChannelService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.newcalllib.datachannel.V1_0.ImsDataChannelService" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".expandingcapacity.TestECService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.newcalllib.datachannel.V1_0.ECService" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

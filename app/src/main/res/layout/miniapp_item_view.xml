@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:layout_marginTop="10dp"
+        android:id="@+id/box1"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/mini_app_background_normal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <FrameLayout
+            android:layout_gravity="center"
+            android:layout_width="38dp"
+            android:layout_height="38dp">
+            <ImageView
+                android:layout_gravity="center"
+                android:id="@+id/miniapp_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter" />
+            <View
+                android:visibility="gone"
+                android:layout_gravity="bottom|end"
+                android:id="@+id/disable_view"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:background="@drawable/icon_disabled_grey"
+                android:scaleType="fitCenter"/>
+        </FrameLayout>
+
+        <com.ct.ertclib.dc.app.ui.view.CircleProgressBar
+            android:layout_gravity="center"
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:radius="17dp" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/miniapp_title"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/box1"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/miniapp_name_title_color"
+        android:textSize="12dp"
+        app:layout_constraintTop_toBottomOf="@id/box1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="common_divider_height">0.33dp</dimen>
+    <dimen name="mini_app_item_margin_start_end">12dp</dimen>
+    <dimen name="half_floatingBall_height">60dp</dimen>
+</resources>
