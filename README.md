@@ -1,8 +1,8 @@
 # IMS DC SDK
 
-5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator's IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, enabling interactive information exchange during calls and upgrading the user experience.
+5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator's IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.
 
-IMS DC SDK requires support from terminal and chip manufacturers. The chip provides IMS DC (Data Channel) capabilities, while terminal manufacturers encapsulate these capabilities. The SDK manages these capabilities and provides a unified JS API to H5 applications on the platform side, allowing H5 applications across different operator platforms to seamlessly invoke the terminal's IMS DC capabilities for data interaction.
+The IMS DC SDK was developed by the China Telecom Research Institute. The chip provides IMS DC (Data Channel) capabilities, while terminal manufacturers encapsulate these capabilities. The SDK manages these capabilities and provides a unified JS API to H5 applications on the platform side, allowing H5 applications across different operator platforms to seamlessly invoke the terminal's IMS DC capabilities for data interaction.
 
 ## Features
 
