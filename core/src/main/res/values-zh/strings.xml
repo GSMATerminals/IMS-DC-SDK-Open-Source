@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="request_nc_permission_dialog_content">使用新通话功能需要显示在其他应用上层和读取通话的权限</string>
+    <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
+    <string name="request_nc_permission_dialog_user">《用户协议》</string>
+    <string name="request_nc_permission_dialog_title">需要授予新通话权限</string>
+
+    <string name="cancel_btn">取消</string>
+    <string name="ok_btn">确定</string>
+    <string name="permission_request_title">“%s”需要使用以下权限</string>
+    <string name="permission_allowed">允许</string>
+    <string name="permission_denied">拒绝</string>
+
+    <string name="camera_title">摄像头</string>
+    <string name="vibrate_title">振动提醒</string>
+    <string name="read_contact_title">读取联系人</string>
+    <string name="record_audio_title">麦克风</string>
+    <string name="external_storage_title">读取外置存储</string>
+    <string name="location_title">定位</string>
+    <string name="call_state_title">通话状态</string>
+    <string name="contacts">联系人</string>
+
+    <string name="camera_description">用于拍照或录像</string>
+    <string name="vibrate_description">用于提醒用户实时消息与实时状态</string>
+    <string name="read_contact_description">用于读取与保存联系人</string>
+    <string name="record_audio_description">用于语音通话</string>
+    <string name="external_storage_description">用于存储文件</string>
+    <string name="location_description">用于提供定位服务</string>
+    <string name="call_state_description">用于提供新通话服务</string>
+    <string name="contact_description">用于获取联系人信息</string>
+
+    <string name="permission_preference_title">权限设置</string>
+    <string name="version_preference_title">版本号</string>
+    <string name="setting_preference_title">设置</string>
+    <string name="setting_permission_tips">该小程序未使用系统权限，无法进行权限设置</string>
+
+    <string name="open_permission_title">开启权限</string>
+    <string name="open_permission_tips">使用%s需要开启以下权限：</string>
+    <string name="open_permission_setting">设置</string>
+    <string name="open_permission_exit">退出</string>
+    <string name="permission_not_grant_tips">未授予小程序需要的全部权限，小程序退出</string>
+
+    <string name="setting">设置</string>
+    <string name="back_text">返回</string>
+    <string name="style_text">皮肤</string>
+
+    <string name="style_black">经典风格</string>
+    <string name="style_white">白色风格</string>
+    <string name="request_dialog_title">信息申请</string>
+    <string name="request_dialog_message">小程序想要获取对端手机号码以提供相关服务，是否同意？</string>
+
+    <string name="btn_agree">同意</string>
+    <string name="btn_refuse">拒绝</string>
+    <string name="holder_call_state_tips">相关通话被保持，待通话恢复后，小程序可继续使用。</string>
+    <string name="save">保存至相册</string>
+    <string name="start_miniapp_tips">对方邀请您使用%s小程序</string>
+
+    <string name="expanded_menu_title">我的小程序</string>
+
+    <string name="toast_download_mini_app_failed">小程序下载失败，请稍后再试</string>
+    <string name="recently_used_mini_app">本次通话中使用的小程序</string>
+</resources>

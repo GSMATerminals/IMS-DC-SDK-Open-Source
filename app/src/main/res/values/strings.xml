@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">电信增强通话</string>
+    <string name="service_screenshare_package">com.ct.ertclib.dc</string>
+    <string name="service_screenshare_cls">com.ct.ertclib.dc.ScreenShareService</string>
+    <string name="service_screenshare_action">com.ct.ertclib.dc.ScreenShareAcion</string>
+</resources>

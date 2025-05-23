@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.ct.ertclib.dc.core.ui.widget.VersionPreference
+        app:key="permission_version"
+        app:layout="@layout/version_preference_layout"
+        app:title="@string/version_preference_title"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
+        app:key="permission_setting"
+        app:layout="@layout/setting_preference_layout"
+        app:title="@string/permission_preference_title"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+
+</androidx.preference.PreferenceScreen>

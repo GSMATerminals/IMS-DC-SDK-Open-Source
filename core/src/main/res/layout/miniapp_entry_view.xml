@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/float_ball_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:src="@drawable/icon_ball_normal" />
+
+    <ImageView
+        android:id="@+id/float_ball_half_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/floating_half_view_left_grey" />
+
+</FrameLayout>
