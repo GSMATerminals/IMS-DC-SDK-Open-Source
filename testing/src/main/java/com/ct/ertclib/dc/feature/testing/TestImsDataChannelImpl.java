@@ -168,7 +168,7 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
 
         // 先简单回一个消息
         try {
-            callback.onSendDataResult(2000);
+            callback.onSendDataResult(20000);
 
             byte[] bytes = ("收到你发的" + s + "啦！！！").getBytes(StandardCharsets.UTF_8);
             mImsObserver.onMessage(bytes, bytes.length);
