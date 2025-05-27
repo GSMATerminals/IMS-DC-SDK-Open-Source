@@ -12,9 +12,6 @@
     <string name="arcall_oem_package_name" translatable="false">com.android.incallui</string>
     <string name="arcall_oem_name" translatable="false">com.android.incallui.ARCalTOEMService</string>
     <string name="arcall_oem_action" translatable="false">com.newcalib.arcall.ARCallOEMService</string>
-    <string name="expand_capacity_service_package_name" translatable="false"></string>
-    <string name="expand_capacity_service_cls" translatable="false"></string>
-    <string name="expand_capacity_service_action" translatable="false"></string>
 
     <string name="request_nc_permission_dialog_content">使用新通话功能需要显示在其他应用上层和读取通话的权限</string>
     <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>

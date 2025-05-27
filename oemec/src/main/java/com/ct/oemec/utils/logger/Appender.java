@@ -14,19 +14,27 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.feature.testing.expandingcapacity
+package com.ct.oemec.utils.logger;
 
-import android.app.Service
-import android.content.Intent
-import android.os.IBinder
+/**
+ * Appender
+ *
+ * @author jexa7410
+ */
+public abstract class Appender {
 
-class TestECService : Service() {
-    override fun onBind(intent: Intent?): IBinder? {
-        return TestECManager.mTestExpandingCapacity
+    /**
+     * Constructor
+     */
+    public Appender() {
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
-        TestECManager.onUnbind()
-        return super.onUnbind(intent)
-    }
+    /**
+     * Print a trace
+     *
+     * @param classname Classname
+     * @param level Trace level
+     * @param trace Trace
+     */
+    public abstract void printTrace(String classname, int level, String trace);
 }

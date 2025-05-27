@@ -30,13 +30,6 @@
                 <action android:name="com.newcalllib.datachannel.V1_0.ImsDataChannelService" />
             </intent-filter>
         </service>
-        <service
-            android:name=".expandingcapacity.TestECService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.newcalllib.datachannel.V1_0.ECService" />
-            </intent-filter>
-        </service>
     </application>
 
 </manifest>

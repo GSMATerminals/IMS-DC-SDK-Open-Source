@@ -23,7 +23,7 @@
 - 推荐开发工具 AndroidStudio
 
 ## 三、架构设计
-![SDK架构CN.jpg](images/SDK架构CN.jpg)  
+![SDK架构CN.png](images/SDK架构CN.png)  
 1、通过实现Android系统的InCallService与通话状态紧捆绑；  
 2、SDK通过DC AIDL接口(com.newcalllib.datachannel.V1_0)与OEM提供的DC Service交互，获取和包装DC数据通道能力；  
 3、通过统一的JS API接口(JSApi)为小程序提供包括DC数据通道、拓展能力、数据缓存等在内的所有能力，使用DSBridge实现；  
@@ -53,9 +53,12 @@ NewCall
 │       ├── usecase/js api、小程序服务事件处理  
 │       └── utils/工具类   
 ├── libs/第三方库文件  
+├── miniapp/小程序开发相关  
+│   ├── webrtcDC/基于SDK实现GSMA ts.66定义的接口，编译出js库供小程序集成使用  
+│   └── IMS_DC_Mini_app_demo.zip/小程序包示例  
+├── oemec/终端厂商拓展能力  
 ├── script/编译脚本  
-├── testing/本地模拟测试相关  
-└── webrtcDC/基于SDK实现GSMA ts.66定义的接口，编译出js库供小程序集成使用  
+└── testing/本地模拟测试相关  
 
 ## 五、技术栈
 - 编程语言：Kotlin、java、rust  
