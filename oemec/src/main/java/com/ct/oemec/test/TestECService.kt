@@ -14,13 +14,19 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.feature.testing.expandingcapacity
+package com.ct.oemec.test
 
-data class ECExpand(
-    var module: String,
-    var func: String,
-    var data: ECExpandData
-)
-data class ECExpandData(
-    var isEnable: Boolean
-)
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
+
+class TestECService : Service() {
+    override fun onBind(intent: Intent?): IBinder? {
+        return TestECManager.mTestExpandingCapacity
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        TestECManager.onUnbind()
+        return super.onUnbind(intent)
+    }
+}

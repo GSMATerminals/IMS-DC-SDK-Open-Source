@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="expand_capacity_service_package_name" translatable="false"></string>
+    <string name="expand_capacity_service_cls" translatable="false"></string>
+    <string name="expand_capacity_service_action" translatable="false"></string>
+</resources>

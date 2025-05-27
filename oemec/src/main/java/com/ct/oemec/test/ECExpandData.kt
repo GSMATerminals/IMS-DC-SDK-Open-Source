@@ -14,10 +14,13 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.feature.testing
+package com.ct.oemec.test
 
-data class OEMECBaseData<T>(
+data class ECExpand(
     var module: String,
     var func: String,
-    var data: T
+    var data: ECExpandData
+)
+data class ECExpandData(
+    var isEnable: Boolean
 )

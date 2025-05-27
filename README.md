@@ -60,9 +60,12 @@ NewCall
 │ ├── usecase/ JS API and IMS DC Application service event handling  
 │ └── utils/ Utility classes  
 ├── libs/ Third-party libraries  
+├── miniapp/IMS DC Mini Application development     
+│ ├── webrtcDC/ Implements GSMA ts.66-defined interfaces based on the SDK, compiling into a JS library for IMS DC Application integration  
+│ └── IMS_DC_Mini_app_demo.zip/IMS DC Mini Application example  
+├── oemec/OEM EC development  
 ├── script/ Build scripts  
-├── testing/ Local simulation testing  
-└── webrtcDC/ Implements GSMA ts.66-defined interfaces based on the SDK, compiling into a JS library for IMS DC Application integration  
+└── testing/ Local simulation testing  
 
 
 ## Technology Stack

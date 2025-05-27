@@ -24,6 +24,7 @@ import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
 import com.ct.ertclib.dc.base.port.ec.IEC
 import com.ct.ertclib.dc.base.port.ec.IECCallback
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
+import com.ct.oemec.OemEC
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

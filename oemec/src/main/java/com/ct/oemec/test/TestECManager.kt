@@ -14,12 +14,11 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.feature.testing.expandingcapacity
+package com.ct.oemec.test
 
 import android.annotation.SuppressLint
-import com.ct.ertclib.dc.core.utils.common.JsonUtil
-import com.ct.ertclib.dc.core.utils.logger.Logger
-import com.ct.ertclib.dc.feature.testing.OEMECBaseData
+import com.ct.oemec.utils.JsonUtil
+import com.ct.oemec.utils.logger.Logger
 import com.newcalllib.expandingCapacity.IExpandingCapacity
 import com.newcalllib.expandingCapacity.IExpandingCapacityCallback
 import java.util.Timer
@@ -121,7 +120,7 @@ object TestECManager {
             mTranslateTimer = Timer()
         }
         if (mTranslateTask == null){
-            mTranslateTask =  object :TimerTask(){
+            mTranslateTask =  object : TimerTask(){
                 override fun run() {
                     val responseData = OEMECBaseData(
                         "Translate",
