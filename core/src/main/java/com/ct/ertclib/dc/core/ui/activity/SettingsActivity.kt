@@ -26,6 +26,7 @@ import com.ct.ertclib.dc.core.databinding.ActivitySettingsBinding
 import com.ct.ertclib.dc.core.ui.viewmodel.SettingsViewModel
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
+import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.extension.startLocalTestActivity
 
 class SettingsActivity : BaseAppCompatActivity() {
@@ -58,7 +59,11 @@ class SettingsActivity : BaseAppCompatActivity() {
             finish()
         }
         binding.localTest.setOnClickListener {
-            this.startLocalTestActivity()
+            if (binding.swNewcall.isChecked){
+                this.startLocalTestActivity()
+            } else {
+                ToastUtils.showShortToast(this@SettingsActivity,"请先开启5G增强通话")
+            }
         }
         binding.swNewcall.setOnCheckedChangeListener { _, isChecked ->
             if (!isChecked){

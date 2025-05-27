@@ -1,10 +1,10 @@
 # 5G增强通话终端SDK
-5G增强通话是指基于运营商IMS网络进行系统增强和业务创新，使得个人及企业行业的用户体验获得提升的一系列业务统称。其最显著的技术特征是在基于IMS音频、视频通道的基础上增加数据通道和融入AR等技术，依赖终端上的5G增强通话终端SDK，实现用户在通话时的交互式信息传递和互动，带来用户通话体验升级。 
+- 5G增强通话是指基于运营商IMS网络进行系统增强和业务创新，使得个人及企业行业的用户体验获得提升的一系列业务统称。其最显著的技术特征是在基于IMS音频、视频通道的基础上增加数据通道和融入AR等技术，依赖终端上的5G增强通话终端SDK，实现用户在通话时的交互式信息传递和互动，带来用户通话体验升级。 
 
-5G增强通话终端SDK由中国电信研究院开发。芯片提供IMS DC通道能力，终端厂商将芯片能力进行封装，SDK管理这些能力并向平台侧的H5应用提供统一的JS API，以实现不同运营商业务平台上的H5应用均可无差别地调用终端的IMS DC能力进行数据交互。
+- 5G增强通话终端SDK由中国电信研究院开发。芯片提供IMS DC通道能力，终端厂商将芯片能力进行封装，SDK管理这些能力并向平台侧的H5应用提供统一的JS API，以实现不同运营商业务平台上的H5应用均可无差别地调用终端的IMS DC能力进行数据交互。
 
 ## 一、功能特性
-SDK监听通话状态，在通话建立时，绑定OEM的DC Service，等待BDC建立后，通过BDC获取小程序列表和下载小程序包，并按照小程参数发起ADC的建立和接收对端或网络发起建立的ADC；通话中，根据小程序调用的js api提供包括DC在内的各种能力；通话保持时，禁用小程序；通话挂断时，释放所有资源。  
+- SDK监听通话状态，在通话建立时，绑定OEM的DC Service，等待BDC建立后，通过BDC获取小程序列表和下载小程序包，并按照小程参数发起ADC的建立和接收对端或网络发起建立的ADC；通话中，根据小程序调用的js api提供包括DC在内的各种能力；通话保持时，禁用小程序；通话挂断时，释放所有资源。  
 主要包含如下特性：  
 1、支持多个小程序同时运行，各自独立进程；  
 2、支持通话中、通话后打开使用小程序；  
@@ -17,9 +17,10 @@ SDK监听通话状态，在通话建立时，绑定OEM的DC Service，等待BDC�
 9、其他。  
 
 ## 二、开发环境
-JDK 版本 17  
-Gradle 版本 8.1  
-Android SDK 版本 compileSdk-34，minSdk-21  
+- JDK 版本 17  
+- Gradle 版本 8.1  
+- Android SDK 版本 compileSdk-34，minSdk-21  
+- 推荐开发工具 AndroidStudio
 
 ## 三、架构设计
 ![SDK架构CN.jpg](images/SDK架构CN.jpg)  
@@ -75,12 +76,21 @@ NewCall
 3、发布：  
 需手机厂商将SDK作为系统默认应用集成，随系统一起发布。  
 
-## 七、许可证
+## 七、小程序本地调试
+- 本项目提供一种方式，无需DC网络环境，即可调试小程序在SDK上的运行情况。
+- 开发打包：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，DC能力调用参考[miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md)实现，其他定制能力由SDK开发者提供文档说明；将web网页打包为离线的zip格式压缩包，即为IMS DC小程序，index.html和properties.json文件需在zip压缩包的一级目录中,参考[miniapp/IMS DC Mini app demo.zip](miniapp/IMS DC Mini app demo.zip)。  
+- 本地调试：使用./gradlew assembleLocal编译本地调试local版本SDK，安装apk到手机，将小程序zip包推至手机sdcard中，按下图操作。  
+  1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
+  4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  
+  7、<img src="images/localtest7.png" alt="描述文字" width="200" />8、<img src="images/localtest8.png" width="200" />9、<img src="images/localtest9.png" width="200" />  
+  10、<img src="images/localtest10.png" alt="描述文字" width="200" />11、<img src="images/localtest11.png" width="200" />12、<img src="images/localtest12.png" width="200" />  
+
+## 八、许可证
 
 本项目采用 [Apache2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) 开源协议。
 
 
-## 八、联系方式
+## 九、联系方式
 xuq17@chinatelecom.cn
 
 
