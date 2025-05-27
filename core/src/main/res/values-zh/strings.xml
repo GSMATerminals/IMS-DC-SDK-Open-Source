@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="request_nc_permission_dialog_content">使用新通话功能需要显示在其他应用上层和读取通话的权限</string>
+    <string name="request_nc_permission_dialog_content">使用增强通话功能需要显示在其他应用上层和读取通话的权限</string>
     <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
     <string name="request_nc_permission_dialog_user">《用户协议》</string>
-    <string name="request_nc_permission_dialog_title">需要授予新通话权限</string>
+    <string name="request_nc_permission_dialog_title">需要授予增强通话权限</string>
 
     <string name="cancel_btn">取消</string>
     <string name="ok_btn">确定</string>
@@ -26,7 +26,7 @@
     <string name="record_audio_description">用于语音通话</string>
     <string name="external_storage_description">用于存储文件</string>
     <string name="location_description">用于提供定位服务</string>
-    <string name="call_state_description">用于提供新通话服务</string>
+    <string name="call_state_description">用于提供增强通话服务</string>
     <string name="contact_description">用于获取联系人信息</string>
 
     <string name="permission_preference_title">权限设置</string>

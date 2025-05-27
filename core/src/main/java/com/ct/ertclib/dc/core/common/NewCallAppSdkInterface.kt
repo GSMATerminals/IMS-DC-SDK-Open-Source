@@ -98,7 +98,7 @@ object NewCallAppSdkInterface {
     private val miniAppDbRepo: MiniAppDbRepo by lazy { MiniAppDbRepo() }
 
     /**
-     * 判断当前应用是否有5G新通话相关的全部权限
+     * 判断当前应用是否有5G增强通话相关的全部权限
      */
     @JvmStatic
     fun hasAllPermissions(context: Context): Boolean {
@@ -108,7 +108,7 @@ object NewCallAppSdkInterface {
     }
 
     /**
-     * 开启或关闭5G新通话功能
+     * 开启或关闭5G增强通话功能
      */
     @JvmStatic
     fun setNewCallEnabled(isEnabled: Boolean) {
@@ -117,7 +117,7 @@ object NewCallAppSdkInterface {
     }
 
     /**
-     * 启动5G新通话权限设置页面
+     * 启动5G增强通话权限设置页面
      */
     @JvmStatic
     fun checkAndRequestPermission(type: Int,onAgree: () -> Unit, onDenied: () -> Unit){

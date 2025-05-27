@@ -13,10 +13,10 @@
     <string name="arcall_oem_name" translatable="false">com.android.incallui.ARCalTOEMService</string>
     <string name="arcall_oem_action" translatable="false">com.newcalib.arcall.ARCallOEMService</string>
 
-    <string name="request_nc_permission_dialog_content">使用新通话功能需要显示在其他应用上层和读取通话的权限</string>
+    <string name="request_nc_permission_dialog_content">使用增强通话功能需要显示在其他应用上层和读取通话的权限</string>
     <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
     <string name="request_nc_permission_dialog_user">《用户协议》</string>
-    <string name="request_nc_permission_dialog_title">需要授予新通话权限</string>
+    <string name="request_nc_permission_dialog_title">需要授予增强通话权限</string>
 
     <string name="cancel_btn">Cancel</string>
     <string name="ok_btn">OK</string>

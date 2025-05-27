@@ -17,7 +17,7 @@
             android:includeFontPadding="false"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="电信增强通话"/>
+            android:text="增强通话"/>
         <ImageView
             android:id="@+id/btn_setting"
             android:layout_width="60dp"

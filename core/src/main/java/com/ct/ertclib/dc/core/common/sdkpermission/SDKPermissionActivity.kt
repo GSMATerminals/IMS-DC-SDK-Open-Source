@@ -36,7 +36,7 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 
 /**
- * 问题：被叫首次使用新通话，手机顶部悬浮窗显示电话，同时弹出权限授权弹窗。用户点击接听后，授权弹窗会被覆盖。
+ * 问题：被叫首次使用增强通话，手机顶部悬浮窗显示电话，同时弹出权限授权弹窗。用户点击接听后，授权弹窗会被覆盖。
  * 解决方案：用户没有点击同意或拒绝按钮，Activity退至后台时，那就再调用一次startActivity
  *
  */
@@ -162,7 +162,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 startActivity(intent)
                             } else {
-                                ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限新通话功能将无法使用")
+                                ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限增强通话功能将无法使用")
                                 denied()
                             }
                         }
@@ -193,7 +193,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (!Settings.canDrawOverlays(this)) {
-            ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限新通话功能将无法使用")
+            ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限增强通话功能将无法使用")
             denied()
         } else {
             agree()

@@ -69,7 +69,7 @@ class InCallServiceImpl : InCallService(), KoinComponent {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCallAdded(call: Call?) {
-        // 开机未解锁过，新通话功能不能使用。sp会有异常，直接catch住就可以了。
+        // 开机未解锁过，增强通话功能不能使用。sp会有异常，直接catch住就可以了。
         try {
             if (call == null){
                 sLogger.info("onCallAdded call is null")

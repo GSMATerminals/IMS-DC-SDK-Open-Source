@@ -89,7 +89,7 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
         binding.btnFakePrecall.setOnClickListener {
             val enableNewCall = spUtils.getBoolean("enableNewCall", false)
             if (!enableNewCall) {
-                ToastUtils.showShortToast(this@LocalTestingMainActivity, "请先开启新通话功能")
+                ToastUtils.showShortToast(this@LocalTestingMainActivity, "请先开启增强通话功能")
                 return@setOnClickListener
             }
             binding.btnFakePrecall.isEnabled = false

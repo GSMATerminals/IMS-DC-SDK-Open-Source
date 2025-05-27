@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:text="开启新通话"
+            android:text="开启增强通话"
             app:layout_constraintTop_toBottomOf="@id/btn_setting" />
 
         <Button
