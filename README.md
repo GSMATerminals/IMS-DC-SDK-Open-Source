@@ -1,12 +1,12 @@
 # IMS DC SDK
 
-5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator's IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.
+- 5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator's IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.
 
-The IMS DC SDK was developed by the China Telecom Research Institute. The chip provides IMS DC (Data Channel) capabilities, while terminal manufacturers encapsulate these capabilities. The SDK manages these capabilities and provides a unified JS API to H5 applications on the platform side, allowing H5 applications across different operator platforms to seamlessly invoke the terminal's IMS DC capabilities for data interaction.
+- The IMS DC SDK was developed by the China Telecom Research Institute. The chip provides IMS DC (Data Channel) capabilities, while terminal manufacturers encapsulate these capabilities. The SDK manages these capabilities and provides a unified JS API to H5 applications on the platform side, allowing H5 applications across different operator platforms to seamlessly invoke the terminal's IMS DC capabilities for data interaction.
 
 ## Features
 
-The SDK monitors call states. When a call is established, it binds to the OEM's DC Service, waits for the BDC to be established, retrieves the IMS DC Application list and downloads the IMS DC Application package via the BDC, and initiates or receives ADC creation based on IMS DC Application parameters. During the call, it provides various capabilities, including DC, based on the JS APIs called by the IMS DC Applications. During call hold, IMS DC Applications are disabled. When the call ends, all resources are released.
+- The SDK monitors call states. When a call is established, it binds to the OEM's DC Service, waits for the BDC to be established, retrieves the IMS DC Application list and downloads the IMS DC Application package via the BDC, and initiates or receives ADC creation based on IMS DC Application parameters. During the call, it provides various capabilities, including DC, based on the JS APIs called by the IMS DC Applications. During call hold, IMS DC Applications are disabled. When the call ends, all resources are released.
 
 Key features include:
 1. Supports running multiple IMS DC Applications simultaneously, each in an independent process.
@@ -24,6 +24,7 @@ Key features include:
 - JDK Version: 17
 - Gradle Version: 8.1
 - Android SDK Version: compileSdk-34, minSdk-21
+- Recommend IDE : Android Studio
 
 ## Architecture Design
 
@@ -84,6 +85,16 @@ NewCall
    ./gradlew assembleRelease
 3. **Release**:  
 The SDK must be integrated as a system default application by the phone manufacturer and released with the system.  
+
+## IMS DC Mini Application Local Debugging  
+- This project provides a method to debug IMS DC Mini Applications on the SDK without requiring a DC network environment.  
+- Development & Packaging：Developers should follow web standards such as HTML5, CSS3, and ES6 for web page development. For DC capability invocation, refer to [miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md). Other custom capabilities are documented by the SDK developers.
+  The web page should be packaged into an offline ZIP archive (the IMS DC Mini Application). The index.html and properties.json files must be placed in the root directory of the ZIP package. See example: [miniapp/IMS DC Mini app demo.zip](miniapp/IMS DC Mini app demo.zip).
+- Compile the local debug version of the SDK using ./gradlew assembleLocal.Install the APK on the phone. Push the IMS DC Mini Application ZIP package to the phone's SDCard. Follow the operations shown in the diagram below:  
+  1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
+  4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  
+  7、<img src="images/localtest7.png" alt="描述文字" width="200" />8、<img src="images/localtest8.png" width="200" />9、<img src="images/localtest9.png" width="200" />  
+  10、<img src="images/localtest10.png" alt="描述文字" width="200" />11、<img src="images/localtest11.png" width="200" />12、<img src="images/localtest12.png" width="200" />
 
 ## License
 This project is licensed under the Apache 2.0 License.
