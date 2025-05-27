@@ -75,7 +75,8 @@ NewCall
 ## Build and Release
 
 1. **Adaptation**:  
-   The SDK relies on the terminal's DC, screen sharing, extended capabilities, and AR services, which must be supported by the terminal.
+- The SDK relies on the terminal's DC, screen sharing, extended capabilities, and AR services, which must be supported by the terminal;  
+- The terminal must be granted the android.permission.CONTROL_INCALL_EXPERIENCE and android.permission.PACKAGE_USAGE_STATS permissions by default.  
 
 2. **Packaging**:  
    Supports multi-channel packaging.

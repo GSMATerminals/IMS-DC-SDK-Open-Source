@@ -57,15 +57,16 @@ NewCall
 └── webrtcDC/基于SDK实现GSMA ts.66定义的接口，编译出js库供小程序集成使用  
 
 ## 五、技术栈
-编程语言：Kotlin、java、rust  
-架构模式：MVVM  
-异步处理：Coroutines + Flow  
-数据库：Room  
-UI 框架：Jetpack Compose / XML Layouts  
+- 编程语言：Kotlin、java、rust  
+- 架构模式：MVVM  
+- 异步处理：Coroutines + Flow  
+- 数据库：Room  
+- UI 框架：Jetpack Compose / XML Layouts  
 
 ## 六、构建发布
 1、适配：  
-SDK运行依赖终端的DC、屏幕共享、拓展能力、AR等服务，需终端支持；  
+- SDK运行依赖终端的DC、屏幕共享、拓展能力、AR等服务，需终端支持；  
+- 终端需默认授予android.permission.CONTROL_INCALL_EXPERIENCE和android.permission.PACKAGE_USAGE_STATS权限。  
 
 2、打包：  
 支持多渠道打包  
