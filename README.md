@@ -98,6 +98,6 @@ The SDK must be integrated as a system default application by the phone manufact
 
 ## License
 This project is licensed under the Apache 2.0 License.
-
+ 
 ## Contact
 xuq17@chinatelecom.cn
