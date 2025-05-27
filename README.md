@@ -89,7 +89,7 @@ The SDK must be integrated as a system default application by the phone manufact
 ## IMS DC Mini Application Local Debugging  
 - This project provides a method to debug IMS DC Mini Applications on the SDK without requiring a DC network environment.  
 - Development & Packaging：Developers should follow web standards such as HTML5, CSS3, and ES6 for web page development. For DC capability invocation, refer to [miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md). Other custom capabilities are documented by the SDK developers.
-  The web page should be packaged into an offline ZIP archive (the IMS DC Mini Application). The index.html and properties.json files must be placed in the root directory of the ZIP package. See example: [miniapp/IMS DC Mini app demo.zip](miniapp/IMS DC Mini app demo.zip).
+  The web page should be packaged into an offline ZIP archive (the IMS DC Mini Application). The index.html and properties.json files must be placed in the root directory of the ZIP package. See example: [miniapp/IMS_DC_Mini_app_demo.zip](miniapp/IMS_DC_Mini_app_demo.zip).
 - Compile the local debug version of the SDK using ./gradlew assembleLocal.Install the APK on the phone. Push the IMS DC Mini Application ZIP package to the phone's SDCard. Follow the operations shown in the diagram below:  
   1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
   4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  

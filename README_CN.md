@@ -78,7 +78,7 @@ NewCall
 
 ## 七、小程序本地调试
 - 本项目提供一种方式，无需DC网络环境，即可调试小程序在SDK上的运行情况。
-- 开发打包：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，DC能力调用参考[miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md)实现，其他定制能力由SDK开发者提供文档说明；将web网页打包为离线的zip格式压缩包，即为IMS DC小程序，index.html和properties.json文件需在zip压缩包的一级目录中,参考[miniapp/IMS DC Mini app demo.zip](miniapp/IMS DC Mini app demo.zip)。  
+- 开发打包：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，DC能力调用参考[miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md)实现，其他定制能力由SDK开发者提供文档说明；将web网页打包为离线的zip格式压缩包，即为IMS DC小程序，index.html和properties.json文件需在zip压缩包的一级目录中,参考[miniapp/IMS_DC_Mini_app_demo.zip](miniapp/IMS_DC_Mini_app_demo.zip)。  
 - 本地调试：使用./gradlew assembleLocal编译本地调试local版本SDK，安装apk到手机，将小程序zip包推至手机sdcard中，按下图操作。  
   1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
   4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  
