@@ -9,6 +9,7 @@ class RTCDataChannel {
     this.onerror = null
     this.onmessage = null
     this.onopen = null
+    this.readyState = null
   }
   close() {
     mDsBridge.call("async",`{"event":"DcEvent","function":"closeAppDataChannel","params":{"dcLabel":["${this.label}"]}}`,function(v) {
@@ -30,21 +31,30 @@ class RTCDataChannel {
     // 查询bufferedAmount
     const s = mDsBridge.call("sync", `{"event":"DcEvent","function":"getBufferedAmount","params":{"dcLabel":"${this.label}"}}`);
     console.info(`getBufferedAmount响应：`+s)
+    const response = JSON.parse(s)
+    this.bufferedAmount = response.data.bufferedAmount
+    return this.bufferedAmount;
   }
   channelDataChannelNotify(imsDCStatus) {
     // DC状态信息
     switch (imsDCStatus) {
+      case 0:
+        this.readyState = "connecting"
+        break
       case 1:
+        this.readyState = "open"
         if (this.onopen !== null){
           this.onopen(this,new Event("open"))
         }
         break
       case 2:
+        this.readyState = "closing"
         if (this.onclosing !== null){
           this.onclosing(this,new Event("closing"))
         }
         break
       case 3:
+        this.readyState = "closed"
         if (this.onclose !== null){
           this.onclose(this,new Event("close"))
         }
