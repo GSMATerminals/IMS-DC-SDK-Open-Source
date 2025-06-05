@@ -5,7 +5,7 @@ npm run build
 会在dist目录下生成webrtcDC.js文件。  
 
 ## 二、使用示例 
-本地引入编译好的webrtcDC.js库文件，API的调用与标准库中的webrtc一致
+小程序开发时，本地引入编译好的webrtcDC.js库文件，API的调用与标准库中的webrtc一致
 ```angular2html
 // 引入webrtcDC.js库文件
 import 'xxx/xxx/webrtcDC.js'

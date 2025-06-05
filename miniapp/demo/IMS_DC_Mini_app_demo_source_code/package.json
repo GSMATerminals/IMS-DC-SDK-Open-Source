@@ -1,0 +1,22 @@
+{
+  "name": "miniapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dsbridge": "^3.1.4",
+    "element-plus": "^2.7.7",
+    "vconsole": "^3.15.1",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-legacy": "^5.4.1",
+    "@vitejs/plugin-vue": "^5.1.2",
+    "sass": "^1.81.0",
+    "vite": "^5.0.12"
+  }
+}

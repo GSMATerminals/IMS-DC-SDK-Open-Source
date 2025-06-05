@@ -54,8 +54,8 @@ NewCall
 │       └── utils/工具类   
 ├── libs/第三方库文件  
 ├── miniapp/小程序开发相关  
-│   ├── webrtcDC/基于SDK实现GSMA ts.66定义的接口，编译出js库供小程序集成使用  
-│   └── IMS_DC_Mini_app_demo.zip/小程序包示例  
+│   ├── webrtcDC/基于SDK实现GSMA ts.66定义的接口，编译出webrtcDC.js库供小程序集成使用  
+│   └── demo/小程序包示例  
 ├── oemec/终端厂商拓展能力  
 ├── script/编译脚本  
 └── testing/本地模拟测试相关  
@@ -73,16 +73,17 @@ NewCall
 - 终端需默认授予android.permission.CONTROL_INCALL_EXPERIENCE和android.permission.PACKAGE_USAGE_STATS权限。  
 
 2、打包：  
-支持多渠道打包  
+支持多渠道打包：Normal(通用版本)、Dialer(拨号盘入口版本)、Local(本地调试版本)  
 ./gradlew assembleRelease  
 
 3、发布：  
 需手机厂商将SDK作为系统默认应用集成，随系统一起发布。  
 
-## 七、小程序本地调试
-- 本项目提供一种方式，无需DC网络环境，即可调试小程序在SDK上的运行情况。
-- 开发打包：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，DC能力调用参考[miniapp/webrtcDC/README.md](miniapp/webrtcDC/README.md)实现，其他定制能力由SDK开发者提供文档说明；将web网页打包为离线的zip格式压缩包，即为IMS DC小程序，index.html和properties.json文件需在zip压缩包的一级目录中,参考[miniapp/IMS_DC_Mini_app_demo.zip](miniapp/IMS_DC_Mini_app_demo.zip)。  
-- 本地调试：使用./gradlew assembleLocal编译本地调试local版本SDK，安装apk到手机，将小程序zip包推至手机sdcard中，按下图操作。  
+## 七、小程序开发调试
+使用Local(本地调试版本)的SDK无需DC网络环境，即可调试小程序在SDK上的运行情况。
+- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，小程序完整demo参考[miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code)。  
+- 小程序打包：将web网页打包为离线的zip格式压缩包，即为IMS DC小程序，index.html和properties.json文件需在zip压缩包的一级目录中,参考[miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip)。  
+- 小程序本地调试：将local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后按下图操作进行配置，即可打开并调试小程序。  
   1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
   4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  
   7、<img src="images/localtest7.png" alt="描述文字" width="200" />8、<img src="images/localtest8.png" width="200" />9、<img src="images/localtest9.png" width="200" />  
