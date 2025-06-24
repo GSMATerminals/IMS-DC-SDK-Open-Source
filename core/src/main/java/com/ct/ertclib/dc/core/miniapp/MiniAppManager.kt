@@ -1145,7 +1145,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
                     telecomCallId,
                     appInfo.eTag,
                     appInfo.ifWorkWithoutPeerDc,
-                    appInfo.isOutgoingCall,
+                    !appInfo.isOutgoingCall,
                     callInfo.myNumber,
                     null,
                     appInfo.phase,
