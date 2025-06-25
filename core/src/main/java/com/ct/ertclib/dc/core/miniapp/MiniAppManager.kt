@@ -141,8 +141,8 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
 
         fun supportPhase(data: MiniAppInfo):Boolean{
-            return !((data.isPhasePreCall() && getAppPackageManager(data.callId)?.callInfo?.isInCall() == true)//配置了接通前可用但已接通
-                    || (data.isPhaseInCall() && getAppPackageManager(data.callId)?.callInfo?.isInCall() == false))//配置了接通后可用但未接通
+            return (data.isPhasePreCall() && getAppPackageManager(data.callId)?.callInfo?.isRinging() == true)//配置了接通前可用
+                    || (data.isPhaseInCall() && getAppPackageManager(data.callId)?.callInfo?.isInCall() == true)//配置了接通后可用
         }
 
         fun supportDC(data: MiniAppInfo):Boolean{
@@ -501,7 +501,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     // 区分接通前和接通后
     fun startAutoloadApp(){
         var miniAppInfo : MiniAppInfo? = null
-        if (!callInfo.isInCall() && !didPreCallAutoLoad && mAutoloadPreCallMiniApp != null && supportScene(mAutoloadPreCallMiniApp!!) && supportDC(mAutoloadPreCallMiniApp!!)){
+        if (callInfo.isRinging() && !didPreCallAutoLoad && mAutoloadPreCallMiniApp != null && supportScene(mAutoloadPreCallMiniApp!!) && supportDC(mAutoloadPreCallMiniApp!!)){
             didPreCallAutoLoad = true
             miniAppInfo = mAutoloadPreCallMiniApp
         } else if (callInfo.isInCall() && !didInCallAutoLoad && mAutoloadInCallMiniApp != null && supportScene(mAutoloadInCallMiniApp!!) && supportDC(mAutoloadInCallMiniApp!!)){
