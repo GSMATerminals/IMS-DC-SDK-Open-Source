@@ -722,11 +722,11 @@ class BDCManager(
 //        if (!callInfo.isCtCall) {
 //            sLogger.debug("updateMiniAppEntryHolder is not ct call")
 //            hideMiniAppEntryHolder()
-//        } else if (!callInfo.isInCall()) {
-//            sLogger.info("$mTag updateMiniAppEntryHolder callInfo not in call, state:${callInfo.state}")
-//            hideMiniAppEntryHolder()
 //        } else
-        if (!isInCallOnTop && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
+        if (!callInfo.isInCall() && !callInfo.isRinging()) {
+            sLogger.info("$mTag updateMiniAppEntryHolder callInfo not in call or ringing, state:${callInfo.state}")
+            hideMiniAppEntryHolder()
+        } else if (!isInCallOnTop && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
             sLogger.info("$mTag updateMiniAppEntryHolder not in call on top")
             hideMiniAppEntryHolder()
         } else if (miniAppManager.getMiniAppInfoList() == null) {
