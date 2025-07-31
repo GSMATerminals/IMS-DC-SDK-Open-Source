@@ -175,11 +175,10 @@ class MiniAppAdapter(
 
     private fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "startMiniApp $appId isSuccess $isSuccess reason $reason")
+        itemViewMap[appId]?.updateProgress(SDK_PERCENT_CONSTANTS)
         if (isSuccess) {
-            itemViewMap[appId]?.updateProgress(SDK_PERCENT_CONSTANTS)
             onStartSuccess.invoke()
         } else {
-            itemViewMap[appId]?.updateProgress(0)
             ToastUtils.showShortToast(context, com.ct.ertclib.dc.core.R.string.toast_download_mini_app_failed)
         }
     }

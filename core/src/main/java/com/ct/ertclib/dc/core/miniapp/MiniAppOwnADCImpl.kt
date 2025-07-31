@@ -27,6 +27,7 @@ import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -64,7 +65,7 @@ class MiniAppOwnADCImpl(private val onADCParamsOk:OnADCParamsOk){
     private var canSend = false
     private var sendResultOK = true
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job:Job? = null
 
     fun onDCCreated(imsDataChannel: IImsDataChannel) {

@@ -19,12 +19,13 @@ package com.ct.ertclib.dc.core.ui.activity
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.ct.ertclib.dc.core.R
-import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.databinding.ActivityMainBinding
 import com.ct.ertclib.dc.core.ui.fragment.MainMiniAppListFragment
 import com.ct.ertclib.dc.core.ui.viewmodel.MainViewModel
+import com.ct.ertclib.dc.core.utils.extension.startSettingsActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -38,7 +39,6 @@ class MainActivity : BaseAppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
     private val mainMiniAppListFragment = MainMiniAppListFragment()
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
     private var isOnCreateUpdateView = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,11 +50,10 @@ class MainActivity : BaseAppCompatActivity() {
 
         // 不干涉通话流程，在这里更新一下版本号，在检查权限时做判断。可能在下次通话时才会提示用户。
         SDKPermissionUtils.updatePrivacyVersion()
-        scope.launch(Dispatchers.Main) {
+        lifecycleScope.launch(Dispatchers.Main) {
             delay(1000)  // 协程延迟1000毫秒（1秒）
             updateView()
             isOnCreateUpdateView = true
-            scope.cancel()
         }
     }
 
@@ -67,10 +66,10 @@ class MainActivity : BaseAppCompatActivity() {
 
     private fun initView() {
         binding.btnSetting.setOnClickListener {
-            NewCallAppSdkInterface.startSettingsActivity(this@MainActivity)
+            this@MainActivity.startSettingsActivity()
         }
         binding.btnOpen.setOnClickListener {
-            NewCallAppSdkInterface.startSettingsActivity(this@MainActivity)
+            this@MainActivity.startSettingsActivity()
         }
         if (!viewModel.isCreated) {
             supportFragmentManager.beginTransaction()
@@ -82,7 +81,7 @@ class MainActivity : BaseAppCompatActivity() {
 
 
     private fun updateView() {
-        if (NewCallAppSdkInterface.hasAllPermissions(this@MainActivity)){
+        if (SDKPermissionUtils.hasAllPermissions(this@MainActivity)){
             binding.contentLayout.visibility = View.VISIBLE
             binding.btnOpen.visibility = View.GONE
         } else {

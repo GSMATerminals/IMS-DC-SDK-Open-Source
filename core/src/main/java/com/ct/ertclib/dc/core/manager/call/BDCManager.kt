@@ -62,6 +62,7 @@ import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
@@ -90,7 +91,7 @@ class BDCManager(
 
     private var mFlowViewStatus = FLOATING_DISMISS
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job1 :Job ?= null
     private var job2 :Job ?= null
     private var job3 :Job ?= null

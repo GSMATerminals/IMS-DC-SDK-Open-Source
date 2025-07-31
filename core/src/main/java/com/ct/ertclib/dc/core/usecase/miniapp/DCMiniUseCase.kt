@@ -34,6 +34,7 @@ import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import wendu.dsbridge.CompletionHandler
@@ -46,7 +47,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
     }
 
     private val logger = Logger.getLogger(TAG)
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override fun createAppDataChannel(
         context: Context,
@@ -163,7 +164,9 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
                                 val map = appResponse?.data as? Map<*, *>
                                 map?.let {
                                     val response = JSResponse("0", "success", mutableMapOf(IS_PEER_SUPPORT_DC_PARAMS to map[IS_PEER_SUPPORT_DC_PARAMS]))
-                                    handler.complete(JsonUtil.toJson(response))
+                                    scope.launch(Dispatchers.Main) {
+                                        handler.complete(JsonUtil.toJson(response))
+                                    }
                                 }
                             }
                         } catch (e:Exception){

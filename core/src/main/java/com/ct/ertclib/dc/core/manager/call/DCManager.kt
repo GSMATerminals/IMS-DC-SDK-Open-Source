@@ -37,6 +37,7 @@ import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
@@ -64,7 +65,7 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
     private val mCallInfoList = ArrayList<CallInfo>()
     private var mIsDataChannelServiceConnected = false
     private var mIsNetworkManagerInit = false
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var currentCallId:String? = null
     private var job1:Job? = null
     private var job2:Job? = null
@@ -111,8 +112,8 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
         mIsNetworkManagerInit = true
         DCServiceManager.setImsDcServiceConnectionCallback(this)
         DCServiceManager.bindDcService(context)
-        ExpandingCapacityManager.init(context)
-        DialerEntryManager.init(context)
+        ExpandingCapacityManager.instance.init(context)
+        DialerEntryManager.instance.init(context)
         job1 = scope.launch {
             StateFlowManager.closeAdcEventFlow.distinctUntilChanged().collect { event ->
                 if (event.message == CloseAdcEvent.CLOSE_ADC) {
@@ -314,8 +315,8 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
         job1 = null
         job2 = null
         DCServiceManager.unbindDcService(context)
-        ExpandingCapacityManager.release(context)
-        DialerEntryManager.release(context)
+        ExpandingCapacityManager.instance.release(context)
+        DialerEntryManager.instance.release(context)
     }
 
     fun createApplicationDataChannels(
@@ -380,8 +381,8 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
 
     fun unBindService(context: Context) {
         DCServiceManager.unbindDcService(context)
-        ExpandingCapacityManager.release(context)
-        DialerEntryManager.release(context)
+        ExpandingCapacityManager.instance.release(context)
+        DialerEntryManager.instance.release(context)
     }
 
     private fun startCreateADCQueue(){

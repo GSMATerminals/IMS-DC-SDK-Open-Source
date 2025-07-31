@@ -32,22 +32,27 @@ import com.ct.ertclib.dc.core.utils.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
-object DialerEntryManager {
-
-    private const val TAG = "DialerEntryManager"
+class DialerEntryManager {
+    companion object {
+        private const val TAG = "DialerEntryManager"
+        val instance: DialerEntryManager by lazy {
+            DialerEntryManager()
+        }
+    }
     private val sLogger: Logger = Logger.getLogger(TAG)
-
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job: Job?= null
-    private var enable = false
-    private var miniAppList:MiniAppList ?= null
-    private var callInfo:CallInfo ?= null
+
 
     fun init(context: Context){
+        var enable = false
+        var miniAppList:MiniAppList ?= null
+        var callInfo:CallInfo ?= null
         job = scope.launch(Dispatchers.Main) {
             dialerEntryStatusFlow.distinctUntilChanged().collect { floatingBallData ->
                 sLogger.info("floatingBallStatusFlow status: ${floatingBallData.showStatus}")
@@ -65,7 +70,7 @@ object DialerEntryManager {
         modules.add("NewCallSDK")
         val providerModules = ConcurrentHashMap<String, ArrayList<String>>()
         providerModules[ExpandingCapacityManager.OEM] = modules
-        ExpandingCapacityManager.registerECListener(
+        ExpandingCapacityManager.instance.registerECListener(
             "DialerEntryManager",
             "DialerEntryManager",
             providerModules,
@@ -104,8 +109,7 @@ object DialerEntryManager {
 
     fun release(context: Context){
         job?.cancel()
-        enable = false
-        ExpandingCapacityManager.unregisterECListener(
+        ExpandingCapacityManager.instance.unregisterECListener(
             context,
             "DialerEntryManager",
             "DialerEntryManager"
@@ -113,7 +117,7 @@ object DialerEntryManager {
     }
 
     private fun notifyEnable(context: Context,enable:Boolean){
-        ExpandingCapacityManager.request(
+        ExpandingCapacityManager.instance.request(
             context,
             "DialerEntryManager",
             "DialerEntryManager",

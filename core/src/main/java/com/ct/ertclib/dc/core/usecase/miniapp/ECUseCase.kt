@@ -26,6 +26,7 @@ import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IECUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -37,7 +38,7 @@ class ECUseCase(private val miniToParentManager: IMiniToParentManager) :
     }
 
     private val logger = Logger.getLogger(TAG)
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override fun request(
         context: Context,

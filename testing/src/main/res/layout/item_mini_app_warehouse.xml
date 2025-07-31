@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <FrameLayout
+        android:id="@+id/box1"
+        android:layout_width="80dp"
+        android:layout_height="80dp">
+        <FrameLayout
+            android:background="@drawable/mini_apps_view_bg"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="80dp">
+            <TextView
+                android:id="@+id/tv_precall"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text="前"/>
+            <TextView
+                android:id="@+id/tv_incall"
+                android:visibility="gone"
+                android:layout_gravity="right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text="中"/>
+            <TextView
+                android:id="@+id/tv_autoload"
+                android:visibility="gone"
+                android:layout_gravity="bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/green"
+                android:text="auto"/>
+            <ImageView
+                android:layout_margin="10dp"
+                android:id="@+id/miniapp_icon"
+                android:src="@drawable/icon_miniapp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+            <LinearLayout
+                android:visibility="gone"
+                android:id="@+id/delete_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="2dp">
+                <Button
+                    android:id="@+id/btn_delete"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="删除"
+                    android:textSize="15dp"
+                    android:background="@color/red"
+                    android:textColor="@color/white"
+                    android:gravity="center"/>
+                <Button
+                    android:id="@+id/btn_cancel"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="取消"
+                    android:textSize="15dp"
+                    android:background="@color/gray"
+                    android:textColor="@color/white"
+                    android:gravity="center"/>
+            </LinearLayout>
+        </FrameLayout>
+
+        <com.ct.ertclib.dc.core.ui.widget.CircleProgressBar
+            android:layout_gravity="center"
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            android:visibility="gone"
+            app:radius="15dp" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_marginTop="5dp"
+        android:id="@+id/miniapp_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/box1"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="@color/black"
+        android:textSize="16sp" />
+
+</LinearLayout>

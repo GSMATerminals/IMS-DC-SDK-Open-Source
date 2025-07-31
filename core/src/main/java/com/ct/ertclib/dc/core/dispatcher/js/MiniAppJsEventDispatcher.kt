@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.core.dispatcher.js
 
 import android.content.Context
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_ADD_CONTACT
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_ANSWER
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CALL_STATE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CONTACT_LIST
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CONTACT_NAME
@@ -82,6 +83,7 @@ class MiniAppJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfTone(context, request.params)
             FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphone(context, request.params)
             FUNCTION_SET_MUTED -> miniAppEventUseCase.setMuted(context, request.params)
+            FUNCTION_ANSWER -> return miniAppEventUseCase.answer(context)
         }
         return ""
     }

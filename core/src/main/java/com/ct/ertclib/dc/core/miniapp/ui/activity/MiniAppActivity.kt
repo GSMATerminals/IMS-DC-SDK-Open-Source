@@ -296,7 +296,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
     private fun notifyMiniAppState(state:String){
         val map = mapOf("miniAppState" to state)
-       callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
+        callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
         sLogger.debug("notifyMiniAppState state:$state")
     }
 
@@ -552,7 +552,8 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         val path = miniApp?.path
         setWindowStyle()
         sLogger.debug("onServiceConnected loadUrl path:$path")
-        mBinding.webView.loadUrl("file://$path/index.html")
+        val params = if (!miniApp?.startByOthersParams.isNullOrEmpty()){"?${miniApp?.startByOthersParams}"}else{""}
+        mBinding.webView.loadUrl("file://$path/index.html${params}")
     }
 
     override fun invokeOnCallStateChange(params: Map<String, Any?>) {

@@ -16,7 +16,10 @@
 
 package com.ct.ertclib.dc.core.port.miniapp
 
+import com.ct.ertclib.dc.core.data.common.Reason
+
 interface IMiniAppStartCallback {
 
     fun onMiniAppStarted()
+    fun onMiniAppStartFailed(reason: Reason)
 }

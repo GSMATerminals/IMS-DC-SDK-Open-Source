@@ -34,6 +34,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -51,7 +52,7 @@ class PermissionUseCase(
     }
 
     private val logger = Logger.getLogger(TAG)
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val permissionDaoFlow = permissionDbRepo.getAll()
     private val permissionsMap = mutableMapOf<String, MutableMap<String, Boolean>>()
 

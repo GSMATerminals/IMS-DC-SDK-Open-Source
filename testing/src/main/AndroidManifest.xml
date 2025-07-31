@@ -3,13 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ct.ertclib.dc.feature.testing">
 
-    <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
+    <permission android:name="com.ct.ertclib.dc.GET_FEATURE" />
 
     <application
         android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="false"
         tools:replace="android:supportsRtl,android:allowBackup">
+        <activity
+            android:name=".LocalTestMiniAppWarehouseActivity"
+            android:exported="false" />
         <activity
             android:name=".LocalTestingMainActivity"
             android:exported="true"
@@ -20,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LocalTestingSettingActivity"
+            android:name=".LocalTestMiniAppEditActivity"
             android:exported="false" />
 
         <service

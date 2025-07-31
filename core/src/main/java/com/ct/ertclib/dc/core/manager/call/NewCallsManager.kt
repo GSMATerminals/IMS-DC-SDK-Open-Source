@@ -38,6 +38,7 @@ import com.ct.ertclib.dc.core.port.call.ICallStateListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -79,7 +80,7 @@ class NewCallsManager() {
         }
         sLogger.info("constructor:$this")
     }
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job1 : Job?= null
 
     init {
@@ -350,9 +351,13 @@ class NewCallsManager() {
         audioControlHelper.unregisterAudioDeviceCallback()
         inCallService = null
     }
-    @SuppressLint("NewApi")
+
     fun hangUp(telecomCallId: String){
         mCallsMap[telecomCallId]?.disconnect()
+    }
+
+    fun answer(telecomCallId: String){
+        mCallsMap[telecomCallId]?.answer(mCallsMap[telecomCallId]?.details?.videoState ?: VideoProfile.STATE_AUDIO_ONLY)
     }
 
     fun isVideoCall(telecomCallId: String):Boolean{

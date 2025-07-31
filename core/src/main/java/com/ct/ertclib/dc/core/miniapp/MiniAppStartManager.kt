@@ -26,6 +26,7 @@ import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.data.call.CallInfo
+import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.service.MiniAppService
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
@@ -81,6 +82,15 @@ object MiniAppStartManager : IMiniAppStartManager {
             }
             val properties = deferred.await()
             if (sLogger.isDebugActivated) sLogger.debug("startMiniAppActivity properties:$properties")
+            if (properties == null){
+                callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                return@launch
+            }
+            if (properties.canStartedByOthers != true && miniAppInfo.isStartByOthers == true) {
+                if (sLogger.isDebugActivated) sLogger.debug("startMiniAppActivity cannot start by others")
+                callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                return@launch
+            }
             miniAppInfo.appProperties = properties
             coroutineScope.launch(Dispatchers.Main){
                 startMiniAppActivity(context, miniAppInfo, callInfo)

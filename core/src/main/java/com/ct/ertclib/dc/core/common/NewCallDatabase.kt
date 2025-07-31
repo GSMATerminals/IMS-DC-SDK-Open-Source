@@ -32,14 +32,16 @@ import com.ct.ertclib.dc.core.port.dao.MiniAppInfoDao
 import com.ct.ertclib.dc.core.data.model.ContactEntity
 import com.ct.ertclib.dc.core.data.model.ConversationEntity
 import com.ct.ertclib.dc.core.data.model.DataChannelPropertyEntity
+import com.ct.ertclib.dc.core.data.model.FileEntity
 import com.ct.ertclib.dc.core.data.model.MessageEntity
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.data.model.PermissionModel
+import com.ct.ertclib.dc.core.port.dao.FileDao
 import com.ct.ertclib.dc.core.port.dao.PermissionDao
 
 @Database(
-    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class],
-    version = 10,
+    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class, FileEntity::class],
+    version = 11,
     exportSchema = false
 )
 abstract class NewCallDatabase : RoomDatabase() {
@@ -53,6 +55,8 @@ abstract class NewCallDatabase : RoomDatabase() {
     abstract fun dcPropertiesDao(): DcPropertiesDao
 
     abstract fun permissionDao(): PermissionDao
+
+    abstract fun FileDao(): FileDao
 
     companion object {
 
@@ -202,6 +206,16 @@ abstract class NewCallDatabase : RoomDatabase() {
                         val addIsActiveStart =
                             "ALTER TABLE mini_app_info ADD COLUMN `isActiveStart` INTEGER NOT NULL DEFAULT 1"
                         database.execSQL(addIsActiveStart)
+                    }
+                })
+                .addMigrations(object : Migration(10, 11) {
+                    override fun migrate(database: SupportSQLiteDatabase) {
+                        LogUtils.i("NewCallDatabase update 10-11")
+                        database.execSQL(
+                            "CREATE TABLE IF NOT EXISTS files (" +
+                                    "path TEXT PRIMARY KEY NOT NULL," +
+                                    "name TEXT NOT NULL)"
+                        )
                     }
                 })
                 .addCallback(object : Callback() {

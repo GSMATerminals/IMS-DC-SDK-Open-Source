@@ -29,6 +29,7 @@ import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.hjq.permissions.XXPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
@@ -54,7 +55,7 @@ object SDKPermissionUtils {
             Manifest.permission.READ_PHONE_STATE,
         )
     }
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     fun hasAllPermissions(context: Context):Boolean{
         return isNewCallEnable() && XXPermissions.isGranted(context, PERMISSIONS) && Settings.canDrawOverlays(context)
     }

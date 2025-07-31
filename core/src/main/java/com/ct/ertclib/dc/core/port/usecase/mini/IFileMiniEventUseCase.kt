@@ -53,6 +53,8 @@ interface IFileMiniEventUseCase {
 
     fun saveUpdateKeyValue(context: Context, params: Map<String, Any>): String?
 
+    fun saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String?
+
     fun getKeyValue(context: Context, params: Map<String, Any>): String?
 
     fun deleteKeyValue(context: Context, params: Map<String, Any>): String?
@@ -60,4 +62,8 @@ interface IFileMiniEventUseCase {
     fun playVoice(context: Context, params: Map<String, Any>): String?
 
     fun stopPlayVoice(context: Context, params: Map<String, Any>): String?
+
+    fun quickSearchFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun quickSearchFileWithKeyWords(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

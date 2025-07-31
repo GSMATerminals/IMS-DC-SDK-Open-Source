@@ -31,6 +31,9 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_PLAY_VOICE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_READ_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SAVE_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SAVE_UPDATE_KEY_VALUE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_QUICK_SEARCH_FILE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_QUICK_SEARCH_KEY_WORDS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SELECT_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_START_READ_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_START_SAVE_FILE
@@ -56,6 +59,8 @@ class FileJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_READ_FILE -> { fileEventUseCase.readFile(context, request.params, handler) }
             FUNCTION_DECOMPRESS_FILE -> { fileEventUseCase.getLocation(context, handler) }
             FUNCTION_GET_FILE_INFO_ASYNC -> { fileEventUseCase.getFileInfoAsync(context, request.params, handler) }
+            FUNCTION_QUICK_SEARCH_FILE -> { fileEventUseCase.quickSearchFile(context,request.params,  handler) }
+            FUNCTION_QUICK_SEARCH_KEY_WORDS -> { fileEventUseCase.quickSearchFileWithKeyWords(context, request.params, handler) }
         }
     }
 
@@ -71,6 +76,7 @@ class FileJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_CHECK_FILE_EXISTS -> { return fileEventUseCase.checkFileOrFolderExists(context, request.params) }
             FUNCTION_GET_FILE_INFO -> { return fileEventUseCase.getFileInfo(context, request.params) }
             FUNCTION_SAVE_UPDATE_KEY_VALUE -> { return fileEventUseCase.saveUpdateKeyValue(context, request.params) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { return fileEventUseCase.saveUpdateKeyValueWithExpiry(context, request.params) }
             FUNCTION_GET_KEY_VALUE -> { return fileEventUseCase.getKeyValue(context, request.params) }
             FUNCTION_DELETE_KEY_VALUE -> { return fileEventUseCase.deleteKeyValue(context, request.params) }
             FUNCTION_PLAY_VOICE -> { return fileEventUseCase.playVoice(context, request.params) }

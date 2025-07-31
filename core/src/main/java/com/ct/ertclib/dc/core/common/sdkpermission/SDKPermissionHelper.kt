@@ -25,6 +25,7 @@ import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -39,7 +40,7 @@ class SDKPermissionHelper(
         private const val TAG = "SDKPermissionHelper"
     }
 
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val sLogger: Logger = Logger.getLogger(TAG)
 
     fun checkAndRequestPermission(type: Int) {

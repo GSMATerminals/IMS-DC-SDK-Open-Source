@@ -45,12 +45,14 @@ import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
+import com.ct.ertclib.dc.core.ui.activity.MainActivity
 import com.ct.ertclib.dc.core.ui.activity.StyleSettingActivity
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import com.ct.ertclib.dc.core.utils.extension.startSettingsActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -94,7 +96,7 @@ object NewCallAppSdkInterface {
     private var androidContext: Context? = null
     var floatPositionX: Int = 0
     var floatPositionY: Int = 0
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val miniAppDbRepo: MiniAppDbRepo by lazy { MiniAppDbRepo() }
 
     /**

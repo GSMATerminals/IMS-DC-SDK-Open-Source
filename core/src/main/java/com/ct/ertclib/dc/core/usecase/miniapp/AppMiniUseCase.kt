@@ -86,6 +86,7 @@ import com.ct.ertclib.dc.core.utils.extension.startAddContactActivity
 import com.ct.ertclib.dc.core.utils.extension.startEditContactActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -111,7 +112,7 @@ class AppMiniUseCase(
     }
 
     private val logger = Logger.getLogger(TAG)
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override fun hangup(context: Context): String {
         //挂断电话
@@ -132,6 +133,30 @@ class AppMiniUseCase(
         scope.launch {
             miniToParentManager.sendMessageToParent(request.toJson(), null)
             logger.debug("hangUp")
+        }
+        val response = JSResponse("0", "success", "")
+        return JsonUtil.toJson(response)
+    }
+
+    override fun answer(context: Context): String {
+        //接听电话
+        miniToParentManager.getMiniAppInfo()?.let {
+            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+                logger.warn("answer, permission not granted, return")
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+            }
+        } ?: run {
+            logger.warn("answer, appInfo is null, return")
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+        }
+        val request = AppRequest(
+            CommonConstants.CALL_APP_EVENT,
+            CommonConstants.ACTION_ANSWER,
+            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
+        )
+        scope.launch {
+            miniToParentManager.sendMessageToParent(request.toJson(), null)
+            logger.debug("answer")
         }
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
@@ -232,7 +257,9 @@ class AppMiniUseCase(
                             val map = appResponse?.data as? Map<*, *>
                             map?.let {
                                 val response = JSResponse("0", "success", mutableMapOf(IS_SPEAKERPHONE_ON to map[IS_SPEAKERPHONE_ON]))
-                                handler.complete(JsonUtil.toJson(response))
+                                scope.launch(Dispatchers.Main) {
+                                    handler.complete(JsonUtil.toJson(response))
+                                }
                             }
                         }
                     } catch (e:Exception){
@@ -305,7 +332,9 @@ class AppMiniUseCase(
                             val map = appResponse?.data as? Map<*, *>
                             map?.let {
                                 val response = JSResponse("0", "success", mutableMapOf(IS_MUTED to map[IS_MUTED]))
-                                handler.complete(JsonUtil.toJson(response))
+                                scope.launch(Dispatchers.Main) {
+                                    handler.complete(JsonUtil.toJson(response))
+                                }
                             }
                         }
                     } catch (e:Exception){
@@ -376,7 +405,26 @@ class AppMiniUseCase(
                         )
                         scope.launch {
                             withContext(Dispatchers.IO) {
-                                miniToParentManager.sendMessageToParent(request.toJson(), null)
+                                miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
+                                    override fun reply(message: String?) {
+                                        try {
+                                            if (message != null) {
+                                                logger.info("miniapp reply${message}")
+                                                val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
+                                                val map = appResponse?.data as? Map<*, *>
+                                                map?.let {
+                                                    val response = JSResponse("0", "success", mutableMapOf(
+                                                        MiniAppConstants.IS_STARTED to map[MiniAppConstants.IS_STARTED]))
+                                                    scope.launch(Dispatchers.Main) {
+                                                        handler.complete(JsonUtil.toJson(response))
+                                                    }
+                                                }
+                                            }
+                                        } catch (e:Exception){
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                })
                             }
                         }
                         val response = JSResponse("0", "success", "")
@@ -540,6 +588,58 @@ class AppMiniUseCase(
                             val jsResponse =
                                 JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
                             handler.complete(JsonUtil.toJson(jsResponse))
+                        }
+                    }
+                    MiniAppStartParam.MINIAPP_APPTYPE_MINIAPP_WITH_PARAMS -> {
+                        val extraStr = extra as String // 示例："appId=xxx&params=xxx"
+                        val pairs = extraStr.split("&",limit = 2)
+
+                        // 创建一个可变Map来存储键值对
+                        val extraMap = mutableMapOf<String, String>()
+
+                        // 遍历每个参数
+                        for (pair in pairs) {
+                            // 使用=分割键和值
+                            val keyValue = pair.split("=")
+                            if (keyValue.size == 2) {
+                                val key = keyValue[0]
+                                val value = keyValue[1]
+                                // 将键值对添加到Map中
+                                extraMap[key] = value
+                            }
+                        }
+                        val request = AppRequest(
+                            CommonConstants.COMMON_APP_EVENT,
+                            CommonConstants.ACTION_START_APP,
+                            mapOf(
+                                "telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId,
+                                "appId" to extraMap["appId"],
+                                "params" to extraMap["params"],
+                            )
+                        )
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
+                                    override fun reply(message: String?) {
+                                        try {
+                                            if (message != null) {
+                                                logger.info("miniappWithParams reply${message}")
+                                                val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
+                                                val map = appResponse?.data as? Map<*, *>
+                                                map?.let {
+                                                    val response = JSResponse("0", "success", mutableMapOf(
+                                                        MiniAppConstants.IS_STARTED to map[MiniAppConstants.IS_STARTED]))
+                                                    scope.launch(Dispatchers.Main) {
+                                                        handler.complete(JsonUtil.toJson(response))
+                                                    }
+                                                }
+                                            }
+                                        } catch (e:Exception){
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                })
+                            }
                         }
                     }
                     else -> {}

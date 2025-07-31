@@ -42,6 +42,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_SHARE_SIDE
 import com.ct.ertclib.dc.core.data.screenshare.xml.PointBean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,7 +94,7 @@ class SketchView : View {
     var currentDrawingInfo: DrawingInfo? = null
 
     private var mSketchInfoList = CopyOnWriteArrayList<SketchBean>()
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     constructor(context: Context?) : super(context) {
         init()
@@ -198,15 +199,15 @@ class SketchView : View {
                     mLocalPaint.color = getPaintColor()
                     currentDrawingInfo = DrawingInfo()
                         .apply {
-                        this.color = ColorUtils.int2ArgbString(getPaintColor())
-                        this.erase = mCurrType == MODE.MODE_ERASE
-                        this.width = mLocalPathSize
-                        this.points = PointsInfo()
-                            .apply {
-                            pointS = mutableListOf()
+                            this.color = ColorUtils.int2ArgbString(getPaintColor())
+                            this.erase = mCurrType == MODE.MODE_ERASE
+                            this.width = mLocalPathSize
+                            this.points = PointsInfo()
+                                .apply {
+                                    pointS = mutableListOf()
+                                }
+                            this.points.pointS.add(PointBean(x, y))
                         }
-                        this.points.pointS.add(PointBean(x, y))
-                    }
                 }
 
                 MotionEvent.ACTION_UP -> {

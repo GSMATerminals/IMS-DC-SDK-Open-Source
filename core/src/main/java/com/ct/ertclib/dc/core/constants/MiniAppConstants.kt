@@ -53,10 +53,13 @@ object MiniAppConstants {
     const val FUNCTION_GET_FILE_INFO = "getFileInfo"
     const val FUNCTION_GET_FILE_INFO_ASYNC = "getFileInfoAsync"
     const val FUNCTION_SAVE_UPDATE_KEY_VALUE = "saveUpdateKeyValue"
+    const val FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY = "saveUpdateKeyValueWithExpiry"
     const val FUNCTION_GET_KEY_VALUE = "getKeyValue"
     const val FUNCTION_DELETE_KEY_VALUE = "deleteKeyValue"
     const val FUNCTION_PLAY_VOICE = "playVoice"
     const val FUNCTION_STOP_PLAY_VOICE = "stopPlayVoice"
+    const val FUNCTION_QUICK_SEARCH_FILE = "quickSearchFile"
+    const val FUNCTION_QUICK_SEARCH_KEY_WORDS = "quickSearchFileWithKeyWords"
 
     //function for miniapp
     const val FUNCTION_GET_MINI_APP_INFO = "getMiniAppInfo"
@@ -82,6 +85,7 @@ object MiniAppConstants {
     const val FUNCTION_IS_SPEAKERPHONE_ON = "isSpeakerphoneOn"
     const val FUNCTION_SET_MUTED = "setMuted"
     const val FUNCTION_IS_MUTED = "isMuted"
+    const val FUNCTION_ANSWER = "answer"
 
     //function for screen share
     const val FUNCTION_START_SCREEN_SHARE = "startScreenShare"
@@ -138,11 +142,13 @@ object MiniAppConstants {
     const val GET_CONTACT_LIST_LIMIT_PARAM = "limit"
     const val KEY_PARAM = "key"
     const val VALUE_PARAM = "value"
+    const val TTL = "ttl"
     const val DIGIT = "digit"
     const val SPEAKERPHONE_ON = "speakerphoneOn"
     const val MUTED = "muted"
     const val IS_SPEAKERPHONE_ON = "isSpeakerphoneOn"
     const val IS_MUTED = "isMuted"
+    const val IS_STARTED = "isStarted"
 
     const val LICENSE = "license"
     const val API = "api"

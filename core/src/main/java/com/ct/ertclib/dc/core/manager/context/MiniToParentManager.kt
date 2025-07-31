@@ -58,6 +58,7 @@ import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.ArrayList
@@ -76,7 +77,7 @@ class MiniToParentManager : IMiniToParentManager {
 
     private val logger = Logger.getLogger(TAG)
     private var appServiceImpl: IMiniToParent? = null
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var isBind = false
 
     override fun bindService(context: Context) {

@@ -18,18 +18,24 @@ package com.ct.ertclib.dc.core.dispatcher.appservice
 
 
 import android.content.Context
+import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_MOVE_TO_FRONT
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REFRESH_PERMISSION
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REQUEST_START_ADVERSE_APP
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_START_APP
+import com.ct.ertclib.dc.core.constants.MiniAppConstants
+import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.miniapp.AppRequest
+import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.port.dispatcher.IAppServiceEventDispatcher
+import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -37,7 +43,7 @@ import org.koin.core.component.inject
 class CommonAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
 
     private val permissionUseCase: IPermissionUseCase by inject()
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val applicationContext: Context by inject()
 
     override fun dispatchEvent(telecomCallId: String, appId: String, appRequest: AppRequest, iMessageCallback: IMessageCallback?) {
@@ -57,9 +63,24 @@ class CommonAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
             ACTION_START_APP -> {
                 val callId = appRequest.map["telecomCallId"]
                 val appId = appRequest.map["appId"]
+                val params = appRequest.map["params"]
                 callId.let {
                     MiniAppManager.getAppPackageManager(it as String)
-                        ?.startMiniApp(appId as String, null)
+                        ?.startMiniApp(appId as String, object :IStartAppCallback{
+                            override fun onStartResult(
+                                appId: String,
+                                isSuccess: Boolean,
+                                reason: Reason?
+                            ) {
+                                val replayMessage = AppResponse(
+                                    CommonConstants.APP_RESPONSE_CODE_SUCCESS,
+                                    CommonConstants.APP_RESPONSE_MESSAGE_SUCCESS,
+                                    mapOf(
+                                        MiniAppConstants.IS_STARTED to isSuccess)
+                                ).toJson()
+                                iMessageCallback?.reply(replayMessage)
+                            }
+                        },isStartByOthers = true, startByOthersParams = params?.toString())
                 }
             }
         }

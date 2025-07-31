@@ -53,6 +53,7 @@ import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -65,7 +66,7 @@ class SketchBoardUseCase(
     private val screenShareSketchManager: IScreenShareSketchManager,
     private val parentToMiniNotifier: IParentToMiniNotify,
     private val screenShareUseCase: IScreenShareUseCase
-    ): ISketchBoardUseCase, KoinComponent {
+): ISketchBoardUseCase, KoinComponent {
 
     companion object {
         private const val TAG = "SketchBoardUseCase"
@@ -77,7 +78,7 @@ class SketchBoardUseCase(
     private var appId = ""
     private val logger = Logger.getLogger(TAG)
     private val applicationContext: Context by inject()
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     //传递给终端，方便终端计算视频流信息的坐标点
     private var remoteScreenWidth: Int = 0
     private var remoteScreenHeight: Int = 0
@@ -163,7 +164,7 @@ class SketchBoardUseCase(
 
     private fun requestVideoInfo() {
         LogUtils.debug(TAG, "requestVideoInfo")
-        ExpandingCapacityManager.request(
+        ExpandingCapacityManager.instance.request(
             applicationContext,
             TAG,
             TAG,
@@ -213,7 +214,7 @@ class SketchBoardUseCase(
         modules.add(MODULE_NEW_CALL_SDK)
         val providerModules = ConcurrentHashMap<String, ArrayList<String>>()
         providerModules[ExpandingCapacityManager.OEM] = modules
-        ExpandingCapacityManager.registerECListener(
+        ExpandingCapacityManager.instance.registerECListener(
             TAG,
             TAG,
             providerModules,
@@ -254,7 +255,7 @@ class SketchBoardUseCase(
 
     private fun unRegisterETEC() {
         LogUtils.debug(TAG, "unRegisterETEC")
-        ExpandingCapacityManager.unregisterECListener(applicationContext,
+        ExpandingCapacityManager.instance.unregisterECListener(applicationContext,
             TAG,
             TAG
         )

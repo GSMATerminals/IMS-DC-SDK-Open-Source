@@ -57,6 +57,6 @@
 
     <string name="expanded_menu_title">我的小程序</string>
 
-    <string name="toast_download_mini_app_failed">小程序下载失败，请稍后再试</string>
+    <string name="toast_download_mini_app_failed">小程序下载失败</string>
     <string name="recently_used_mini_app">本次通话中使用的小程序</string>
 </resources>

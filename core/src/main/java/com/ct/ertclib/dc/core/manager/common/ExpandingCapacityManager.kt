@@ -27,23 +27,30 @@ import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.oemec.OemEC
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 
-object ExpandingCapacityManager {
+class ExpandingCapacityManager {
+    companion object {
+        const val CT = "CT"
+        const val CM = "CM"
+        const val CU = "CU"
+        const val OEM = "OEM"
+        private const val TAG = "ExpandingCapacityManager"
 
-    private const val TAG = "ExpandingCapacityManager"
+        val instance: ExpandingCapacityManager by lazy {
+            ExpandingCapacityManager()
+        }
+    }
     private val sLogger: Logger = Logger.getLogger(TAG)
-
-    const val CT = "CT"
-    const val CM = "CM"
-    const val CU = "CU"
-    const val OEM = "OEM"
 
     private val mECListenerMap = ConcurrentHashMap<String, IExpandingCapacityListener>()
     private val mECModulesMap = ConcurrentHashMap<String, ConcurrentHashMap<String, ArrayList<String>>>()//防止能力提供者胡乱回调
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val mProviderMap = ConcurrentHashMap<String, IEC>()
 
     // 哪通电话的哪个小程序要使用哪个能力提供者的哪些能力
@@ -117,7 +124,7 @@ object ExpandingCapacityManager {
 
 
     // 其他能力提供者能关联callId和appId
-    class ECCallback(val provider: String) : IECCallback {
+    inner class ECCallback(val provider: String) : IECCallback {
         override fun onCallback(callId:String?, appId:String?,content: String?) {
             sLogger.debug("ECCallback onCallback content: $content")
             dealCallback(callId,appId,this.provider,content)

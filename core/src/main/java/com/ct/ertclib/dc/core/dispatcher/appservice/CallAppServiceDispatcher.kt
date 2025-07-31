@@ -42,6 +42,9 @@ class CallAppServiceDispatcher : IAppServiceEventDispatcher {
             CommonConstants.ACTION_HANGUP -> {
                 MiniAppManager.hangUp(appRequest.map["telecomCallId"] as String)
             }
+            CommonConstants.ACTION_ANSWER -> {
+                MiniAppManager.answer(appRequest.map["telecomCallId"] as String)
+            }
             CommonConstants.ACTION_PLAY_DTMF_TONE -> {
                 MiniAppManager.playDtmfTone(appRequest.map["telecomCallId"] as String,(appRequest.map[MiniAppConstants.DIGIT] as String).first())
             }

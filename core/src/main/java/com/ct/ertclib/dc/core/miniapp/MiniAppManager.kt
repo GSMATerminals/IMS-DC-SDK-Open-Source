@@ -72,6 +72,7 @@ import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -116,6 +117,9 @@ class MiniAppManager(private val callInfo: CallInfo) :
 
         fun hangUp(telecomCallId: String){
             mCallsManager?.hangUp(telecomCallId)
+        }
+        fun answer(telecomCallId: String){
+            mCallsManager?.answer(telecomCallId)
         }
         fun playDtmfTone(telecomCallId: String,digit: Char){
             mCallsManager?.playDtmfTone(telecomCallId,digit)
@@ -186,7 +190,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     private var mAutoloadPreCallMiniApp: MiniAppInfo? = null
     @Volatile
     private var mCallState: Int = 0
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private var mMiniAppOwnADCImpl:MiniAppOwnADCImpl? = null
 
@@ -201,48 +205,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
             sLogger.debug("$mTag init")
         }
 
-        val fileSahre = MiniAppInfo(CommonConstants.DC_APPID_FILESHARE_OLD,
-            "文件传输",
-            null,
-            false,
-            true,
-            callInfo.telecomCallId,
-            "",
-            false,
-            false,
-            callInfo.myNumber,
-            null,
-            "INCALL",
-            "",
-            callInfo.remoteNumber,
-            callInfo.slotId,
-            1,
-            MiniAppStatus.INSTALLED,
-            false,
-            null)
-        mNativeAppMap[CommonConstants.DC_APPID_FILESHARE_OLD] = fileSahre
-
-//        val sketchpad = MiniAppInfo("sketchpad",
-//            "标记",
-//            null,
-//            false,
-//            true,
-//            callInfo.telecomCallId,
-//            "",
-//            false,
-//            false,
-//            callInfo.myNumber,
-//            null,
-//            "INCALL",
-//            "",
-//            callInfo.remoteNumber,
-//            callInfo.slotId,
-//            1,
-//            MiniAppStatus.INSTALLED,
-//            false,
-//            null)
-//        mNativeAppMap["sketchpad"] = sketchpad
-
         mMiniAppOwnADCImpl = MiniAppOwnADCImpl(object :MiniAppOwnADCImpl.OnADCParamsOk{
             override fun onCreateADCParams(
                 appId: String,
@@ -255,6 +217,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     fun getMiniAppInfo(appId: String?): MiniAppInfo? {
+        // todo 如果本端小程序拉起，不一定能找到
         if (mPassivelyMiniAppMap[appId]!=null){
             return mPassivelyMiniAppMap[appId]
         }
@@ -365,6 +328,11 @@ class MiniAppManager(private val callInfo: CallInfo) :
         val miniAppInfo = getMiniAppInfo(appId)
         if (miniAppInfo == null) {
             if (sLogger.isDebugActivated) sLogger.debug("$mTag handleStartMiniApp not found app")
+            handleStartMiniAppFailed(appId, Reason.UNKNOWN)
+            return
+        }
+        if (!(supportScene(miniAppInfo) && supportDC(miniAppInfo) && supportPhase(miniAppInfo))) {
+            if (sLogger.isDebugActivated) sLogger.debug("$mTag handleStartMiniApp not support")
             handleStartMiniAppFailed(appId, Reason.UNKNOWN)
             return
         }
@@ -513,7 +481,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
     }
 
-    fun startMiniApp(appId: String, startCallback: IStartAppCallback?, startType: Int = ACTIVE_START_TYPE) {
+    fun startMiniApp(appId: String, startCallback: IStartAppCallback?, startType: Int = ACTIVE_START_TYPE,isStartByOthers:Boolean = false,startByOthersParams:String? = null) {
         if (sLogger.isDebugActivated) {
             sLogger.debug("startMiniApp appId: $appId, startType: $startType")
         }
@@ -521,6 +489,8 @@ class MiniAppManager(private val callInfo: CallInfo) :
             mStartAppCallback[appId] = startCallback
         }
         getMiniAppInfo(appId)?.isActiveStart = (startType == ACTIVE_START_TYPE)
+        getMiniAppInfo(appId)?.isStartByOthers = isStartByOthers
+        getMiniAppInfo(appId)?.startByOthersParams = startByOthersParams
         val startAppMsg = mHandler.obtainMessage(CONST_START_MINI_APP)
         startAppMsg.obj = appId
         startAppMsg.sendToTarget()
@@ -624,9 +594,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     private fun handleStartMiniAppFailed(appId: String?, reason: Reason) {
-        if (isStartOldVersionMiniApp(appId)) {
-            return
-        }
         val miniAppInfo = getMiniAppInfo(appId)
         if (miniAppInfo == null) {
             sLogger.debug("$mTag handleStartMiniAppFailed app not found")
@@ -634,16 +601,17 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
         miniAppInfo.appStatus = MiniAppStatus.STOPPED
         mStartAppCallback[appId] ?: return
-
-        sLogger.debug("$mTag notify app start result")
-        mStartAppCallback[appId]!!.onStartResult(appId!!, false, reason)
-        mStartAppCallback.remove(appId)
+        sLogger.debug("$mTag handleStartMiniAppFailed notify app start result")
+        scope.launch(Dispatchers.Main){
+            mStartAppCallback[appId]?.onStartResult(appId!!, false, reason)
+            mStartAppCallback.remove(appId)
+        }
     }
 
     private fun handleStartMiniAppSuccess(telecomCallId: String,appId: String?) {
         val miniAppInfo = getMiniAppInfo(appId)
         if (miniAppInfo == null) {
-            sLogger.debug("$mTag handleStartMiniAppFailed app not found")
+            sLogger.debug("$mTag handleStartMiniAppSuccess app not found")
             return
         }
         miniAppInfo.appStatus = MiniAppStatus.STARTED
@@ -656,7 +624,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
 
         mStartAppCallback[appId] ?: return
 
-        sLogger.debug("$mTag notify app start result,miniAppInfo.appProperties: ${miniAppInfo.appProperties}")
+        sLogger.debug("$mTag handleStartMiniAppSuccess notify app start result,miniAppInfo.appProperties: ${miniAppInfo.appProperties}")
         mStartAppCallback[appId]!!.onStartResult(appId!!, true, null)
         mStartAppCallback.remove(appId)
         // 业务发起方发起建立SDK协商机制
@@ -705,27 +673,19 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
     }
 
-    private fun isStartOldVersionMiniApp(appId: String?): Boolean {
-        val miniAppInfo = getMiniAppInfo(appId) ?: return false
-
-        if (miniAppInfo.path.isNullOrEmpty()) {
-            return false
-        }
-
-        sLogger.info("$mTag isStartOldVersionMiniApp-appId:$appId")
-        startMiniAppInternal(miniAppInfo)
-        return true
-    }
-
     private fun startMiniAppInternal(miniAppInfo: MiniAppInfo) {
         if (isNativeMiniApp(miniAppInfo.appId)) {
             sLogger.info("$mTag startMiniAppInternal-The app is native, not start it")
             return
         }
         sLogger.debug("$mTag startMiniAppInternal miniAppManager:$miniAppStartManager")
+
         miniAppStartManager?.startMiniApp(Utils.getApp(), miniAppInfo, callInfo,object : IMiniAppStartCallback{
             override fun onMiniAppStarted() {
                 handleStartMiniAppSuccess(miniAppInfo.callId,miniAppInfo.appId)
+            }
+            override fun onMiniAppStartFailed(reason: Reason) {
+                handleStartMiniAppFailed(miniAppInfo.appId, reason)
             }
         })
     }
@@ -1157,7 +1117,10 @@ class MiniAppManager(private val callInfo: CallInfo) :
                     true,
                     null,
                     0,
-                    isFromBDC100)
+                    isFromBDC100,
+                    false,
+                    false,
+                    null)
             }
             ConfirmActivity.startConfirm(
                 Utils.getApp(), Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
@@ -1231,7 +1194,10 @@ class MiniAppManager(private val callInfo: CallInfo) :
                     true,
                     null,
                     0,
-                    imsDataChannel.dcLabel.startsWith("remote_"))
+                    imsDataChannel.dcLabel.startsWith("remote_"),
+                    false,
+                    false,
+                    null)
             }
             startMiniAppByAdverse(telecomCallId, miniAppInfo,imsDataChannel.dcLabel.startsWith("remote_"))
         }

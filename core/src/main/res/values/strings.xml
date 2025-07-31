@@ -70,6 +70,6 @@
 
     <string name="expanded_menu_title">My miniApps</string>
 
-    <string name="toast_download_mini_app_failed">The download of the mini program failed. Please try again later.</string>
+    <string name="toast_download_mini_app_failed">The download of the mini program failed. </string>
     <string name="recently_used_mini_app">The Mini App used in this call</string>
 </resources>

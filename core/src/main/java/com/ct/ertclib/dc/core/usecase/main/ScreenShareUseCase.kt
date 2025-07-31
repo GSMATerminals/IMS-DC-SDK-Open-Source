@@ -115,7 +115,7 @@ class ScreenShareUseCase(
 
     override fun setPrivacyModeEnabled(isEnable: Boolean) {
         LogUtils.debug(TAG, "setPrivacyModeEnabled: isEnabled: $isEnable")
-        ExpandingCapacityManager.request(
+        ExpandingCapacityManager.instance.request(
             applicationContext,
             TAG,
             TAG,
@@ -148,7 +148,7 @@ class ScreenShareUseCase(
         modules.add(MODULE_SCREEN_SHARE)
         val providerModules = ConcurrentHashMap<String, ArrayList<String>>()
         providerModules[ExpandingCapacityManager.OEM] = modules
-        ExpandingCapacityManager.registerECListener(
+        ExpandingCapacityManager.instance.registerECListener(
             TAG,
             TAG,
             providerModules,
@@ -161,6 +161,6 @@ class ScreenShareUseCase(
 
     private fun unRegisterETEC() {
         LogUtils.debug(TAG, "unRegisterETEC")
-        ExpandingCapacityManager.unregisterECListener(applicationContext, TAG, TAG)
+        ExpandingCapacityManager.instance.unregisterECListener(applicationContext, TAG, TAG)
     }
 }

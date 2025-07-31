@@ -28,6 +28,7 @@ import com.newcalllib.expandingCapacity.IExpandingCapacityCallback
 import com.ct.oemec.utils.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class OemEC: IEC {
@@ -39,7 +40,7 @@ class OemEC: IEC {
     private var callback: IECCallback? = null
     private var mOEMBindECServiceResult = false
     private var mOEMExpandingCapacity: IExpandingCapacity? = null
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var mOEMECServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             sLogger.info("bind oemEC onServiceConnected ")

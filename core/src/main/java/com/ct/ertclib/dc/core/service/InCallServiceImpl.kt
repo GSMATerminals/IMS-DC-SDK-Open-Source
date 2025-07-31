@@ -16,14 +16,21 @@
 
 package com.ct.ertclib.dc.core.service
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.telecom.Call
 import android.telecom.InCallService
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
+import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT_KEY
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_KEYS_KEY
 import com.ct.ertclib.dc.core.utils.common.CallUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.manager.call.BDCManager
@@ -31,10 +38,12 @@ import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.manager.call.DCManager
 import com.ct.ertclib.dc.core.manager.call.NewCallsManager
+import com.ct.ertclib.dc.core.manager.common.FileManager
 import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.utils.logger.LogConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -56,7 +65,7 @@ class InCallServiceImpl : InCallService(), KoinComponent {
     private var hasInit = false
     private val activityManager: IActivityManager by inject()
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val mCallsMap = ConcurrentHashMap<String, Call>()
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -64,6 +73,37 @@ class InCallServiceImpl : InCallService(), KoinComponent {
         sLogger.info("InCallServiceImpl onBind")
         // 不干涉通话流程，在这里更新一下版本号，在检查权限时做判断。可能在下次通话时才会提示用户。
         SDKPermissionUtils.updatePrivacyVersion()
+        // 清除小程序SP过期数据
+        scope.launch(Dispatchers.IO) {
+            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
+            val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+            var builder = StringBuilder()
+            keys.forEach {
+                try {
+                    val key = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[0]
+                    val expiryTime = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[1].toLong()
+                    if (System.currentTimeMillis() < expiryTime){
+                        if (builder.isNotEmpty()){
+                            builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                        }
+                        builder.append(it)
+                    } else {
+                        SPUtils.getInstance().remove(key)
+                    }
+                } catch (e: Exception){
+                    e.printStackTrace()
+                }
+            }
+            SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+        }
+        scope.launch(Dispatchers.IO) {
+            if (ContextCompat.checkSelfPermission(
+                    this@InCallServiceImpl,
+                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED){// 如果已经有权限了，就扫描更新
+                FileManager.instance.updateFiles(this@InCallServiceImpl)
+            }
+        }
         return super.onBind(intent)
     }
 

@@ -13,8 +13,8 @@
         <FrameLayout
             android:background="@drawable/mini_apps_view_bg"
             android:layout_gravity="center"
-            android:layout_width="40dp"
-            android:layout_height="40dp">
+            android:layout_width="60dp"
+            android:layout_height="60dp">
             <ImageView
                 android:layout_margin="6dp"
                 android:id="@+id/miniapp_icon"

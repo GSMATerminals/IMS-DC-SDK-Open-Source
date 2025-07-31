@@ -28,6 +28,7 @@ data class MiniAppProperties(
     val windowStyle: WindowStyle?,
     val shouldCreateControlADC: Boolean?,// 用户点击启动后，是否允许SDK创建控制ADC
     val shouldStartRemoteApp: Boolean?,// 用户点击启动后，是否请求对端也启动小程序，shouldCreateControlADC为true时有效
+    val canStartedByOthers: Boolean?,// 是否允许被本地其他小程序启动
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -36,6 +37,7 @@ data class MiniAppProperties(
         parcel.readInt(),
         parcel.readString(),
         parcel.readParcelable(WindowStyle::class.java.classLoader),
+        parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte()
     )
@@ -49,6 +51,7 @@ data class MiniAppProperties(
         parcel.writeParcelable(windowStyle, flags)
         parcel.writeByte(if (shouldCreateControlADC == true) 1 else 0)
         parcel.writeByte(if (shouldStartRemoteApp == true) 1 else 0)
+        parcel.writeByte(if (canStartedByOthers == true) 1 else 0)
     }
 
     override fun describeContents(): Int {

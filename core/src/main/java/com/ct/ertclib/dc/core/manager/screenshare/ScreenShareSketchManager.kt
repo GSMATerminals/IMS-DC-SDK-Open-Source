@@ -42,6 +42,7 @@ import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class ScreenShareSketchManager(
@@ -76,7 +77,7 @@ class ScreenShareSketchManager(
     private var rotation = 0
     private var rectF = RectF()
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override fun setSketchWindowListener(listener: ISketchWindowListener) {
         sketchWindowListener = listener

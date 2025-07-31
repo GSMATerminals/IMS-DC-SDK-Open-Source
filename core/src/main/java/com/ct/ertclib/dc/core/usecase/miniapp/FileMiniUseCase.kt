@@ -32,23 +32,31 @@ import com.blankj.utilcode.util.ZipUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.common.PathManager
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT_KEY
+import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_KEYS_KEY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.KEY_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_MESSAGE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAGE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.TTL
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.VALUE_PARAM
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
+import com.ct.ertclib.dc.core.data.model.FileEntity
+import com.ct.ertclib.dc.core.manager.common.FileManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -73,7 +81,7 @@ class FileMiniUseCase(
     private val logger = Logger.getLogger(TAG)
     private var mFileInputStream: InputStream? = null
     private var mFileOutputStream: OutputStream? = null
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var startTime: Long = 0
     private var fileSize: Long = 0
     private var saveFilePath: String = ""
@@ -86,10 +94,14 @@ class FileMiniUseCase(
         logger.info("getLocation")
         miniToParentManager.getMiniAppInfo()?.let {
             if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_LOCATION))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
                 logger.warn("getLocation, permission not granted, return")
                 return
             }
         } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
             logger.warn("getLocation, appInfo is null, return")
             return
         }
@@ -104,10 +116,14 @@ class FileMiniUseCase(
         logger.info("selectFile")
         miniToParentManager.getMiniAppInfo()?.let {
             if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
                 logger.warn("selectFile, permission not granted, return")
                 return
             }
         } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
             logger.warn("selectFile, appInfo is null, return")
             return
         }
@@ -145,10 +161,14 @@ class FileMiniUseCase(
         logger.info("saveFile")
         miniToParentManager.getMiniAppInfo()?.let {
             if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
                 logger.warn("saveFile, permission not granted, return")
                 return
             }
         } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
             logger.warn("saveFile, appInfo is null, return")
             return
         }
@@ -183,10 +203,14 @@ class FileMiniUseCase(
         logger.info("readFile")
         miniToParentManager.getMiniAppInfo()?.let {
             if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
                 logger.warn("readFile, permission not granted, return")
                 return
             }
         } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
             logger.warn("readFile, appInfo is null, return")
             return
         }
@@ -245,10 +269,14 @@ class FileMiniUseCase(
         logger.info("decompressFile")
         miniToParentManager.getMiniAppInfo()?.let {
             if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
                 logger.warn("decompressFile, permission not granted, return")
                 return
             }
         } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
             logger.warn("decompressFile, appInfo is null, return")
             return
         }
@@ -913,6 +941,11 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    @Deprecated(
+        message = "This function is deprecated. Use saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? instead.",
+        replaceWith = ReplaceWith("saveUpdateKeyValueWithExpiry"),
+        level = DeprecationLevel.WARNING
+    )
     override fun saveUpdateKeyValue(context: Context, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         val value = params[VALUE_PARAM]?.toString()
@@ -931,14 +964,67 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? {
+        val key = params[KEY_PARAM]?.toString()
+        val value = params[VALUE_PARAM]?.toString()
+        val ttl = params[TTL]?.toString()
+        if (key.isNullOrEmpty()){
+            logger.warn("saveKeyValue, param key is null, return")
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+        }
+        if (value.isNullOrEmpty()){
+            logger.warn("saveKeyValue, param value is null, return")
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+        }
+        if (ttl.isNullOrEmpty()){
+            logger.warn("saveKeyValue, param ttl is null, return")
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+        }
+        miniToParentManager.getMiniAppInfo()?.let{
+            SPUtils.getInstance().put(it.appId+key,value)
+            // 存有效期，用于在SDK启动的时候清除过期的key
+            val expiryTime = System.currentTimeMillis() + ttl.toLong()
+            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
+            var builder = StringBuilder(keysStr)
+            if (builder.isNotEmpty()){
+                builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+            }
+            builder.append("${it.appId}${key}${MINI_APP_SP_EXPIRY_SPLIT_KEY}${expiryTime}")
+            SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+        }
+        val response = JSResponse("0", "success", null)
+        return JsonUtil.toJson(response)
+    }
+
     override fun deleteKeyValue(context: Context, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         if (key.isNullOrEmpty()){
             logger.warn("saveKeyValue, param key is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        miniToParentManager.getMiniAppInfo()?.let{
-            SPUtils.getInstance().remove(it.appId+key)
+        miniToParentManager.getMiniAppInfo()?.let{ appInfo ->
+            SPUtils.getInstance().remove(appInfo.appId+key)
+            scope.launch(Dispatchers.IO) {
+                val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
+                val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                var builder = StringBuilder()
+                keys.forEach {
+                    try {
+                        val appIdKey = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[0]
+                        if (appIdKey === appInfo.appId+key){
+                            SPUtils.getInstance().remove(key)
+                        } else {
+                            if (builder.isNotEmpty()){
+                                builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                            }
+                            builder.append(it)
+                        }
+                    } catch (e: Exception){
+                        e.printStackTrace()
+                    }
+                }
+                SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+            }
         }
         val response = JSResponse("0", "success", null)
         return JsonUtil.toJson(response)
@@ -1005,6 +1091,114 @@ class FileMiniUseCase(
         }
         logger.warn("getKeyValue, getMiniAppInfo is null, return")
         return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+    }
+
+    override fun quickSearchFile(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        logger.info("searchFile")
+        miniToParentManager.getMiniAppInfo()?.let {
+            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
+                logger.warn("searchFile, permission not granted, return")
+                return
+            }
+        } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
+            logger.warn("searchFile, appInfo is null, return")
+            return
+        }
+        val name = params["name"]
+        if (name == null) {
+            val response = JSResponse("1", "searchFile name is null", "")
+            handler.complete(JsonUtil.toJson(response))
+            logger.info("JSApi asyn searchFile name is null")
+            return
+        }
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                if (!FileManager.instance.hasFileIndex()){// 没有扫描过，第一次扫描；后面将在InCallService中每次bind的时候更新，是在另一个进程中，不共享变量，但共享数据库。
+                    FileManager.instance.updateFiles(context)
+                }
+
+                val list = FileManager.instance.searchFilesByName(name.toString())
+                val result = mutableListOf<HashMap<String,Any>>()
+                list.forEach {
+                    result.add(
+                        hashMapOf(
+                            "name" to it.name,
+                            "path" to it.path
+                        )
+                    )
+                }
+                scope.launch {
+                    withContext(Dispatchers.Main) {
+                        val response = JSResponse("0", "success", result)
+                        handler.complete(JsonUtil.toJson(response))
+                    }
+                }
+            }
+        }
+    }
+
+    override fun quickSearchFileWithKeyWords(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        miniToParentManager.getMiniAppInfo()?.let {
+            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
+                logger.warn("quickSearchFileWithKeyWords, permission not granted, return")
+                return
+            }
+        } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
+            logger.warn("quickSearchFileWithKeyWords, appInfo is null, return")
+            return
+        }
+        val keyWords = params["keywords"].toString()
+        val keyWordsList = JsonUtil.fromJson(keyWords, Array<String>::class.java)?.toList()
+        keyWordsList ?: run {
+            LogUtils.debug(TAG, "quickSearchFileWithKeyWords keywords is null")
+            return
+        }
+        if (!FileManager.instance.hasFileIndex()) {// 没有扫描过，第一次扫描
+            FileManager.instance.updateFiles(context)
+        }
+        val resultList = mutableListOf<FileEntity>()
+        if (keyWordsList.size == 1) {
+            resultList.addAll(FileManager.instance.searchFilesByName(keyWordsList[0]))
+        } else {
+            val resultHashMap = mutableMapOf<String, FileEntity>()
+            keyWordsList.forEach { keyWord ->
+                val fileList = FileManager.instance.searchFilesByName(keyWord)
+                if (fileList.isEmpty()) {
+                    return@forEach
+                }
+                val fileMap = fileList.associateBy { it.path }
+                if (resultHashMap.isEmpty()) {
+                    resultHashMap.putAll(fileMap)
+                } else {
+                    val intersectMap = fileMap.filter { resultHashMap.contains(it.key) }
+                    resultHashMap.clear()
+                    resultHashMap.putAll(intersectMap)
+                }
+            }
+            resultList.addAll(resultHashMap.values)
+        }
+        scope.launch {
+            withContext(Dispatchers.Main) {
+                val response = JSResponse("0", "success", JsonUtil.toJson(resultList))
+                handler.complete(JsonUtil.toJson(response))
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")

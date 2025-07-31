@@ -25,9 +25,9 @@ import java.util.HashMap
 
 @SuppressLint("StaticFieldLeak")
 object TestImsDataChannelManager {
-    private val TAG = "TestNewCall"
+    private val TAG = "TestImsDataChannelManager"
     private val sLogger = Logger.getLogger(TAG)
-    val mBdcMaps: HashMap<String, TestImsDataChannelImpl> = HashMap()
+    val mDCMaps: HashMap<String, TestImsDataChannelImpl> = HashMap()
     var mSoltId: Int? = null
     var mCallId: String? = null
     var mCallback: IImsDataChannelCallback? = null
@@ -35,7 +35,7 @@ object TestImsDataChannelManager {
 
     @SuppressLint("StaticFieldLeak")
     private fun openBdc(soltId: Int, callId: String) {
-        if (mBdcMaps["bdc"] != null) {
+        if (mDCMaps["bdc"] != null) {
             sLogger.info("bdc is already open, need close first")
             return
         }
@@ -51,25 +51,25 @@ object TestImsDataChannelManager {
         imsDataChannelImpl.setDcLabel("bdc")
         imsDataChannelImpl.setStreamId("0")
         imsDataChannelImpl.setDcStatus(ImsDCStatus.DC_STATE_OPEN)
-        mBdcMaps["bdc"] = imsDataChannelImpl
+        mDCMaps["bdc"] = imsDataChannelImpl
         notifyBDCResponse(mCallback)
     }
 
     private fun notifyBDCResponse(callback: IImsDataChannelCallback?) {
-        if (mBdcMaps["bdc"] == null) {
+        if (mDCMaps["bdc"] == null) {
             sLogger.info("notifyBDCResponse BDC IS null")
             return
         }
         sLogger.info("callback:$callback")
         try {
-            callback?.onBootstrapDataChannelResponse(mBdcMaps["bdc"])
+            callback?.onBootstrapDataChannelResponse(mDCMaps["bdc"])
         } catch (e: Exception) {
             sLogger.error("notifyBDCResponse error", e)
         }
     }
 
     fun closeBdc(soltId: Int, callId: String) {
-        val imsDataChannelImpl = mBdcMaps["bdc"]
+        val imsDataChannelImpl = mDCMaps["bdc"]
         if (imsDataChannelImpl == null) {
             sLogger.info("close bdc is null")
         } else if (imsDataChannelImpl.isClosed()) {
@@ -77,19 +77,19 @@ object TestImsDataChannelManager {
         } else {
             if (soltId == imsDataChannelImpl.slotId && callId == imsDataChannelImpl.telecomCallId) {
                 imsDataChannelImpl.setDcStatus(ImsDCStatus.DC_STATE_CLOSED)
-                mBdcMaps.clear()
+                mDCMaps.clear()
             }
         }
 
     }
 
     fun onUnbind() {
-        mBdcMaps.clear()
+        mDCMaps.clear()
         mCallback = null
     }
 
     fun close(tag: String) {
-        mBdcMaps.remove(tag)
+        mDCMaps.remove(tag)
     }
 
     class TestServiceController : IImsDataChannelServiceController.Stub() {
@@ -103,7 +103,7 @@ object TestImsDataChannelManager {
 
             val list = ArrayList<String>()
             dcIds?.forEach {
-                if (mBdcMaps[it] == null) {
+                if (mDCMaps[it] == null) {
                     list.add(it)
                 }
             }
@@ -156,7 +156,7 @@ object TestImsDataChannelManager {
             return
         }
         dcIds.forEach {
-            var imsDataChannelImpl = mBdcMaps[it]
+            var imsDataChannelImpl = mDCMaps[it]
             if (imsDataChannelImpl == null) {
                 sLogger.info("notifyADCResponse imsDataChannelImpl is null, create it")
                 imsDataChannelImpl =
@@ -165,9 +165,9 @@ object TestImsDataChannelManager {
                 imsDataChannelImpl.setSlotId(mSoltId!!)
                 imsDataChannelImpl.setTelecomCallId(mCallId!!)
                 imsDataChannelImpl.setDcLabel(it)
-                imsDataChannelImpl.setStreamId("1000")
+                imsDataChannelImpl.setStreamId((1000+(mDCMaps.size)*2).toString())
                 imsDataChannelImpl.setDcStatus(dcStateConnecting)
-                mBdcMaps[it] = imsDataChannelImpl
+                mDCMaps[it] = imsDataChannelImpl
             } else if (ImsDCStatus.DC_STATE_CONNECTING != dcStateConnecting) {
                 imsDataChannelImpl.setDcStatus(dcStateConnecting)
             }

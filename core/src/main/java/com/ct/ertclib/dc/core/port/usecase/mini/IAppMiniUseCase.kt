@@ -66,4 +66,6 @@ interface IAppMiniUseCase {
     fun setMuted(context: Context, params: Map<String, Any>): String
 
     fun isMuted(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun answer(context: Context): String?
 }

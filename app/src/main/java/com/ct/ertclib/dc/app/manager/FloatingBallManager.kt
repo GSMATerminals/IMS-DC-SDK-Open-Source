@@ -25,6 +25,7 @@ import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_FLOATING_DISPLAY
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ object FloatingBallManager: KoinComponent {
 
     private val context: Context by inject()
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     @JvmStatic
     fun init() {

@@ -291,7 +291,7 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
                                         providerModules[provider]?.add(module)
                                     }
                                 }
-                                ExpandingCapacityManager.registerECListener(telecomCallId,appId,providerModules,object :IExpandingCapacityListener{
+                                ExpandingCapacityManager.instance.registerECListener(telecomCallId,appId,providerModules,object :IExpandingCapacityListener{
                                     override fun onCallback(content: String?) {
                                         val event = NotifyEvent(
                                             ACTION_EC_CALLBACK,
@@ -307,7 +307,7 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
                         }
                         ACTION_REQUEST_EC -> {
                             val requestStr = JsonUtil.toJson(appRequest.map)
-                            ExpandingCapacityManager.request(this@MiniAppService,telecomCallId,appId,requestStr)
+                            ExpandingCapacityManager.instance.request(this@MiniAppService,telecomCallId,appId,requestStr)
                         }
                         else -> {
                             sLogger.info("other request...")
@@ -349,7 +349,7 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
                 mCallStatusListenerMap.remove(appId)
             }
             telecomCallId?.let {
-                ExpandingCapacityManager.unregisterECListener(this@MiniAppService,telecomCallId,appId)
+                ExpandingCapacityManager.instance.unregisterECListener(this@MiniAppService,telecomCallId,appId)
             }
         }
 

@@ -24,6 +24,7 @@ import com.ct.ertclib.dc.core.data.event.CloseAdcEvent
 import com.ct.ertclib.dc.core.data.event.UpdateDownloadProgressEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -44,7 +45,7 @@ object StateFlowManager: KoinComponent {
     val permissionAgreeFlow = MutableSharedFlow<Boolean>()
 
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     @JvmStatic
     fun emitUpdateDownloadProgress(event: UpdateDownloadProgressEvent) {

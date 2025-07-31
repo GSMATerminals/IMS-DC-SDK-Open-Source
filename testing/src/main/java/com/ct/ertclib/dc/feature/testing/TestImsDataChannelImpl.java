@@ -23,6 +23,8 @@ import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
+import com.ct.ertclib.dc.core.utils.common.Base64Utils;
+import com.ct.ertclib.dc.core.utils.common.JsonUtil;
 import com.ct.ertclib.dc.core.utils.logger.Logger;
 import com.ct.ertclib.dc.core.utils.common.FileUtils;
 import com.ct.ertclib.dc.core.common.PathManager;
@@ -49,9 +51,11 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
 
 public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
-    private static final String TAG = "TestNewCall";
+    private static final String TAG = "TestImsDataChannelImpl";
 
     private static final Logger sLogger = Logger.getLogger(TAG);
 
@@ -451,7 +455,13 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
             String request = new String(data, StandardCharsets.UTF_8);
             sLogger.info( "sendBdcData request="+request);
             if (request.contains("applicationlist")) {
-                String[] response = createAppListResponse();
+                String[] split1 = request.split("applicationlist\\?begin-index=");
+                sLogger.info( "sendBdcData split1="+ Arrays.toString(split1));
+                String[] split2 = split1[1].split("&app-num=");
+                String beginIndex = split2[0];
+                String[] split3 = split2[1].split("&sdkVersion=");
+                String pageSize = split3[0];
+                String[] response = createAppListResponse(Integer.parseInt(beginIndex), Integer.parseInt(pageSize));
                 sLogger.debug("sendBdcData response[0]:" + response[0]);
                 byte[] bytes = response[0].getBytes();
                 mImsObserver.onMessage(bytes, bytes.length);
@@ -459,9 +469,27 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
                 byte[] bytes2 = response[1].getBytes();
                 mImsObserver.onMessage(bytes2, bytes2.length);
             } else if (request.contains("applications?appid=")) {
-                String appPath = SPUtils.getInstance().getString("appPath");
-                sLogger.info( "sendBdcData appPath="+appPath);
-                byte[] fileBytes = FileUtils.INSTANCE.getFileBytes(appPath);
+                String zipPath = "";
+                MiniAppInfo miniAppInfo = null;
+                String[] split1 = request.split("applications\\?appid=");
+                String[] split2 = split1[1].split("&sdkVersion=");
+                String appId = split2[0];
+                // 查找appId匹配的zipPath
+                String apps = SPUtils.getInstance().getString("TestMiniAppList");
+                if (!apps.isEmpty()) {
+                    String[] strs = apps.split(",");
+                    for (String str : strs) {
+                        String[] split = str.split("&zipPath=");
+                        String appInfoJsonStr = split[0];
+                        miniAppInfo = JsonUtil.INSTANCE.fromJson(Base64Utils.INSTANCE.decodeFromBase64(appInfoJsonStr), MiniAppInfo.class);
+                        if (miniAppInfo != null && miniAppInfo.getAppId().equals(appId)){
+                            zipPath = split[1];
+                            break;
+                        }
+                    }
+                }
+                sLogger.info( "sendBdcData zipPath="+zipPath);
+                byte[] fileBytes = FileUtils.INSTANCE.getFileBytes(zipPath);
                 if (fileBytes == null) {
                     byte[] bytes = "HTTP/1.1 404 not found\r\n\r\n\r\n".getBytes();
                     mImsObserver.onMessage(bytes, bytes.length);
@@ -470,7 +498,7 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
                 StringBuilder sb = new StringBuilder("HTTP/1.1 200 OK\r\nContent-Type: application/zip\r\nContent-Length: ");
                 sb.append(fileBytes.length);
                 sb.append(STR_RN);
-                sb.append("etag: " + SPUtils.getInstance().getString("eTag") + "\r\n\r\n");
+                sb.append("etag: " + miniAppInfo.getETag() + "\r\n\r\n");
                 byte[] bytes = sb.toString().getBytes();
                 mImsObserver.onMessage(bytes, bytes.length);
                 mImsObserver.onMessage(fileBytes, fileBytes.length);
@@ -483,83 +511,30 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
         return true;
     }
 
-    private String[] createAppListResponse() {
-
+    private String[] createAppListResponse(int beginIndex, int pageSize) {
         ArrayList<MiniAppInfo> miniAppInfoList = new ArrayList<>();
-
-        MiniAppInfo miniAppInfo = new MiniAppInfo(
-                "fileShare",
-                "内容分享",
-                null,
-                false,
-                false,
-                mTelecomCallId,
-                "",
-                false,
-                false,
-                "123456",
-                "/storage/emulated/0/Android/data/com.ct.ertclib.dc.debug/files/dist",
-                "INCALL",
-                "1234",
-                null,
-                1,
-                1,
-                MiniAppStatus.INSTALLED,
-                false,
-                null
-        );
-        miniAppInfoList.add(miniAppInfo);
-
-        MiniAppInfo miniAppInfo2 = new MiniAppInfo(
-                "sketchpad",
-                "标记画图",
-                null,
-                false,
-                false,
-                mTelecomCallId,
-                "",
-                false,
-                false,
-                "123456",
-                "/storage/emulated/0/Android/data/com.ct.ertclib.dc.debug/files/dist",
-                "INCALL",
-                "1234",
-                null,
-                1,
-                1,
-                MiniAppStatus.INSTALLED,
-                false,
-                null
-        );
-        miniAppInfoList.add(miniAppInfo2);
-
-
-
-        if (!TextUtils.isEmpty(SPUtils.getInstance().getString("appPath"))) {
-            MiniAppInfo miniAppInfo3 = new MiniAppInfo(
-                    SPUtils.getInstance().getString("appId"),
-                    SPUtils.getInstance().getString("appName"),
-                    null,
-                    false,
-                    true,
-                    mTelecomCallId,
-                    System.currentTimeMillis()+"",
-                    false,
-                    false,
-                    null,
-                    null,
-                    "INCALL",
-                    "1234",
-                    null,
-                    1,
-                    1,
-                    MiniAppStatus.UNINSTALLED,
-                    false,
-                    null
-            );
-            miniAppInfoList.add(miniAppInfo3);
+        // 读取配置的小程序列表
+        String apps = SPUtils.getInstance().getString("TestMiniAppList");
+        sLogger.info("createAppListResponse apps="+apps);
+        if (!apps.isEmpty()) {
+            int index = 0;
+            String[] strs = apps.split(",");
+            for (String str : strs) {
+                try {
+                    String[] split = str.split("&zipPath=");
+                    String appInfoJsonStr = split[0];
+                    sLogger.info("createAppListResponse appInfoJsonStr="+appInfoJsonStr);
+                    if (index >= beginIndex && index < beginIndex + pageSize){
+                        MiniAppInfo info = JsonUtil.INSTANCE.fromJson(Base64Utils.INSTANCE.decodeFromBase64(appInfoJsonStr), MiniAppInfo.class);
+                        sLogger.info("createAppListResponse info="+info);
+                        miniAppInfoList.add(info);
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                index++;
+            }
         }
-
         MiniAppList miniAppList = new MiniAppList(
                 miniAppInfoList.size(),
                 miniAppInfoList,

@@ -23,110 +23,55 @@
             android:textColor="@color/black"
             android:textSize="20sp"
             android:text="本地调试"/>
-
-    </FrameLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
         <Button
             android:id="@+id/btn_setting"
-            android:layout_width="match_parent"
+            android:layout_gravity="right|center_vertical"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="配置"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:textSize="16sp"
+            android:text="配置"/>
+    </FrameLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e7e7e7"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <Button
-            android:visibility="gone"
-            android:id="@+id/btn_nc_settings"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:text="开启增强通话"
-            app:layout_constraintTop_toBottomOf="@id/btn_setting" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center|bottom"
+            android:paddingBottom="100dp"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/btn_fake_incall"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:enabled="false"
+                android:background="@drawable/button_answer_selector"/>
+
+            <Button
+                android:layout_marginLeft="80dp"
+                android:id="@+id/btn_fake_endcall"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:enabled="false"
+                android:background="@drawable/button_hangup_selector"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_fake_precall"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="模拟来电"
-            app:layout_constraintTop_toBottomOf="@id/btn_nc_settings" />
+            android:layout_height="60dp"
+            android:text="模拟来电" />
+    </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_fake_incall"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="模拟接听"
-            app:layout_constraintTop_toBottomOf="@id/btn_fake_precall" />
-
-        <Button
-            android:id="@+id/btn_fake_endcall"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="模拟结束"
-            app:layout_constraintTop_toBottomOf="@id/btn_fake_incall" />
-
-        <Button
-            android:visibility="gone"
-            android:id="@+id/btn_sketchshare"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="画板"
-            app:layout_constraintTop_toBottomOf="@id/btn_fake_endcall" />
-
-        <LinearLayout
-            android:id="@+id/ll1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="invisible"
-            app:layout_constraintTop_toBottomOf="@id/btn_sketchshare">
-
-            <EditText
-                android:id="@+id/et_message"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="8"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:lines="1" />
-
-            <Button
-                android:id="@+id/btn_send_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Send" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/ll2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="invisible"
-            app:layout_constraintTop_toBottomOf="@id/ll1">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="接收:" />
-
-            <EditText
-                android:id="@+id/et_message_receive"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:lines="3"
-                android:scrollbars="vertical" />
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 

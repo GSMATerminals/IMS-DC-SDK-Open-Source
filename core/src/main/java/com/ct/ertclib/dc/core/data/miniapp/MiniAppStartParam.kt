@@ -22,4 +22,5 @@ object MiniAppStartParam {
     const val MINIAPP_APPTYPE_FILE = "file"
     const val MINIAPP_APPTYPE_MAP = "map"
     const val MINIAPP_APPTYPE_BROWSER = "browser"
+    const val MINIAPP_APPTYPE_MINIAPP_WITH_PARAMS = "miniappWithParams"
 }
