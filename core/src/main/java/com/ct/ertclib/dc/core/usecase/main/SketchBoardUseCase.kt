@@ -66,7 +66,7 @@ class SketchBoardUseCase(
     private val screenShareSketchManager: IScreenShareSketchManager,
     private val parentToMiniNotifier: IParentToMiniNotify,
     private val screenShareUseCase: IScreenShareUseCase
-): ISketchBoardUseCase, KoinComponent {
+    ): ISketchBoardUseCase, KoinComponent {
 
     companion object {
         private const val TAG = "SketchBoardUseCase"
@@ -168,7 +168,7 @@ class SketchBoardUseCase(
             applicationContext,
             TAG,
             TAG,
-            "{\"provider\":\"${ExpandingCapacityManager.OEM}\",\"module\":\"${MODULE_NEW_CALL_SDK}\",\"func\":\"${OEMECConstants.FUNCTION_GET_VIDEO_SHOW_INFO}\",\"data\":{\"shareDeviceWidth\":$remoteScreenWidth},\"shareDeviceHeight\":$remoteScreenHeight}}"
+            "{\"provider\":\"${ExpandingCapacityManager.OEM}\",\"module\":\"${MODULE_NEW_CALL_SDK}\",\"func\":\"${OEMECConstants.FUNCTION_GET_VIDEO_SHOW_INFO}\",\"data\":{\"shareDeviceWidth\":$remoteScreenWidth,\"shareDeviceHeight\":$remoteScreenHeight}}"
         )
     }
 
@@ -201,10 +201,6 @@ class SketchBoardUseCase(
             )
 
             parentToMiniNotifier.notifyEvent(callId, appId, screenSizeNotifyEvent)
-        }
-
-        override fun onCtrlPanelInit() {
-            requestVideoInfo()
         }
     }
 

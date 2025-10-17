@@ -154,7 +154,7 @@ class MainMiniAppListFragment : Fragment(){
             holder.mItem.setOnClickListener {
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "isInCall $isInCall")
                 if(isInCall){
-                    ToastUtils.showShortToast(context, "此入口仅通话后可用")
+                    ToastUtils.showShortToast(context, context.getString(R.string.after_call_use))
                 } else {
                     NewCallAppSdkInterface.startMiniAppOutOfCall(context, miniAppInfo)
                 }

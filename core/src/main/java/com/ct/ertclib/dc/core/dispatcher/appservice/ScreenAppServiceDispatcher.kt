@@ -74,7 +74,7 @@ class ScreenAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
                 kotlin.runCatching {
                     val width = appRequest.map[APP_REMOTE_WIDTH_PARAM].toString()
                     val height = appRequest.map[APP_REMOTE_HEIGHT_PARAM] .toString()
-                    sketchBoardUseCase.addRemoteSizeInfo(width.toInt(), height.toInt())
+                    sketchBoardUseCase.addRemoteSizeInfo(width.toFloat().toInt(), height.toFloat().toInt())
                 }.onFailure {
                     logger.error("remote size convert wrong")
                 }
@@ -91,7 +91,7 @@ class ScreenAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
                 kotlin.runCatching {
                     val width = appRequest.map[APP_REMOTE_WIDTH_PARAM].toString()
                     val height = appRequest.map[APP_REMOTE_HEIGHT_PARAM] .toString()
-                    sketchBoardUseCase.addRemoteSizeInfo(width.toInt(), height.toInt())
+                    sketchBoardUseCase.addRemoteWindowSizeInfo(width.toFloat().toInt(), height.toFloat().toInt())
                 }.onFailure {
                     logger.error("remote size convert wrong")
                 }

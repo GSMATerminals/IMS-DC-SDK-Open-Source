@@ -32,6 +32,7 @@ import com.ct.ertclib.dc.core.data.call.Contact
 import com.ct.ertclib.dc.core.port.dao.ContactDao
 import com.macoli.reflect_helper.ReflectHelper
 import java.util.Arrays
+import kotlin.collections.mutableListOf
 
 
 object CallUtils {
@@ -39,24 +40,21 @@ object CallUtils {
     @SuppressLint("MissingPermission")
     fun isCtCall(subId: Int): Boolean {
 
-        val ctMccMncList = mutableListOf("460003","460005", "460011", "460012")
+        val ctMccMncList = mutableListOf("460-03","460-05", "460-11", "460-12")
         val mccMnc = getMccMnc(Utils.getApp(), subId)
-        LogUtils.debug(TAG,"mccMnc:${if (mccMnc != null) Arrays.toString(mccMnc) else null}")
+        LogUtils.debug(TAG,"mccMnc:${mccMnc?.contentToString()}")
         mccMnc?.apply {
             var mcc = get(0).toString()
             var mnc = get(1).toString()
             if (mnc.length == 1) {
-                mnc = "00$mnc"
-            } else if (mnc.length == 2) {
                 mnc = "0$mnc"
             }
-            if (ctMccMncList.contains("$mcc$mnc")) {
+            if (ctMccMncList.contains("$mcc-$mnc")) {
                 return true
             }
         }
         return false
     }
-
 
     /**
      * Get MCC/MNC of an SIM subscription

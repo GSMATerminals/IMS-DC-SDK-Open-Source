@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.feature.testing
 
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -33,12 +34,16 @@ import com.ct.ertclib.dc.core.manager.call.BDCManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.manager.call.DCManager
+import com.ct.ertclib.dc.core.manager.common.StateFlowManager
+import com.ct.ertclib.dc.core.port.call.ICallStateListener
 import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.feature.testing.databinding.ActivityLocalTestingMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class LocalTestingMainActivity : BaseAppCompatActivity() {
@@ -76,7 +81,7 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
         binding.btnFakePrecall.setOnClickListener {
             val enableNewCall = spUtils.getBoolean("enableNewCall", false)
             if (!enableNewCall) {
-                ToastUtils.showShortToast(this@LocalTestingMainActivity, "请先开启增强通话功能")
+                ToastUtils.showShortToast(this@LocalTestingMainActivity, getString(com.ct.ertclib.dc.core.R.string.please_open))
                 return@setOnClickListener
             }
             binding.btnSetting.isEnabled = false
@@ -121,55 +126,55 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
             callsManager?.addCallStateListener("TC@1", testNetworkManager!!)
             callsManager?.addCallStateListener("TC@1", miniAppPackageManagerImpl)
             callsManager?.addCallStateListener("TC@1", mCallGuideManager!!)
+            callsManager?.addCallStateListener("TC@1", object : ICallStateListener{
+                override fun onCallAdded(
+                    context: Context,
+                    callInfo: CallInfo
+                ) {
+                }
+
+                override fun onCallRemoved(
+                    context: Context,
+                    callInfo: CallInfo
+                ) {
+                }
+
+                override fun onCallStateChanged(
+                    info: CallInfo,
+                    state: Int
+                ) {
+                    scope.launch(Dispatchers.Main) {
+                        if (state == Call.STATE_DISCONNECTED){
+                            binding.btnSetting.isEnabled = true
+                            binding.btnFakePrecall.isEnabled = true
+                            binding.btnFakeIncall.isEnabled = false
+                            binding.btnFakeEndcall.isEnabled = false
+                            TestImsDataChannelManager.closeBdc(0, "TC@1")
+                            testNetworkManager?.unBindService(Utils.getApp())
+                            sLogger.info("onImsDCClose mCallGuideManager:$mCallGuideManager")
+                            mCallGuideManager?.onImsCallRemovedBDCClose()
+                            testNetworkManager = null
+                            callsManager = null
+                            callInfo = null
+                        } else if (state == Call.STATE_ACTIVE){
+                            binding.btnSetting.isEnabled = false
+                            binding.btnFakePrecall.isEnabled = false
+                            binding.btnFakeIncall.isEnabled = false
+                            binding.btnFakeEndcall.isEnabled = true
+                        }
+                    }
+                }
+
+                override fun onAudioDeviceChange() {
+                }
+
+            })
             callsManager?.notifyOnCallAdded(callInfo!!)
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                val uri = DBUriUtil.getContactUri()
-
-                val query = myNumber?.let {
-                    contentResolver.query(
-                        uri,
-                        null,
-                        "phoneNumber=?",
-                        arrayOf(it),
-                        null
-                    )
-                }
-
-                query?.let { cursor ->
-                    if (!cursor.moveToFirst()) {
-                        val values = ContentValues()
-                        values.put("phoneNumber", myNumber)
-                        contentResolver.insert(uri, values)
-                    }
-                }
-                val query2 = remoteNumber?.let {
-                    contentResolver.query(
-                        uri,
-                        null,
-                        "phoneNumber=?",
-                        arrayOf(remoteNumber),
-                        null
-                    )
-                }
-
-                query2?.let { cursor ->
-                    if (!cursor.moveToFirst()) {
-                        val values = ContentValues()
-                        values.put("phoneNumber", remoteNumber)
-                        contentResolver.insert(uri, values)
-                    }
-                }
-            }
         }
 
         binding.btnFakeIncall.setOnClickListener {
-            binding.btnSetting.isEnabled = false
-            binding.btnFakePrecall.isEnabled = false
-            binding.btnFakeIncall.isEnabled = false
-            binding.btnFakeEndcall.isEnabled = true
             scope.launch {
-
                 callInfo?.let {
                     it.state = Call.STATE_ACTIVE
                     sLogger.info("testNotifyCallStateChange")
@@ -183,21 +188,10 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
     }
 
     fun hangup(){
-        binding.btnSetting.isEnabled = true
-        binding.btnFakePrecall.isEnabled = true
-        binding.btnFakeIncall.isEnabled = false
-        binding.btnFakeEndcall.isEnabled = false
-        TestImsDataChannelManager.closeBdc(0, "TC@1")
-        testNetworkManager?.unBindService(Utils.getApp())
-        sLogger.info("onImsDCClose mCallGuideManager:$mCallGuideManager")
-        mCallGuideManager?.onImsCallRemovedBDCClose()
         scope.launch {
             callInfo?.let {
                 it.state = Call.STATE_DISCONNECTED
                 callsManager?.testNotifyCallStateChange(it.telecomCallId, it.state)
-                callInfo = null
-                testNetworkManager = null
-                callsManager = null
             }
         }
     }

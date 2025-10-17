@@ -132,7 +132,7 @@
                     android:layout_height="32dp"
                     android:padding="6dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/icon_setting" />
+                    android:src="@drawable/icon_mini_setting" />
 
                 <View
                     android:layout_width="1dp"

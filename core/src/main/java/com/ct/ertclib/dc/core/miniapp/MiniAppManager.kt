@@ -680,7 +680,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
         sLogger.debug("$mTag startMiniAppInternal miniAppManager:$miniAppStartManager")
 
-        miniAppStartManager?.startMiniApp(Utils.getApp(), miniAppInfo, callInfo,object : IMiniAppStartCallback{
+        miniAppStartManager?.startMiniApp(Utils.getApp(), miniAppInfo, callInfo, mMiniAppListInfo, object : IMiniAppStartCallback{
             override fun onMiniAppStarted() {
                 handleStartMiniAppSuccess(miniAppInfo.callId,miniAppInfo.appId)
             }

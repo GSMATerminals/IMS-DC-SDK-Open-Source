@@ -1,0 +1,171 @@
+[SDK] Release notes
+/*Increase the major version number if have new feature be added. otherwise change the date only*/
+/*Version label: productname_Majorversionnumber_subversionnnumber(date)_versionstatus*/
+/*version status: ES engineering sample, FC feature complete status, CS Commericalize status, Post CS, post commericatlize status*/
+/****************************************************************************************************/
+
+Auditor: CT
+Publisher: yesh1
+publish Description:
+CtCallSDK_v1.1.0_202501017_FC
+	1.支持CTEC支持mnn框架
+	2.修复接通电话时界面抢占问题
+	3.sdk携带mccMncList作为支持的运营商标识
+	4.修复其他问题
+CtCallSDK_v1.0.48_20250721_FC
+	1.支持通话前使用小程序
+	2.隐私政策变更逻辑
+	3.增加小程序控制通话状态的接口
+	4.修复部分问题
+CtCallSDK_v1.0.47_20250320_FC
+	1.是否创建内置ADC由小程序按需配置
+	2.收到adc建立时拉起小程序只对a2p有效
+	3.修复小程序拉起成功后执行逻辑的时序问题
+	4.安全扫描整改：全部release签名；taskAffinity动态添加；全局异常捕获；Activity启动权限；so库堆栈保护
+	5.修复浮窗底部空白区域问题
+	6.小程序顶部区域控制
+	7.有DC正在创建中，需要等待
+CtCallSDK_v1.0.46_20250311_FC
+	1.小程序样式修改
+	2.定位bug修复
+	3.翼分享子功能快捷入口
+	4.小程序增加获取联系人接口
+	5.支持小程序打开系统浏览器和地图
+	6.屏蔽内置文件共享
+	7.完善对端不支持DC时处理
+CtCallSDK_v1.0.45_20250210_FC
+	1.SDK授权时机改在成功获取小程序列表时
+	2.增加本地调试小程序的渠道包
+	3.增加关闭小程序的接口
+	4.隐私政策可以撤回
+	5.日志输出默认关闭
+CtCallSDK_v1.0.44_20241128_FC
+	1.增加UseCase参数校验
+	2.拓展能力
+CtCallSDK_v1.0.43_20241111_FC
+	1.修复while可能内存泄漏
+	2.增加SDK自有小程序adc
+	3.Q4版本提测
+CtCallSDK_v1.0.42_20241012_FC
+	1.ADC创建加入队列
+CtCallSDK_v1.0.41_20240902_FC
+	1.读取和编辑本地通讯录
+	2.SDK需要单独管理每个DC应用的权限
+	3.屏幕共享解偶
+	4.SDK提供摄像头实时视频流获取能力
+	5.小程序列表分页
+	6.小程序下载进度条显示
+	7.SDK的UI优化
+	8.用标准方案实现对端小程序的拉起
+	9.增加BDC100的处理逻辑
+CtCallSDK_v1.0.39_20240619_FC
+	1.优化内置测试应用发送数据逻辑
+CtCallSDK_v1.0.38_20240606_FC
+	1.修复文件路径问题
+	2.内置应用在挂断电话时不用调用close adc
+CtCallSDK_v1.0.37_20240523_FC
+	1.用户授权流程；
+	2.增加小程序挂断电话、回调通话状态、生命周期js api；
+	3.通话后小程序管理
+	4.小程序使用场景控制
+CtCallSDK_v1.0.36_20240516_FC
+	1.支持小程序大文件存储；
+	2.保存和读取文件改成异步；
+	3.每个小程序都有公开和非公开的两个私有文件目录
+CtCallSDK_v1.0.35_20240507_FC
+	1.实现锁屏显示悬浮窗；
+CtCallSDK_v1.0.34_20240424_FC
+	1.合并getFolderList、getImageList、getVideoList、getFileList接口为getFileList一个接口实现；
+	2.增加getPrivateFolder、selectFile、deleteFile、startReadFile、readFile、stopReadFile共6个接口；
+	3.小程序删除和写文件操作文件只能在sdk为其指定的特有目录中操作。
+CtCallSDK_v1.0.33_20240423_FC
+    1.增加三星、荣耀dc service配置。
+CtCallSDK_v1.0.32_20240408_FC
+	1.屏幕共享不再作为本地小程序，而是以基础能力提供给第三方小程序调用。
+CtCallSDK_v1.0.31_20240408_FC
+	1.修复js api中offet count参数类型错误、关闭dc参数类型错误，完善检查文件是否存在代码。
+CtCallSDK_v1.0.30_20240402_FC
+	1.小程序包缓存改回之前的代码，之前有问题只是路径拼接时多了一个空格
+	2.单边DC屏幕共享不用协商
+tCallSDK_v1.0.29_20240318_FC
+	1.增加adc缓存逻辑
+	2.修复小程序每次打开都下载的问题
+	3.修复mnc判断问题
+CtCallSDK_v1.0.28_20240227_FC
+	1.修改屏幕共享逻辑，ADC建立后再绑定屏幕共享服务
+CtCallSDK_v1.0.27_20240218_FC
+	1.去除IScreenShareStatusListener.aidl中onScreenShareStatus的message参数
+CtCallSDK_v1.0.26_20240204_FC
+	1.修复后台小程序版本落后时未更新
+	2.修复crash
+	3.修复接收方接收文件时没有进入文件共享空间以及接收文件提示框没有消失的问题。
+CtCallSDK_v1.0.25_20240130_FC
+	1.修改内容分享空间export为true，使得可以正常跳转，移动xml解析类到entity,keep不让混肴。
+	2.修复timeFotmat 异常引起的内存dump,导致发送文件和接收文件异常。
+CtCallSDK_v1.0.24_20240126_FC
+	1.增加配置项，默认等待10S 发送数据事件，超时失败。配置中用户可以输入时间，单位为秒。
+	2.增加配置项创建多DC，发送文件时，先创建命令DC通道，再创建文件传输通道。
+CtCallSDK_v1.0.23_20240123_FC
+	1.新增小程序空间入口
+	2.修复网络小程序不创建ADC的问题
+CtCallSDK_v1.0.22_20240118_FC
+	1.修复小程序闪退的问题
+CtCallSDK_v1.0.21_20240116_FC
+	1.修复加载小程序图标时会crash的问题
+CtCallSDK_v1.0.20_20240112_FC
+	1.修改IImsDataChannel.aidl中getTelecommCallId()为getTelecomCallId()
+CtCallSDK_v1.0.19_20240110_FC
+	1.添加运营商判断
+	2.添加主动关闭ADC过程
+	3.添加自定义DC通道配置
+CtCallSDK_v1.0.18_20231229_FC
+	1.去掉获取本地手机号方法
+CtCallSDK_v1.0.17_20231207_FC
+	1.去掉屏幕共享小程序中的按钮
+	2.修改屏幕共享AIDL包名为com.newcalllib.sharescreen
+CtCallSDK_v1.0.16_20231206_FC
+	1.修改屏幕共享服务初始化逻辑
+CtCallSDK_v1.0.15_20231204_FC
+	1.通话结束时释放标记和屏幕共享服务
+CtCallSDK_v1.0.14_20231130_FC
+	1.添加标记和屏幕共享DC服务
+CtCallSDK_v1.0.13_20231121_FC
+	1.更新版本号为1.0.x
+CtCallSDK_v0.0.13_20231120_FC
+	1.修复模拟通话时小程序无法拉起的问题
+CtCallSDK_v0.0.12_20231107_FC
+	1.删除小程序列表请求多带的“http://”
+	2.添加屏幕共享服务
+CtCallSDK_v0.0.11_20231020_FC
+	1.更新小程序盒子UI
+	2.预设vivo和oppo的dc配置
+	3.修复相机拍照后没有停留在照片预览界面
+CtCallSDK_v0.0.10_20231018_FC
+	1.根据JSApi文档修改JSApi接口，getLocation接口调用改为async
+	2.更新AIDL文件
+	3.修复小程序无法打开本地文件的问题
+CtCallSDK_v0.0.9_20231008_FC
+	1.修复小程序打开白屏问题
+	2.去除小程序页面中的ActionBar
+	3.根据文档修改aidl
+CtCallSDK_v0.0.8_20230928_FC
+	1.修改screenshare的aidl包名为com.newcalllib.screenshare
+	2.修复悬浮框延迟出现的问题
+CtCallSDK_v0.0.7_20230927_FC
+	1.修改aidl包名为com.newcalllib.datachannel.V1_0
+CtCallSDK_v0.0.6_20230926_FC
+	1.修复空指针问题
+CtCallSDK_v0.0.5_20230925_FC
+	1.修复空指针问题
+CtCallSDK_v0.0.4_20230925_FC
+	1.新增DC Service配置
+	2.新增聊天消息查询接口
+	3.统一日志工具
+CtCallSDK_v0.0.3_20230908_FC
+	1.修复Huawei,vivo手机无法打开小程序
+	2.修复小程序列表页偶尔不显示小程序列表问题
+CtCallSDK_v0.0.2_20230906_FC
+	1.WebView加载Url放到主线程
+	2.新增READ_PHONE_STATE权限
+CtCallSDK_v0.0.1_20230904_FC
+	初始版本，实现增强通话功能

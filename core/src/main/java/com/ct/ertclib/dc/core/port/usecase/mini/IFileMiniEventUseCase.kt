@@ -66,4 +66,6 @@ interface IFileMiniEventUseCase {
     fun quickSearchFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
     fun quickSearchFileWithKeyWords(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun fileDownload(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

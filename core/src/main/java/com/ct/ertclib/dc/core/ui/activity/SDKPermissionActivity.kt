@@ -1,20 +1,4 @@
-/*
- *   Copyright 2025-China Telecom Research Institute.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *        https://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
-
-package com.ct.ertclib.dc.core.common.sdkpermission
+package com.ct.ertclib.dc.core.ui.activity
 
 import android.content.Context
 import android.content.Intent
@@ -25,13 +9,13 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
 import com.blankj.utilcode.util.SizeUtils
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.databinding.DialogRequestNewcallPermissionBinding
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
-import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
+import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 
@@ -42,7 +26,7 @@ import com.hjq.permissions.XXPermissions
  */
 class SDKPermissionActivity : BaseAppCompatActivity() {
     companion object {
-        fun startActivity(context: Context,type:Int) {
+        fun startActivity(context: Context, type:Int) {
             val intent = Intent(context, SDKPermissionActivity::class.java)
             intent.putExtra(SDKPermissionUtils.PERMISSION_TYPE_KEY, type)
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -59,7 +43,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        type = intent.getIntExtra(SDKPermissionUtils.PERMISSION_TYPE_KEY,NewCallAppSdkInterface.PERMISSION_TYPE_IN_APP)
+        type = intent.getIntExtra(SDKPermissionUtils.PERMISSION_TYPE_KEY, NewCallAppSdkInterface.PERMISSION_TYPE_IN_APP)
     }
 
     override fun onStart() {
@@ -97,12 +81,14 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
                 it.setBackgroundDrawableResource(R.drawable.dialog_window_background)
             }
             if (type == NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL){
-                binding.btnCancel.text = "稍后"
+                binding.btnCancel.text = getString(R.string.later_btn)
             } else if (type == NewCallAppSdkInterface.PERMISSION_TYPE_AFTER_CALL){
-                binding.btnCancel.text = "取消"
+                binding.btnCancel.text = getString(R.string.cancel_btn)
             }
-            if (SDKPermissionUtils.hasPhonePermissions(this@SDKPermissionActivity)){
-                binding.contentTextview.text = ""
+            if (SDKPermissionUtils.isPrivacyChanged()){
+                binding.titleTextview.text = getString(R.string.request_nc_permission_dialog_privacy_change_title)
+            } else {
+                binding.titleTextview.text = getString(R.string.request_nc_permission_dialog_title)
             }
 
             binding.privacyPolicyTextview.setOnClickListener{
@@ -121,7 +107,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             }
             binding.btnOk.setOnClickListener {
                 if (!binding.privacyPolicyCheckBox.isChecked){
-                    ToastUtils.showShortToast(this@SDKPermissionActivity,"请先阅读并勾选同意《隐私政策声明》")
+                    ToastUtils.showShortToast(this@SDKPermissionActivity,getString(R.string.authorize_tips))
                     return@setOnClickListener
                 }
                 userClicked = true
@@ -162,7 +148,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 startActivity(intent)
                             } else {
-                                ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限增强通话功能将无法使用")
+                                ToastUtils.showShortToast(this@SDKPermissionActivity, getString(R.string.miss_permission_tips))
                                 denied()
                             }
                         }
@@ -193,7 +179,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (!Settings.canDrawOverlays(this)) {
-            ToastUtils.showShortToast(this@SDKPermissionActivity, "缺少权限增强通话功能将无法使用")
+            ToastUtils.showShortToast(this@SDKPermissionActivity, getString(R.string.miss_permission_tips))
             denied()
         } else {
             agree()

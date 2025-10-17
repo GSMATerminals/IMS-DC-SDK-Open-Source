@@ -19,6 +19,7 @@ package com.ct.ertclib.dc.core.port.miniapp
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.data.miniapp.AppRequest
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.WindowStyle
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 
@@ -26,6 +27,7 @@ interface IMiniApp {
 
     var miniApp: MiniAppInfo?
     var callInfo: CallInfo?
+    var miniAppListInfo: MiniAppList?
 
     fun finishAndKillMiniAppActivity()
 

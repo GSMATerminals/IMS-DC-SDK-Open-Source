@@ -34,7 +34,8 @@ class ScreenShareCtrlPanel : FrameLayout {
     }
 
     private var listener: OnCtrlPanelListener? = null
-    private var viewBinding: ScreenShareCtrlPanelLayoutBinding
+    private var viewBinding: ScreenShareCtrlPanelLayoutBinding =
+        ScreenShareCtrlPanelLayoutBinding.inflate(LayoutInflater.from(context), this, true)
     private var isMove = false
     private var preTouchX = 0f
     private var preTouchY = 0f
@@ -52,8 +53,6 @@ class ScreenShareCtrlPanel : FrameLayout {
     )
 
     init {
-        viewBinding =
-            ScreenShareCtrlPanelLayoutBinding.inflate(LayoutInflater.from(context), this, true)
         viewBinding.sketchDrawingBtn.setOnClickListener {
             listener?.onDraw()
         }
@@ -62,9 +61,6 @@ class ScreenShareCtrlPanel : FrameLayout {
         }
         setMoveListener()
         LogUtils.debug(TAG, "init")
-        this.post {
-            listener?.onInit()
-        }
     }
 
     fun setListener(listener: OnCtrlPanelListener) {
@@ -73,22 +69,6 @@ class ScreenShareCtrlPanel : FrameLayout {
 
     fun setSketchBtnSelected(selected: Boolean) {
         viewBinding.sketchDrawingBtn.isSelected = selected
-    }
-
-    fun setScreenShareBtnEnable(enable: Boolean) {
-        viewBinding.exitBoardBtn.visibility = if (enable) VISIBLE else GONE
-    }
-
-    fun setScreenShareBtnSelected(selected: Boolean? = null) {
-        if (selected != null) {
-            viewBinding.exitBoardBtn.isSelected = selected
-        } else {
-            viewBinding.exitBoardBtn.isSelected = !viewBinding.exitBoardBtn.isSelected
-        }
-    }
-
-    fun getScreenShareBtnSelected(): Boolean {
-        return viewBinding.exitBoardBtn.isSelected
     }
 
     fun setDrawRebBubbleVisible(visible: Boolean) {
@@ -143,7 +123,5 @@ class ScreenShareCtrlPanel : FrameLayout {
         fun onExit()
 
         fun onDraw()
-
-        fun onInit()
     }
 }

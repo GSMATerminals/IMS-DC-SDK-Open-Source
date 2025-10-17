@@ -48,33 +48,33 @@ object PkgUtils {
         return num<3
     }
 
-    // 获取自身签名信息
-    fun getSignature(context: Context): String {
-        try {
-            val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val packageInfo: PackageInfo = context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.GET_SIGNING_CERTIFICATES
-                )
-                val signingInfo: SigningInfo = packageInfo.signingInfo
-                signingInfo.apkContentsSigners
-            } else {
-                val packageInfo: PackageInfo = context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.GET_SIGNATURES
-                )
-                packageInfo.signatures
-            }
-            val builder = StringBuilder()
-            for (signature in signatures) {
-                builder.append(signature.toCharsString())
-            }
-            return builder.toString()
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-        }
-        return ""
-    }
+//    // 获取自身签名信息
+//    fun getSignature(context: Context): String {
+//        try {
+//            val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+//                val packageInfo: PackageInfo = context.packageManager.getPackageInfo(
+//                    context.packageName,
+//                    PackageManager.GET_SIGNING_CERTIFICATES
+//                )
+//                val signingInfo: SigningInfo = packageInfo.signingInfo
+//                signingInfo.apkContentsSigners
+//            } else {
+//                val packageInfo: PackageInfo = context.packageManager.getPackageInfo(
+//                    context.packageName,
+//                    PackageManager.GET_SIGNATURES
+//                )
+//                packageInfo.signatures
+//            }
+//            val builder = StringBuilder()
+//            for (signature in signatures) {
+//                builder.append(signature.toCharsString())
+//            }
+//            return builder.toString()
+//        } catch (e: PackageManager.NameNotFoundException) {
+//            e.printStackTrace()
+//        }
+//        return ""
+//    }
     /**
      * 获取app的名称
      * @param context
@@ -85,8 +85,8 @@ object PkgUtils {
         try {
             val packageManager = context.packageManager
             val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
-            val labelRes = packageInfo.applicationInfo.labelRes
-            appName = context.resources.getString(labelRes)
+            val labelRes = packageInfo.applicationInfo?.labelRes
+            labelRes?.let { appName = context.resources.getString(labelRes) }
         } catch (e:Exception) {
             e.printStackTrace()
         }
@@ -104,7 +104,9 @@ object PkgUtils {
         try {
             val packageManager = context.packageManager
             val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
-            versionName = packageInfo.versionName
+            packageInfo.versionName?.let {
+                versionName = it
+            }
         } catch (e:Exception) {
             e.printStackTrace()
         }

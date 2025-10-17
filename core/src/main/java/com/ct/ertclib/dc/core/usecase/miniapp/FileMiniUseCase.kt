@@ -29,6 +29,7 @@ import android.text.TextUtils
 import androidx.appcompat.app.AlertDialog
 import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.ZipUtils
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.common.PathManager
@@ -37,6 +38,10 @@ import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_KEYS_KEY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.KEY_PARAM
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_EVENT
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_URL
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_EXTRA_INFO
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_MODEL
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_MESSAGE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_CODE
@@ -44,12 +49,18 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAG
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.TTL
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.VALUE_PARAM
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
+import com.ct.ertclib.dc.core.data.common.DownloadData
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
+import com.ct.ertclib.dc.core.data.miniapp.ModelInfo
 import com.ct.ertclib.dc.core.data.model.FileEntity
+import com.ct.ertclib.dc.core.data.model.ModelEntity
 import com.ct.ertclib.dc.core.manager.common.FileManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
+import com.ct.ertclib.dc.core.port.listener.IDownloadListener
+import com.ct.ertclib.dc.core.port.manager.IFileDownloadManager
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
@@ -71,11 +82,14 @@ import java.util.Collections
 
 class FileMiniUseCase(
     private val miniToParentManager: IMiniToParentManager,
-    private val permissionMiniUseCase: IPermissionUseCase
+    private val permissionMiniUseCase: IPermissionUseCase,
+    private val modelManager: IModelManager,
+    private val fileDownloadManager: IFileDownloadManager
 ) : IFileMiniEventUseCase {
 
     companion object {
         private const val TAG = "FileMiniUseCase"
+        private const val FILE_MODEL_PATH = "model"
     }
 
     private val logger = Logger.getLogger(TAG)
@@ -1197,6 +1211,62 @@ class FileMiniUseCase(
             withContext(Dispatchers.Main) {
                 val response = JSResponse("0", "success", JsonUtil.toJson(resultList))
                 handler.complete(JsonUtil.toJson(response))
+            }
+        }
+    }
+
+    override fun fileDownload(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        val downloadEvent = params[PARAMS_DOWNLOAD_EVENT] as? String
+        val url = params[PARAMS_DOWNLOAD_URL] as? String
+        val infoJson = params[PARAMS_EXTRA_INFO] as? String
+        if (downloadEvent == null || url == null || infoJson == null) {
+            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "empty params"))))
+            return
+        }
+        when (downloadEvent) {
+            PARAMS_MODEL -> {
+                scope.launch {
+                    val modelInfo = JsonUtil.fromJson(infoJson, ModelInfo::class.java)
+                    val modelName = modelInfo?.modelName
+                    val downloadFileFolder = "${context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName"
+                    val downloadFilePath = "$downloadFileFolder${File.separator}$modelName$.zip"
+                    val downloadListener = object : IDownloadListener {
+                        override fun onDownloadProgress(progress: Int) {
+                            LogUtils.debug(TAG, "onDownloadProgress progress: $progress")
+                        }
+
+                        override fun onDownloadSuccess() {
+                            LogUtils.debug(TAG, "onDownloadSuccess")
+                            ZipUtils.unzipFile(downloadFilePath, downloadFileFolder)
+                            val zipFile = File(downloadFilePath)
+                            if (zipFile.exists()) {
+                                zipFile.delete()
+                            }
+                            val modelFilePath = "$downloadFileFolder${File.separator}config.json"
+                            modelInfo?.let {
+                                val modelEntity = ModelEntity(modelId = modelInfo.modelId, modelName = modelInfo.modelName, modelPath = modelFilePath, modelVersion = modelInfo.modelVersion, modelType = modelInfo.modelType, "")
+                                modelManager.insertOrUpdate(modelEntity)
+                            }
+                            val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mapOf("result" to "true"))
+                            handler.complete(JsonUtil.toJson(response))
+                        }
+
+                        override fun onDownloadFailed() {
+                            LogUtils.debug(TAG, "onDownloadFailed")
+                            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("result" to "false"))))
+                        }
+                    }
+                    val downloadData = DownloadData(url, context.getString(R.string.download_model_title), context.getString(
+                        R.string.download_model_description), downloadFilePath)
+                    fileDownloadManager.startDownload(downloadData, downloadListener)
+                }
+            }
+            else -> {
+                handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "invalid downloadEvent"))))
             }
         }
     }

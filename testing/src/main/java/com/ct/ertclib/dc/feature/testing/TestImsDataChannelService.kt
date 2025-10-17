@@ -19,9 +19,14 @@ package com.ct.ertclib.dc.feature.testing
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.ct.ertclib.dc.core.utils.logger.Logger
 
 class TestImsDataChannelService : Service() {
+    private val TAG = "TestImsDataChannelService"
+    private val sLogger = Logger.getLogger(TAG)
     override fun onBind(intent: Intent?): IBinder? {
+        var list = intent?.getStringArrayListExtra("mccMncList")
+        sLogger.debug("onBind mccMncList : $list")
         return TestImsDataChannelManager.mDcController
     }
 

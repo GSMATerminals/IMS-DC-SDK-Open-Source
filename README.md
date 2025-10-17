@@ -1,106 +1,123 @@
-# IMS DC SDK
+Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
 
-- 5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator's IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.
+# 5G New Calling Terminal SDK
+- 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.
 
-- The IMS DC SDK was developed by the China Telecom Research Institute. The chip provides IMS DC (Data Channel) capabilities, while terminal manufacturers encapsulate these capabilities. The SDK manages these capabilities and provides a unified JS API to H5 applications on the platform side, allowing H5 applications across different operator platforms to seamlessly invoke the terminal's IMS DC capabilities for data interaction.
+- The 5G New Calling Terminal SDK (hereinafter referred to as the SDK) is developed by the China Telecom Research Institute. After a call is established, the chip and the network negotiate the establishment of the IMS Data Channel. The terminal encapsulates the call logic for the IMS Data Channel and provides it to the SDK via AIDL interfaces (Android Interface Definition Language). The SDK serves as the runtime environment for the 5G New Calling Application (hereinafter referred to as Mini-Application) and provides a unified interface for Mini-Application to call, enabling them to operate the IMS Data Channel and other terminal capability interfaces.
 
-## Features
+## I. Features
+While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
 
-- The SDK monitors call states. When a call is established, it binds to the OEM's DC Service, waits for the BDC to be established, retrieves the IMS DC Application list and downloads the IMS DC Application package via the BDC, and initiates or receives ADC creation based on IMS DC Application parameters. During the call, it provides various capabilities, including DC, based on the JS APIs called by the IMS DC Applications. During call hold, IMS DC Applications are disabled. When the call ends, all resources are released.
+- Closely associated with call state, manages the lifecycle of Mini-Application, providing a stable runtime environment;
 
-Key features include:
-1. Supports running multiple IMS DC Applications simultaneously, each in an independent process.
-2. Supports opening and using IMS DC Applications during or after a call.
-3. Allows operators and OEMs to integrate their unique capabilities into IMS DC Applications.
-4. Supports initiating and receiving DC data channel creation, with ADC caching when IMS DC Applications are closed.
-5. Obtains floating window permissions to display entry points on the dialer page.
-6. Implements license control for sensitive JS APIs.
-7. Supports screen sharing based on OEM capabilities.
-8. Supports simulated incoming calls and loading local IMS DC Application packages for debugging.
-9. Other features.
+- Isolated storage space for Mini-Application, ensuring data security;
 
-## Development Environment
+- Provides interfaces for Mini-Application to operate the IMS Data Channel and other terminal capabilities;
 
-- JDK Version: 17
-- Gradle Version: 8.1
-- Android SDK Version: compileSdk-34, minSdk-21
-- Recommend IDE : Android Studio
+- Supports running multiple Mini-Application simultaneously, each in an independent process;
 
-## Architecture Design
+- Supports opening and using Mini-Application after a call is established;
 
-![SDK Architecture.jpg](images/SDK架构.png)
+- Supports different operators and terminal manufacturers implementing extended capability interfaces, introducing their respective private features via AAR packages;
 
-1. Tightly binds with call states by implementing Android's `InCallService`.
-2. The SDK interacts with the OEM-provided DC Service via the DC AIDL interface (`com.newcalllib.datachannel.V1_0`) to acquire and encapsulate DC data channel capabilities.
-3. Provides a unified JS API interface (`JSApi`) for IMS DC Applications, offering capabilities such as DC data channels, extended features, and data caching, implemented using DSBridge.
-4. Operators/OEMs implement the `IEC` interface defined in the `base` module and package it as an AAR library, which is integrated into `ExpandingCapacityManager` to provide unique capabilities. IMS DC Applications invoke these capabilities via the `expandingCapacityRequest` JS API, following the parameter structure: `{"provider":"","module":"","func":"","data":T}`.
+- Supports IMS Data Channel caching when a Mini-Application is closed during a call, avoiding re-creation of the IMS Data Channel when the Mini-Application is reopened;
 
-## Project Structure
+- Manages sensitive JS APIs (related to permissions, data privacy, etc.) through a license verification mechanism;
 
+- Supports simulated calls and loading local Mini-Application packages for offline debugging.
+
+## II. Architecture Design
+![SDK架构.png](images/SDK架构.png)
+
+- Inherits InCallService: The SDK obtains call information by inheriting InCallService (https://developer.android.google.cn/reference/android/telecom/InCallService), closely associating with call state. It starts running when a call is established and releases resources when the call ends. Refer to SDK code: [core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt](core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt).  
+
+- TS.71 IDL Interfaces: Interfaces between the SDK and the terminal. The SDK uses these interfaces to obtain the Mini-Application list, download Mini-Application packages, create IMS Data Channels and send/receive data as instructed by the Mini-Application. Refer to SDK code: [core/src/main/aidl/com/newcalllib/datachannel/V1_0](core/src/main/aidl/com/newcalllib/datachannel/V1_0).  
+
+- Extended Capability Interfaces: To promote the unification of the 5G New Calling Terminal SDK (i.e., only one SDK runs on a terminal) while meeting the needs of operators to provide unique features for their platform's Mini-Applications, the SDK designs extended capability interfaces. This allows different operators and terminal manufacturers to introduce their respective private features via AAR packages for Mini-Applications to call.
+
+    1) Definition of extended capability interfaces, refer to SDK code: [base/src/main/java/com/ct/ertclib/dc/base/port/ec/IEC.kt](base/src/main/java/com/ct/ertclib/dc/base/port/ec/IEC.kt);    
+
+    2) Logic for the SDK to integrate and manage extended capabilities, refer to SDK code: [core/src/main/java/com/ct/ertclib/dc/core/manager/common/ExpandingCapacityManager.kt](core/src/main/java/com/ct/ertclib/dc/core/manager/common/ExpandingCapacityManager.kt);    
+
+    3) Example implementation of extended capabilities by a terminal manufacturer, refer to SDK code: [oemec/src/main/java/com/ct/oemec/OemEC.kt](oemec/src/main/java/com/ct/oemec/OemEC.kt).    
+
+- JS API Interfaces: Interfaces between Mini-Applications and the SDK, implemented using the DSBridge framework (https://github.com/wendux/DSBridge-Android). Mini-Applications use these interfaces to operate the IMS Data Channel and other terminal capabilities (including the aforementioned extended capabilities). Refer to SDK code: [core/src/main/java/com/ct/ertclib/dc/core/miniapp/bridge/JSApi.kt](core/src/main/java/com/ct/ertclib/dc/core/miniapp/bridge/JSApi.kt).  
+
+## III. Project Structure
 NewCall  
-├── app/ IMS DC Application space related  
-├── base/ Common classes, indirectly referenced by other modules (referenced as an AAR)  
+├── app/ Mini-Application list display related  
+├── base/ Basic common classes, not directly referenced by other modules, referenced after being compiled into an aar  
 │ ├── data/ Data structures  
 │ └── port/ Interfaces  
-├── build-logic/ Project build configurations  
+├── build-logic/ Contains project build-related files  
 ├── core/ Core logic code  
 │ ├── aidl/ AIDL interfaces for DC, screen sharing, extended capabilities, etc.  
 │ └── core/  
-│ ├── common/ Utility tools  
+│ ├── common/ Common utilities  
 │ ├── constants/ Constant configurations  
 │ ├── data/ Data structures  
-│ ├── dispatcher/ JS API and IMS DC Application service event dispatching  
+│ ├── dispatcher/ JS API and Mini-Application service event dispatching  
 │ ├── factory/ Dispatcher factory  
-│ ├── manager/ Various management classes  
-│ ├── miniapp/ IMS DC Application (management, UI, DC, etc.) related  
+│ ├── manager/ Various managers  
+│ ├── miniapp/ Mini-Application (management, UI, DC, etc.) related  
 │ ├── picker/ Image selection  
 │ ├── port/ Various interfaces  
-│ ├── service/ IMS DC Application, call, and other services  
-│ ├── ui/ UI components (excluding IMS DC Application space and IMS DC Applications themselves)  
-│ ├── usecase/ JS API and IMS DC Application service event handling  
+│ ├── service/ Mini-Application, call, and other services  
+│ ├── ui/ Other UI besides the Mini-Application space and Mini-Applications themselves  
+│ ├── usecase/ JS API and Mini-Application service event handling  
 │ └── utils/ Utility classes  
-├── libs/ Third-party libraries  
-├── miniapp/IMS DC Mini Application development     
-│ ├── webrtcDC/ Implements GSMA ts.66-defined interfaces based on the SDK, compiling into a JS library webrtcDC.js for IMS DC Application integration  
-│ └── demo/IMS DC Mini Application example  
-├── oemec/OEM EC development  
+├── libs/ Third-party library files  
+├── miniapp/ Mini-Application development related  
+│ ├── webrtcDC/ Implements interfaces defined by GSMA TS.66 based on the SDK, can compile the webrtcDC.js library for Mini-Application integration  
+│ └── demo/ Mini-Application examples  
+├── oemec/ Terminal manufacturer extended capabilities  
 ├── script/ Build scripts  
-└── testing/ Local simulation testing  
+└── testing/ Local simulation testing related  
 
+## IV. Technology Stack
+- Programming Languages: Kotlin, Java, JS
 
-## Technology Stack
-
-- Programming Languages: Kotlin, Java, Rust
 - Architecture Pattern: MVVM
-- Asynchronous Handling: Coroutines + Flow
+
+- Asynchronous Processing: Coroutines + Flow
+
 - Database: Room
+
 - UI Framework: Jetpack Compose / XML Layouts
 
-## Build and Release
+## V. Development Environment
+- JDK Version 17
 
-1. **Adaptation**:  
-- The SDK relies on the terminal's DC, screen sharing, extended capabilities, and AR services, which must be supported by the terminal;  
-- The terminal must be granted the android.permission.CONTROL_INCALL_EXPERIENCE and android.permission.PACKAGE_USAGE_STATS permissions by default.  
+- Gradle Version 8.1
 
-2. **Packaging**:  
-   Supports multi-channel packaging: Normal(General Version)、Dialer(Dial Pad Entry Version)、Local(Local Debug Version)
+- Android SDK Version compileSdk-34, minSdk-26
+
+- Recommended Development Tool: AndroidStudio
+
+## VI. Build & Release
+- Packaging: Currently configured for three distribution channels: Normal (Floating Ball entry version), Dialer (Dialer entry version), Local (Local debugging version, for local debugging only)
    ```bash
-   ./gradlew assembleRelease
-3. **Release**:  
-The SDK must be integrated as a system default application by the phone manufacturer and released with the system.  
+   ./gradlew assembleRelease 
 
-## IMS DC Mini Application Local Debugging  
-The Local (Local Debug Version) SDK allows debugging the IMS DC Mini Application on the SDK without requiring a DC network environment.
-- Development：Developers should follow web standards such as HTML5, CSS3, and ES6 for web page development. For a complete demo, refer to: [miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code).  
-- Packaging: The web page should be packaged into an offline ZIP archive (the IMS DC Mini Application). The index.html and properties.json files must be placed in the root directory of the ZIP package. See example: [miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip).
-- Install the Local Debug Version apk on the phone. Push the IMS DC Mini Application ZIP package to the phone's SDCard. Configure the settings as shown in the diagram below to launch and debug the IMS DC Mini Application:  
-  1、<img src="images/localtest1.png" alt="描述文字" width="200" />2、<img src="images/localtest2.png" width="200" />3、<img src="images/localtest3.png" width="200" />  
-  4、<img src="images/localtest4.png" alt="描述文字" width="200" />5、<img src="images/localtest5.png" width="200" />6、<img src="images/localtest6.png" width="200" />  
-  7、<img src="images/localtest7.png" alt="描述文字" width="200" />8、<img src="images/localtest8.png" width="200" />9、<img src="images/localtest9.png" width="200" />  
-  10、<img src="images/localtest10.png" alt="描述文字" width="200" />11、<img src="images/localtest11.png" width="200" />12、<img src="images/localtest12.png" width="200" />
+- Terminal Adaptation:
+Before network-terminal joint debugging or commercial release, terminals must be adapted according to the [《5G New Calling SDK Terminal Adaptation Specification》](/document/5G New Calling SDK Terminal Adaptation Specification.docx) to ensure the proper functioning of all SDK features.
 
-## License
+- Release:
+Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
+When a user is on a call, the 5G New Calling icon appears as a floating ball on the terminal's native call interface. Clicking this icon opens the 5G New Calling Mini-Application space.
+
+## VII. Mini-Application Development & Debugging
+Using the Local (Local debugging version) SDK, developers can debug Mini-Applications on ordinary Android terminals without relying on an IMS Data Channel network environment or terminal adaptation.
+
+- Mini-Application Development: Developers need to follow web standards like HTML5, CSS3, ES6 for web development. The document [《5G New Calling IMS Data Channel JS API》](/document/5G New Calling IMS Data Channel JS API.docx) lists all interfaces exposed by the SDK to Mini-Applications. Mini-Application developers should refer to this document for development. Refer to example Mini-Application code: [miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code).  
+
+- Mini-Application Packaging: Package the web project into an offline zip format compressed package, i.e., the Mini-Application package. The index.html and properties.json files must be in the root directory of the zip package. Refer to the example Mini-Application package: [miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip).  
+
+- Mini-Application Local Debugging: Install the Local version SDK onto the phone like a regular APK. Push the Mini-Application zip package to the phone's sdcard. Then launch the "Telecom Enhanced Calling" app from the phone's home screen. After granting permissions as guided, open Settings -> Local Debugging Entry to configure and debug the Mini-Application.  
+<img src="images/localtest.png" alt="Description" width="200" />
+
+## VIII. License
 This project is licensed under the Apache 2.0 License.
- 
-## Contact
+
+## IX. Contact
 xuq17@chinatelecom.cn

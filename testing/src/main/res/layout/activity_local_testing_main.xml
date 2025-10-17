@@ -22,7 +22,7 @@
             android:includeFontPadding="false"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="本地调试"/>
+            android:text="@string/local_debug"/>
         <Button
             android:id="@+id/btn_setting"
             android:layout_gravity="right|center_vertical"
@@ -31,7 +31,7 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:textSize="16sp"
-            android:text="配置"/>
+            android:text="@string/config_btn"/>
     </FrameLayout>
     <View
         android:layout_width="match_parent"

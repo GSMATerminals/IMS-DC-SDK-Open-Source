@@ -35,6 +35,7 @@ import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.port.call.ICallInfoUpdateListener
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
+import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -354,6 +355,15 @@ class NewCallsManager() {
 
     fun hangUp(telecomCallId: String){
         mCallsMap[telecomCallId]?.disconnect()
+        sLogger.info("hangUp 1")
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
+            scope.launch {
+                mCallInfoMap[telecomCallId]?.let {
+                    it.state = Call.STATE_DISCONNECTED
+                    testNotifyCallStateChange(it.telecomCallId, it.state)
+                }
+            }
+        }
     }
 
     fun answer(telecomCallId: String){

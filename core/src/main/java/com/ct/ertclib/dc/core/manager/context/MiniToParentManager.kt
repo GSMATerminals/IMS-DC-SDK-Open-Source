@@ -45,6 +45,7 @@ import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.data.miniapp.AppResponse
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.miniapp.aidl.IDCCallback
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.miniapp.aidl.IMiniToParent
@@ -164,6 +165,10 @@ class MiniToParentManager : IMiniToParentManager {
 
     override fun getMiniAppInfo(): MiniAppInfo? {
         return miniAppInterface?.miniApp
+    }
+
+    override fun getMiniAppList(): MiniAppList? {
+        return miniAppInterface?.miniAppListInfo
     }
 
     override fun selectFile(callback: OnPickMediaCallbackListener) {

@@ -19,6 +19,7 @@ package com.ct.ertclib.dc.core.common.sdkpermission
 import android.content.Context
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
+import com.ct.ertclib.dc.core.ui.activity.SDKPermissionActivity
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.LogUtils

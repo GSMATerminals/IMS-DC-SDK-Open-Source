@@ -24,7 +24,7 @@
             android:includeFontPadding="false"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="设置"/>
+            android:text="@string/setting"/>
 
     </FrameLayout>
     <View
@@ -58,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:textSize="14sp"
-                    android:text="开启/关闭5G增强通话" />
+                    android:text="@string/open_switch_title" />
                 <TextView
                     android:id="@+id/close_tips"
                     android:layout_marginStart="10dp"
@@ -97,7 +97,7 @@
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
                 android:textSize="14sp"
-                android:text="本地调试入口"
+                android:text="@string/local_debug_entry"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
@@ -118,7 +118,7 @@
             android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="点击阅读"
+            android:text="@string/request_nc_permission_dialog_click"
             android:textAlignment="center"
             android:textSize="14sp" />
         <TextView
@@ -136,7 +136,7 @@
             android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="和"
+            android:text="、"
             android:textAlignment="center"
             android:textSize="14sp" />
         <TextView

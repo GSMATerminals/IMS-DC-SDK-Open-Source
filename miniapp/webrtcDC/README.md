@@ -1,6 +1,6 @@
 # WebRTC Data Channel Implementation for IMS DC
 
-This project implements the interfaces specified in GSMA TS.66 "IMS data channel API specification CR1040", aiming to provide 5G enhanced call IMS DC Application developers with a unified API for creating and using DC (Data Channel) to facilitate interoperability.
+This project implements the interfaces specified in GSMA TS.66 "IMS data channel API specification CR1040", aiming to provide 5G New Calling IMS DC Application developers with a unified API for creating and using DC (Data Channel) to facilitate interoperability.
 
 ## Features
 - Implements GSMA TS.66 standard interfaces

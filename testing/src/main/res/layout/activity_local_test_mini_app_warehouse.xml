@@ -23,7 +23,7 @@
             android:includeFontPadding="false"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="小程序运管仓库"/>
+            android:text="@string/miniapp_repository"/>
         <Button
             android:id="@+id/btn_add"
             android:layout_gravity="right|center_vertical"
@@ -33,7 +33,7 @@
             android:paddingBottom="8dp"
             android:textSize="16sp"
             android:textColor="@color/green"
-            android:text="新增"/>
+            android:text="@string/create_btn"/>
 
     </FrameLayout>
     <View

@@ -24,6 +24,7 @@ object MiniAppConstants {
     const val EVENT_FILE = "FileEvent"
     const val EVENT_SCREEN_SHARE = "ScreenShareEvent"
     const val EVENT_EC = "ECEvent"
+    const val SYSTEM_EVENT = "SystemEvent"
 
     //function for dc
     const val FUNCTION_CREATE_DATA_CHANNEL = "createAppDataChannel"
@@ -35,6 +36,10 @@ object MiniAppConstants {
     //function for ec
     const val FUNCTION_EC_REQUEST = "expandingCapacityRequest"
     const val FUNCTION_EC_REGISTER = "expandingCapacityRegister"
+
+    //function for system
+    const val FUNCTION_GET_INFORMATION_LIST = "getInformationList"
+
 
     //function for file
     const val FUNCTION_GET_LOCATION = "getLocation"
@@ -60,6 +65,7 @@ object MiniAppConstants {
     const val FUNCTION_STOP_PLAY_VOICE = "stopPlayVoice"
     const val FUNCTION_QUICK_SEARCH_FILE = "quickSearchFile"
     const val FUNCTION_QUICK_SEARCH_KEY_WORDS = "quickSearchFileWithKeyWords"
+    const val FUNCTION_FILE_DOWNLOAD = "fileDownload"
 
     //function for miniapp
     const val FUNCTION_GET_MINI_APP_INFO = "getMiniAppInfo"
@@ -149,6 +155,20 @@ object MiniAppConstants {
     const val IS_SPEAKERPHONE_ON = "isSpeakerphoneOn"
     const val IS_MUTED = "isMuted"
     const val IS_STARTED = "isStarted"
+    const val BATTERY = "battery"
+    const val AVAILABLE_MEMORY = "availableMemory"
+    const val WIFI_RSSI = "wifiRssi"
+    const val MOBILE_RSRP = "mobileRSRP"
+    const val CPU_CORE_NUM = "cpuCoreNum"
+
+    const val PARAMS_GET_INFORMATION = "getInformation"
+    const val PARAMS_INFORMATION_MODEL = "model"
+    const val PARAMS_INFORMATION_CAPABILITY = "capability"
+    const val PARAMS_INFORMATION_APPLICATION = "application"
+    const val PARAMS_DOWNLOAD_EVENT = "downloadEvent"
+    const val PARAMS_DOWNLOAD_URL = "downloadURL"
+    const val PARAMS_MODEL = "model"
+    const val PARAMS_EXTRA_INFO = "extraInfo"
 
     const val LICENSE = "license"
     const val API = "api"

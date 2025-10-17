@@ -20,7 +20,8 @@ import android.content.Context
 
 
 /**
- * 面向小程序提供拓展能力
+ * 面向终端厂商、各运营商提供私有能力接入的接口定义，参考oemec模块的实现
+ * 打包为AAR，供core模块和各拓展能力模块依赖
  */
 interface IEC {
     fun init(context: Context, callback: IECCallback?)

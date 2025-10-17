@@ -5,6 +5,7 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/title_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -23,7 +24,6 @@
         android:layout_marginStart="@dimen/common_margin_start_end"
         android:layout_marginEnd="@dimen/common_margin_start_end"
         android:text="@string/request_nc_permission_dialog_content"
-        android:textAlignment="center"
         android:textSize="14sp" />
     <LinearLayout
         android:gravity="center_vertical"
@@ -43,7 +43,7 @@
             android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="点击阅读"
+            android:text="@string/request_nc_permission_dialog_click"
             android:textAlignment="center"
             android:textSize="14sp" />
         <TextView
@@ -61,7 +61,7 @@
             android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="和"
+            android:text="、"
             android:textAlignment="center"
             android:textSize="14sp" />
         <TextView
@@ -95,7 +95,7 @@
             android:layout_margin="1dp"
             android:layout_weight="1"
             android:background="@drawable/button_selector"
-            android:text="取消"
+            android:text="@string/cancel_btn"
             android:textSize="12sp"
             android:textColor="@color/gray" />
 
@@ -111,7 +111,7 @@
             android:layout_margin="1dp"
             android:layout_weight="1"
             android:background="@drawable/button_selector"
-            android:text="授权开启"
+            android:text="@string/authorize_and_enable"
             android:textSize="12sp"
             android:textColor="@color/holo_blue_dark" />
     </LinearLayout>

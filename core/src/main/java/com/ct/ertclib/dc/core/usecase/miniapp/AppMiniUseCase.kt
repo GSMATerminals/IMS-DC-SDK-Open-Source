@@ -44,7 +44,10 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_MODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_NAME_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_NUMBER_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.API
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.AVAILABLE_MEMORY
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.BATTERY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.CONTACT_EDIT_MODE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.CPU_CORE_NUM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.DIGIT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.GET_CONTACT_LIST_LIMIT_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.GET_CONTACT_LIST_OFFSET_PARAM
@@ -66,6 +69,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAGE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.TITLE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.URL
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.WIFI_RSSI
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStartParam
@@ -81,6 +85,7 @@ import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
+import com.ct.ertclib.dc.core.utils.common.SystemUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.extension.startAddContactActivity
 import com.ct.ertclib.dc.core.utils.extension.startEditContactActivity
@@ -653,12 +658,12 @@ class AppMiniUseCase(
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        logger.info("setWindow")
+        logger.info("setWindow params:${params}")
         val activity = context as? Activity
         activity?.let { activity ->
             params["hidden"]?.let {
                 if (it as Boolean) {
-                    logger.debug("setWindow true")
+                    logger.debug("setWindow hidden true")
                     activity.moveTaskToBack(true)
                 }
             }

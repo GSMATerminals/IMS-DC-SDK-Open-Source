@@ -27,6 +27,7 @@ import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.common.Reason
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.service.MiniAppService
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
@@ -48,6 +49,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
@@ -66,7 +68,7 @@ object MiniAppStartManager : IMiniAppStartManager {
         }
     }
 
-    private fun startMiniAppInfo(miniAppInfo: MiniAppInfo, context: Context, callInfo: CallInfo?,callback: IMiniAppStartCallback?) {
+    private fun startMiniAppInfo(miniAppInfo: MiniAppInfo, context: Context, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?) {
         val coroutineScope = CoroutineScope(EmptyCoroutineContext)
         coroutineScope.launch(Dispatchers.IO) {
             val deferred = async {
@@ -93,7 +95,7 @@ object MiniAppStartManager : IMiniAppStartManager {
             }
             miniAppInfo.appProperties = properties
             coroutineScope.launch(Dispatchers.Main){
-                startMiniAppActivity(context, miniAppInfo, callInfo)
+                startMiniAppActivity(context, miniAppInfo, callInfo, miniAppListInfo)
                 // 回调启动成功
                 callback?.onMiniAppStarted()
             }
@@ -103,7 +105,8 @@ object MiniAppStartManager : IMiniAppStartManager {
     private fun startMiniAppActivity(
         context: Context,
         miniAppInfo: MiniAppInfo,
-        callInfo: CallInfo?
+        callInfo: CallInfo?,
+        miniAppListInfo: MiniAppList?
     ) {
         if (sLogger.isDebugActivated) sLogger.debug("startMiniAppActivity miniAppInfp:$miniAppInfo")
 
@@ -114,8 +117,13 @@ object MiniAppStartManager : IMiniAppStartManager {
             val intent = Intent(context, runningMiniAppWrapper.activityClass)
             intent.putExtra("miniApp", runningMiniAppWrapper.miniApp)
             intent.putExtra("callInfo", runningMiniAppWrapper.callInfo)
+            intent.putExtra("miniAppListInfo", miniAppListInfo)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            val coroutineScope = CoroutineScope(EmptyCoroutineContext)
+            coroutineScope.launch(Dispatchers.Main) {
+                delay(500)
+                context.startActivity(intent)
+            }
             return
         }
 
@@ -134,7 +142,11 @@ object MiniAppStartManager : IMiniAppStartManager {
         intent.putExtra("miniApp", miniAppInfoWrapper.miniApp)
         intent.putExtra("callInfo", callInfo)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+        val coroutineScope = CoroutineScope(EmptyCoroutineContext)
+        coroutineScope.launch(Dispatchers.Main) {
+            delay(500)
+            context.startActivity(intent)
+        }
     }
 
 
@@ -254,8 +266,8 @@ object MiniAppStartManager : IMiniAppStartManager {
         mMiniAppInfoList.removeAll(list.toSet())
     }
 
-    override fun startMiniApp(context: Context, miniAppInfo: MiniAppInfo, callInfo: CallInfo?,callback: IMiniAppStartCallback?) {
-        startMiniAppInfo(miniAppInfo, context, callInfo,callback)
+    override fun startMiniApp(context: Context, miniAppInfo: MiniAppInfo, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?) {
+        startMiniAppInfo(miniAppInfo, context, callInfo, miniAppListInfo, callback)
     }
 
     override fun stopMiniApp(context: Context, callId: String,appId: String) {

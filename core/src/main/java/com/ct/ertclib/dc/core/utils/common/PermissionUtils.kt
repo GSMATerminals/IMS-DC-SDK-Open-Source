@@ -33,6 +33,7 @@ object PermissionUtils : KoinComponent {
     private const val LOCATION_INDEX = 4
     private const val CALL_STATE_INDEX = 5
     private const val READ_CONTACTS_INDEX = 6
+    private const val ACCESS_WIFI_INDEX = 7
 
     private val applicationContext: Context by inject()
 
@@ -43,7 +44,8 @@ object PermissionUtils : KoinComponent {
         PermissionData(applicationContext.resources.getString(R.string.external_storage_title), applicationContext.resources.getString(R.string.external_storage_description)),
         PermissionData(applicationContext.resources.getString(R.string.location_title), applicationContext.resources.getString(R.string.location_description)),
         PermissionData(applicationContext.resources.getString(R.string.call_state_title), applicationContext.resources.getString(R.string.call_state_description)),
-        PermissionData(applicationContext.resources.getString(R.string.contacts), applicationContext.resources.getString(R.string.contact_description))
+        PermissionData(applicationContext.resources.getString(R.string.contacts), applicationContext.resources.getString(R.string.contact_description)),
+        PermissionData(applicationContext.resources.getString(R.string.wifi), applicationContext.resources.getString(R.string.wifi_description))
     )
 
     private val permissionDataMap = mutableMapOf(
@@ -53,7 +55,8 @@ object PermissionUtils : KoinComponent {
         MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
         MiniAppPermissions.MINIAPP_LOCATION to permissionDataList[LOCATION_INDEX],
         MiniAppPermissions.MINIAPP_GET_CALL_STATE to permissionDataList[CALL_STATE_INDEX],
-        MiniAppPermissions.MINIAPP_READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX]
+        MiniAppPermissions.MINIAPP_READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
+        MiniAppPermissions.MINIAPP_ACCESS_WIFI to permissionDataList[ACCESS_WIFI_INDEX]
     )
 
     private val systemPermissionDataMap = mutableMapOf(
@@ -64,7 +67,8 @@ object PermissionUtils : KoinComponent {
         Manifest.permission.ACCESS_FINE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.ACCESS_COARSE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.READ_PHONE_STATE to permissionDataList[CALL_STATE_INDEX],
-        Manifest.permission.READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX]
+        Manifest.permission.READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
+        Manifest.permission.ACCESS_WIFI_STATE to permissionDataList[ACCESS_WIFI_INDEX]
     )
 
     //将permissionDataList转换成permissionMap，方便进行权限比对
@@ -94,6 +98,7 @@ object PermissionUtils : KoinComponent {
                 }
                 MiniAppPermissions.MINIAPP_GET_CALL_STATE -> allPermission.add(Manifest.permission.READ_PHONE_STATE)
                 MiniAppPermissions.MINIAPP_READ_CONTACTS -> allPermission.add(Manifest.permission.READ_CONTACTS)
+                MiniAppPermissions.MINIAPP_ACCESS_WIFI -> allPermission.add(Manifest.permission.ACCESS_WIFI_STATE)
             }
         }
         return allPermission
@@ -112,6 +117,7 @@ object PermissionUtils : KoinComponent {
 
             Manifest.permission.READ_PHONE_STATE -> MiniAppPermissions.MINIAPP_GET_CALL_STATE
             Manifest.permission.READ_CONTACTS -> MiniAppPermissions.MINIAPP_READ_CONTACTS
+            Manifest.permission.ACCESS_WIFI_STATE -> MiniAppPermissions.MINIAPP_ACCESS_WIFI
             else -> ""
         }
     }
@@ -196,6 +202,9 @@ object PermissionUtils : KoinComponent {
             }
             applicationContext.resources.getString(R.string.contacts) -> {
                 map[MiniAppPermissions.MINIAPP_READ_CONTACTS] = permissionData.willBeGranted
+            }
+            applicationContext.resources.getString(R.string.wifi) -> {
+                map[MiniAppPermissions.MINIAPP_ACCESS_WIFI] = permissionData.willBeGranted
             }
         }
         return map

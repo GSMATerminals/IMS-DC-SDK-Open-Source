@@ -75,7 +75,7 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                     }
                 }
             }
-            binding.btnDelete.text = "删除"
+            binding.btnDelete.text = getString(R.string.delete_btn)
         }
         if (oldAppInfo != null){
             binding.etAppId.setText(oldAppInfo?.appId)
@@ -93,14 +93,14 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             onBack()
         }
         binding.btnDelete.setOnClickListener {
-            var tips = "放弃编辑？"
+            var tips = getString(R.string.discard_edit)
             if (oldAppId.isNotEmpty()){
-                tips = "从仓库删除该小程序？"
+                tips = getString(R.string.delete_miniappp_tips)
             }
             AlertDialog.Builder(this@LocalTestMiniAppEditActivity)
-                .setTitle("确认")
+                .setTitle(R.string.confirm)
                 .setMessage(tips)
-                .setPositiveButton("确定") { dialog, which ->
+                .setPositiveButton(com.ct.ertclib.dc.core.R.string.ok_btn) { dialog, which ->
                     // 确定按钮点击事件
                     dialog.dismiss()
 
@@ -125,11 +125,11 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                         SPUtils.getInstance().put("TestMiniAppList", builder.toString())
                     }
                     if (oldAppId.isNotEmpty()){
-                        ToastUtils.showShortToast(this, "删除成功")
+                        ToastUtils.showShortToast(this, R.string.delete_successful)
                     }
                     finish()
                 }
-                .setNegativeButton("取消") { dialog, which ->
+                .setNegativeButton(com.ct.ertclib.dc.core.R.string.cancel_btn) { dialog, which ->
                     dialog.dismiss()
                 }
                 .show()
@@ -140,7 +140,7 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                 || binding.etVersion.text.isNullOrEmpty()
                 || binding.etScene.text.isNullOrEmpty()
                 || binding.path.text.isNullOrEmpty()) {
-                ToastUtils.showShortToast(this, "请填写完整信息")
+                ToastUtils.showShortToast(this, R.string.edit_all_info)
                 return@setOnClickListener
             }
             val miniAppInfo = MiniAppInfo(
@@ -176,7 +176,7 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                         if (miniAppInfo.appId != temp?.appId && miniAppInfo.phase == temp?.phase && miniAppInfo.autoLoad && temp.autoLoad) {
                             ToastUtils.showShortToast(
                                 this,
-                                "${miniAppInfo.phase}已经配置自动拉起小程序：${temp.appName}"
+                                "${miniAppInfo.phase}${getString(R.string.exist_autoload)}：${temp.appName}"
                             )
                             return@setOnClickListener
                         }
@@ -196,7 +196,7 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             }
             builder.insert(0,Base64Utils.encodeToBase64(JsonUtil.toJson(miniAppInfo)) + "&zipPath=" + binding.path.text.toString())
             SPUtils.getInstance().put("TestMiniAppList", builder.toString())
-            ToastUtils.showShortToast(this, "保存成功")
+            ToastUtils.showShortToast(this, R.string.saved_ok)
             finish()
         }
 
@@ -212,17 +212,17 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                         if (all) {
                             selectMiniApp()
                         } else {
-                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, "获取权限成功，部分权限未正常授予")
+                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, R.string.miss_some_permissions)
                         }
                     }
 
                     override fun onDenied(permissions: MutableList<String>, never: Boolean) {
                         if (never) {
-                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, "被永久拒绝授权，请手动授予权限")
+                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, R.string.miss_permission_forever)
                             // 如果是被永久拒绝就跳转到应用权限系统设置页面
                             XXPermissions.startPermissionActivity(this@LocalTestMiniAppEditActivity, permissions)
                         } else {
-                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, "获取权限失败")
+                            ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, R.string.got_permissions)
                         }
                     }
 
@@ -235,7 +235,7 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
         val intent = Intent("android.intent.action.GET_CONTENT")
         intent.type = "application/zip"
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        startActivityForResult(Intent.createChooser(intent, "选择小程序安装包"), 1)
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_package)), 1)
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -264,15 +264,15 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             || binding.swPhase.isChecked != (oldAppInfo?.phase == "PRECALL")
         ) {
             AlertDialog.Builder(this@LocalTestMiniAppEditActivity)
-                .setTitle("确认")
-                .setMessage("放弃编辑？")
-                .setPositiveButton("确定") { dialog, which ->
+                .setTitle(R.string.confirm)
+                .setMessage(R.string.discard_edit)
+                .setPositiveButton(com.ct.ertclib.dc.core.R.string.ok_btn) { dialog, which ->
                     // 确定按钮点击事件
                     dialog.dismiss()
                     finish()
 
                 }
-                .setNegativeButton("取消") { dialog, which ->
+                .setNegativeButton(com.ct.ertclib.dc.core.R.string.cancel_btn) { dialog, which ->
                     dialog.dismiss()
                 }
                 .show()

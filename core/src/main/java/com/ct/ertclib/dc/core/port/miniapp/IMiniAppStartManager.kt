@@ -18,11 +18,12 @@ package com.ct.ertclib.dc.core.port.miniapp
 
 import android.content.Context
 import com.ct.ertclib.dc.core.data.call.CallInfo
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 
 interface IMiniAppStartManager {
 
-    fun startMiniApp(context: Context, miniAppInfo: MiniAppInfo, callInfo: CallInfo?,callback: IMiniAppStartCallback?)
+    fun startMiniApp(context: Context, miniAppInfo: MiniAppInfo, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?)
 
     fun stopMiniApp(context: Context,callId: String, appId: String)
 

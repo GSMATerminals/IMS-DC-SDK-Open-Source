@@ -108,18 +108,6 @@ object TestImsDataChannelManager {
                 }
             }
             notifyADCResponse(dcIds, mCallback, ImsDCStatus.DC_STATE_CONNECTING)
-            try {
-                Thread.sleep(5)
-                notifyADCResponse(dcIds, mCallback, ImsDCStatus.DC_STATE_OPEN)
-            } catch (e:Exception) {
-                sLogger.warn(e.message, e)
-            }
-            if (list.isNotEmpty()) {
-                val data = TestData()
-                data.messageType = TestData.MessageType.CREATE_DC_REQUEST
-                data.dcLabel = list[0]
-                sendData(data)
-            }
         }
 
         override fun setImsDataChannelCallback(

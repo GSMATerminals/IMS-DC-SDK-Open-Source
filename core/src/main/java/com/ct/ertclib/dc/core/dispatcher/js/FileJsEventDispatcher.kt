@@ -21,6 +21,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_CHECK_FILE_EXI
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DECOMPRESS_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DELETE_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DELETE_KEY_VALUE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_FILE_DOWNLOAD
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_FILE_INFO
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_FILE_INFO_ASYNC
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_FILE_LIST
@@ -57,10 +58,11 @@ class FileJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_SELECT_FILE -> { fileEventUseCase.selectFile(context, handler) }
             FUNCTION_SAVE_FILE -> { fileEventUseCase.saveFile(context, request.params, handler) }
             FUNCTION_READ_FILE -> { fileEventUseCase.readFile(context, request.params, handler) }
-            FUNCTION_DECOMPRESS_FILE -> { fileEventUseCase.getLocation(context, handler) }
+            FUNCTION_DECOMPRESS_FILE -> { fileEventUseCase.decompressFile(context, request.params, handler) }
             FUNCTION_GET_FILE_INFO_ASYNC -> { fileEventUseCase.getFileInfoAsync(context, request.params, handler) }
             FUNCTION_QUICK_SEARCH_FILE -> { fileEventUseCase.quickSearchFile(context,request.params,  handler) }
             FUNCTION_QUICK_SEARCH_KEY_WORDS -> { fileEventUseCase.quickSearchFileWithKeyWords(context, request.params, handler) }
+            FUNCTION_FILE_DOWNLOAD -> { fileEventUseCase.fileDownload(context, request.params, handler) }
         }
     }
 
