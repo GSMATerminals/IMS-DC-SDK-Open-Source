@@ -35,13 +35,15 @@ import com.ct.ertclib.dc.core.data.model.DataChannelPropertyEntity
 import com.ct.ertclib.dc.core.data.model.FileEntity
 import com.ct.ertclib.dc.core.data.model.MessageEntity
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
+import com.ct.ertclib.dc.core.data.model.ModelEntity
 import com.ct.ertclib.dc.core.data.model.PermissionModel
 import com.ct.ertclib.dc.core.port.dao.FileDao
+import com.ct.ertclib.dc.core.port.dao.ModelDao
 import com.ct.ertclib.dc.core.port.dao.PermissionDao
 
 @Database(
-    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class, FileEntity::class],
-    version = 11,
+    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class, FileEntity::class, ModelEntity::class],
+    version = 12,
     exportSchema = false
 )
 abstract class NewCallDatabase : RoomDatabase() {
@@ -57,6 +59,8 @@ abstract class NewCallDatabase : RoomDatabase() {
     abstract fun permissionDao(): PermissionDao
 
     abstract fun FileDao(): FileDao
+
+    abstract fun modelDao(): ModelDao
 
     companion object {
 
@@ -215,6 +219,20 @@ abstract class NewCallDatabase : RoomDatabase() {
                             "CREATE TABLE IF NOT EXISTS files (" +
                                     "path TEXT PRIMARY KEY NOT NULL," +
                                     "name TEXT NOT NULL)"
+                        )
+                    }
+                })
+                .addMigrations(object : Migration(11, 12) {
+                    override fun migrate(database: SupportSQLiteDatabase) {
+                        LogUtils.i("NewCallDatabase update 11-12")
+                        database.execSQL(
+                            "CREATE TABLE IF NOT EXISTS model_table (" +
+                                    "modelId TEXT PRIMARY KEY NOT NULL," +
+                                    "modelName TEXT NOT NULL," +
+                                    "modelPath TEXT NOT NULL," +
+                                    "modelVersion TEXT NOT NULL," +
+                                    "modelType TEXT NOT NULL," +
+                                    "icon TEXT NOT NULL)"
                         )
                     }
                 })

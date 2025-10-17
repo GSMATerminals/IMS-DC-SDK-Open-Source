@@ -17,8 +17,11 @@
 package com.ct.ertclib.dc.core.ui.viewmodel
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
+import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
 
 class SettingsViewModel: ViewModel() {
 
@@ -29,6 +32,15 @@ class SettingsViewModel: ViewModel() {
     var isCreated = false
 
     fun checkAndRequestPermission(context: Context, type: Int, onAgree: () -> Unit, onDenied: () -> Unit) {
-        NewCallAppSdkInterface.checkAndRequestPermission(type,onAgree,onDenied)
+        val permissionHelper = SDKPermissionHelper(context,object : IPermissionCallback {
+            @RequiresApi(Build.VERSION_CODES.Q)
+            override fun onAgree() {
+                onAgree()
+            }
+            override fun onDenied() {
+                onDenied()
+            }
+        })
+        permissionHelper.checkAndRequestPermission(type)
     }
 }

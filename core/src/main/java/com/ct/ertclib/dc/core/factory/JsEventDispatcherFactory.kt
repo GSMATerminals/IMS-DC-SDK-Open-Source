@@ -21,11 +21,13 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.EVENT_EC
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.EVENT_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.EVENT_MINI_APP
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.EVENT_SCREEN_SHARE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.SYSTEM_EVENT
 import com.ct.ertclib.dc.core.dispatcher.js.DCJsEventDispatcher
 import com.ct.ertclib.dc.core.dispatcher.js.DefaultJsDispatcher
 import com.ct.ertclib.dc.core.dispatcher.js.ECJsEventDispatcher
 import com.ct.ertclib.dc.core.dispatcher.js.FileJsEventDispatcher
 import com.ct.ertclib.dc.core.dispatcher.js.MiniAppJsEventDispatcher
+import com.ct.ertclib.dc.core.dispatcher.js.SystemJsEventDispatcher
 import com.ct.ertclib.dc.core.dispatcher.js.ScreenShareJsEventDispatcher
 import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
 
@@ -37,6 +39,7 @@ object JsEventDispatcherFactory {
     private val miniAppEventDispatcher: IJsEventDispatcher by lazy { MiniAppJsEventDispatcher() }
     private val screenShareEventDispatcher: IJsEventDispatcher by lazy { ScreenShareJsEventDispatcher() }
     private val ecDispatcher: IJsEventDispatcher by lazy { ECJsEventDispatcher() }
+    private val systemEventDispatcher: IJsEventDispatcher by lazy { SystemJsEventDispatcher() }
 
     @JvmStatic
     fun getEventDispatcher(eventType: String): IJsEventDispatcher {
@@ -46,6 +49,7 @@ object JsEventDispatcherFactory {
             EVENT_FILE -> fileEventDispatcher
             EVENT_SCREEN_SHARE -> screenShareEventDispatcher
             EVENT_EC -> ecDispatcher
+            SYSTEM_EVENT -> systemEventDispatcher
             else -> defaultDispatcher
         }
     }

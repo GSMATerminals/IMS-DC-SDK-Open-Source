@@ -17,7 +17,6 @@
 package com.ct.ertclib.dc.feature.testing;
 
 import android.os.RemoteException;
-import android.text.TextUtils;
 
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.SPUtils;
@@ -35,8 +34,6 @@ import com.ct.ertclib.dc.core.data.message.FileResponse;
 import com.ct.ertclib.dc.core.data.message.IMessage;
 import com.ct.ertclib.dc.core.data.message.MessageType;
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList;
-import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus;
-import com.ct.ertclib.dc.feature.testing.socket.SocketNetworkManager;
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback;
 import com.newcalllib.datachannel.V1_0.IImsDCObserver;
 import com.newcalllib.datachannel.V1_0.IImsDataChannel;
@@ -51,8 +48,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Set;
 
 public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
     private static final String TAG = "TestImsDataChannelImpl";
@@ -63,16 +58,11 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
 
     private static final String STR_RN = "\r\n";
 
-    private INetworkManager mSocketNetworkManager;
-
     public static final int DC_TYPE_ADC = 2;
     public static final int DC_TYPE_BDC = 1;
 
     public TestImsDataChannelImpl() {
         mPath = new PathManager().getInternalCacheDirPath(Utils.getApp());
-        if (SPUtils.getInstance().getBoolean("mock_socket", false)) {
-            mSocketNetworkManager = SocketNetworkManager.Companion.getINSTANCE();
-        }
     }
 
     private int mDcType;
@@ -120,13 +110,16 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
 
     private ImsDCStatus mDcStatus;
     public void setDcStatus(ImsDCStatus status) {
+        boolean hasChanged = mDcStatus != null && mDcStatus != status;
         mDcStatus = status;
-        try {
-            if (mImsObserver != null) {
-                mImsObserver.onDataChannelStateChange(status, 0);
+        if (hasChanged){
+            try {
+                if (mImsObserver != null) {
+                    mImsObserver.onDataChannelStateChange(status, 0);
+                }
+            } catch (RemoteException e) {
+                sLogger.error(e.getMessage(), e);
             }
-        } catch (RemoteException e) {
-            sLogger.error(e.getMessage(), e);
         }
     }
 
@@ -150,7 +143,7 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
 
     @Override
     public boolean send(byte[] data, int length, IDCSendDataCallback l) throws RemoteException {
-        sLogger.info("send data length = " + length+",mDcStatus="+mDcStatus);
+//        sLogger.info("send data length = " + length+",mDcStatus="+mDcStatus);
         if (mDcStatus == ImsDCStatus.DC_STATE_OPEN) {
             if (mDcType == DC_TYPE_BDC) {
                 return sendBdcData(data, length, l);
@@ -165,7 +158,7 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
     private boolean sendAdcData(byte[] data, int length, IDCSendDataCallback callback) {
         //TODO 通过socket发送数据
         String s = new String(data, StandardCharsets.UTF_8);
-        sLogger.info("sendAdcData data[" + s + "]");
+//        sLogger.info("sendAdcData data[" + s + "]");
 //        if (SPUtils.getInstance().getBoolean("mock_socket", false)) {
 //            mSocketNetworkManager.sendByte(data);
 //        }
@@ -174,7 +167,7 @@ public class TestImsDataChannelImpl extends IImsDataChannel.Stub {
         try {
             callback.onSendDataResult(20000);
 
-            byte[] bytes = ("收到你发的" + s + "啦！！！").getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = (s).getBytes(StandardCharsets.UTF_8);
             mImsObserver.onMessage(bytes, bytes.length);
         } catch (Exception e) {
             sLogger.warn("sendAdcData replay", e);

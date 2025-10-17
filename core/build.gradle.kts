@@ -67,12 +67,11 @@ android {
 }
 
 dependencies {
-    compileOnly(files("${rootProject.projectDir}\\libs\\ctec-release.aar"))
+    compileOnly(files("${rootProject.projectDir}\\libs\\ctec-release-1.0.0.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\base-release.aar"))
     implementation(project(":oemec"))
     api(libs.appcompat)
     implementation(files("${rootProject.projectDir}\\libs\\xstream-1.4.9.jar"))
-//    compileOnly(files("${rootProject.projectDir}\\libs\\framework.jar"))
     implementation(libs.localbroadcastmanager)
     implementation(libs.okhttp)
     // room

@@ -83,10 +83,10 @@ class MainActivity : BaseAppCompatActivity() {
     private fun updateView() {
         if (SDKPermissionUtils.hasAllPermissions(this@MainActivity)){
             binding.contentLayout.visibility = View.VISIBLE
-            binding.btnOpen.visibility = View.GONE
+            binding.tipsLayout.visibility = View.GONE
         } else {
             binding.contentLayout.visibility = View.GONE
-            binding.btnOpen.visibility = View.VISIBLE
+            binding.tipsLayout.visibility = View.VISIBLE
         }
     }
 }

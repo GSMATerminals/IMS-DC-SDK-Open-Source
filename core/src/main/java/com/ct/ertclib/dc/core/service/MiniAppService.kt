@@ -273,7 +273,7 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
                             replayMessage = AppResponse(
                                 1,
                                 "success",
-                                mapOf("getSdkVersions" to SdkInfo(versionCode, versionName))
+                                mapOf("getSdkVersions" to SdkInfo(versionCode, versionName ?: ""))
                             ).toJson()
                             iMessageCallback?.reply(replayMessage)
                         }

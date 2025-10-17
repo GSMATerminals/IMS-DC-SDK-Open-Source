@@ -28,9 +28,4 @@ class MainViewModel: ViewModel() {
     }
 
     var isCreated = false
-
-    fun checkAndRequestPermission(context: Context, type: Int, onAgree: () -> Unit, onDenied: () -> Unit) {
-        NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "checkAndRequestPermission, type: $type")
-        NewCallAppSdkInterface.checkAndRequestPermission(type,onAgree,onDenied)
-    }
 }

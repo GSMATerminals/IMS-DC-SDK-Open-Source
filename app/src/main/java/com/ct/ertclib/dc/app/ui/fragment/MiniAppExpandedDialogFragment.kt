@@ -224,10 +224,6 @@ class MiniAppExpandedDialogFragment(
         }
         viewBinding.setting.setOnClickListener {
             NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "Jump miniapp dialog setting")
-            dismiss()
-            activity?.let {
-                NewCallAppSdkInterface.startSettingsActivity(it)
-            }
         }
         viewBinding.skin.setOnClickListener {
             NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "click skin page")

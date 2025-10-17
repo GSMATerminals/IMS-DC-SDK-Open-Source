@@ -45,16 +45,11 @@ object SDKPermissionUtils {
     const val PERMISSION_DID_CALL_NUM_SP_KEY = "permission_did_call_num_sp_key"
     const val POLICY_VERSION_KEY = "policy_version_key"
     const val ENABLE_NEW_CALL_SP_KEY = "enableNewCall"
-    val PERMISSIONS = if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
-        arrayOf(
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.PACKAGE_USAGE_STATS,
-        )
-    } else {
-        arrayOf(
-            Manifest.permission.READ_PHONE_STATE,
-        )
-    }
+    const val POLICY_CHANGE_KEY = "policy_change_key"
+    val PERMISSIONS = arrayOf(
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.PACKAGE_USAGE_STATS,
+    )
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     fun hasAllPermissions(context: Context):Boolean{
         return isNewCallEnable() && XXPermissions.isGranted(context, PERMISSIONS) && Settings.canDrawOverlays(context)
@@ -70,6 +65,10 @@ object SDKPermissionUtils {
 
     fun isNewCallEnable():Boolean{
         return SPUtils.getInstance().getBoolean(ENABLE_NEW_CALL_SP_KEY, false)
+    }
+
+    fun isPrivacyChanged():Boolean{
+        return SPUtils.getInstance().getBoolean(POLICY_CHANGE_KEY, false)
     }
 
     fun addPermissionDidOnce(){
@@ -118,6 +117,7 @@ object SDKPermissionUtils {
                             // 一定是在有变化的时候才重置，防止第一次授权后，第二次使用时又弹窗
                             if (!oldVersion.isNullOrEmpty() && responseBody.value.version != oldVersion){
                                 setNewCallEnable(false)
+                                SPUtils.getInstance().put(POLICY_CHANGE_KEY,true)
                             }
                             SPUtils.getInstance().put(POLICY_VERSION_KEY,responseBody.value.version)
                         }

@@ -17,13 +17,13 @@
             android:includeFontPadding="false"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="增强通话"/>
+            android:text="@string/main_activity_title"/>
         <ImageView
             android:id="@+id/btn_setting"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="right|center_vertical"
-            android:src="@drawable/icon_setting"
+            android:src="@drawable/icon_mini_setting"
             android:padding="15dp"/>
     </FrameLayout>
     <View
@@ -51,24 +51,41 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
-                    android:text="使用过的小程序"/>
+                    android:text="@string/used_miniapp_title"/>
                 <androidx.fragment.app.FragmentContainerView
                     android:id="@+id/fragment_container"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"/>
             </LinearLayout>
-            <Button
+            <LinearLayout
                 android:visibility="gone"
-                android:id="@+id/btn_open"
-                android:layout_width="160dp"
-                android:layout_height="40dp"
-                android:background="@drawable/open_btn_bg"
-                android:gravity="center"
+                android:id="@+id/tips_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:singleLine="true"
-                android:text="前往开启"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp" />
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="30dp"
+                    android:layout_marginLeft="30dp"
+                    android:layout_marginRight="30dp"
+                    android:textSize="18dp"
+                    android:text="@string/open_tips"/>
+                <Button
+                    android:id="@+id/btn_open"
+                    android:layout_width="160dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/open_btn_bg"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:singleLine="true"
+                    android:text="@string/open_btn_title"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
         </FrameLayout>
     </LinearLayout>
 </LinearLayout>

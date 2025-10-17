@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_btn">删除</string>
+    <string name="confirm">确认</string>
+    <string name="discard_edit">放弃编辑？</string>
+    <string name="delete_miniappp_tips">从仓库删除该小程序？</string>
+    <string name="delete_successful">删除成功</string>
+    <string name="edit_all_info">请填写完整信息</string>
+    <string name="exist_autoload">已经配置自动拉起小程序</string>
+    <string name="saved_ok">保存成功</string>
+    <string name="miss_some_permissions">部分权限未正常授予</string>
+    <string name="miss_permission_forever">被永久拒绝授权，请手动授予权限</string>
+    <string name="got_permissions">获取权限失败</string>
+    <string name="choose_package">选择小程序安装包</string>
+    <string name="save_btn">保存</string>
+    <string name="used_precall">是否通话前:</string>
+    <string name="edit_miniapp_title">编辑小程序</string>
+    <string name="miniapp_package_path">小程序安装包路径：</string>
+    <string name="miniapp_id">小程序ID：</string>
+    <string name="miniapp_name">小程序名称：</string>
+    <string name="version">版本号：</string>
+    <string name="support_scene">supportScene：</string>
+    <string name="support_scene_tips">1：音频;2：视频;3：音频和视频：</string>
+    <string name="autoload">autoload</string>
+    <string name="miniapp_repository">小程序仓库</string>
+    <string name="create_btn">新增</string>
+    <string name="local_debug">本地调试</string>
+    <string name="config_btn">配置</string>
+    <string name="simulate_call">模拟通话</string>
+</resources>

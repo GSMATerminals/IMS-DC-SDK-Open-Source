@@ -88,6 +88,7 @@ import org.koin.core.component.inject
 import wendu.dsbridge.DWebView
 import androidx.core.graphics.toColorInt
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_AUDIO_DEVICE_NOTIFY
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 
 open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
@@ -99,12 +100,14 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
     override var miniApp: MiniAppInfo? = null
     override var callInfo: CallInfo? = null
+    override var miniAppListInfo: MiniAppList? = null
     private lateinit var mBinding: ActivityMiniAppBinding
     var mOnPickMediaCallbackListener: OnPickMediaCallbackListener? = null
     val miniToParentManager: IMiniToParentManager by inject()
     var mCallState = Call.STATE_DISCONNECTED
     private var miniAppDbRepo:MiniAppDbRepo? = null
     private var hasAllPermission = false
+    private var hasDataInit = false
     private lateinit var viewModel: MiniAppViewModel
     private var permissionDialog: PermissionBottomSheetDialog? = null
     private val activityManager: IActivityManager by inject()//本进程中的Activity，如小程序设置页面，小程序的Activity除外
@@ -135,24 +138,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         setContentView(mBinding.root)
         supportActionBar?.hide()
         miniToParentManager.miniAppInterface = this
-
-        val parcelableExtra: Parcelable? = intent.getParcelableExtra("miniApp")
-
-        if (parcelableExtra != null) {
-            miniApp = parcelableExtra as MiniAppInfo
-        }
-
-        val callInfoParcelable: Parcelable? = intent.getParcelableExtra("callInfo")
-        if (callInfoParcelable != null) {
-            callInfo = callInfoParcelable as CallInfo
-            mCallState = callInfo?.state!!
-        }
-
-        if (sLogger.isDebugActivated) {
-            sLogger.debug("onCreate miniAppInfo :$miniApp")
-            sLogger.debug("onCreate mCallInfo :$callInfo")
-        }
-        initData()
+        handleIntent(intent)
         initView()
 
         if (miniApp != null) {
@@ -183,10 +169,44 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         }
     }
 
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        sLogger.info("onNewIntent")
+        intent?.let {
+            handleIntent(it)
+            // 小程序在后台被其他小程序唤起，且携带了参数，这时刷新小程序页面
+            if (miniApp?.isStartByOthers == true && miniApp?.startByOthersParams != null) {
+                loadUrl()
+            }
+        }
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val parcelableExtra: Parcelable? = intent.getParcelableExtra("miniApp")
+
+        if (parcelableExtra != null) {
+            miniApp = parcelableExtra as MiniAppInfo
+        }
+
+        val callInfoParcelable: Parcelable? = intent.getParcelableExtra("callInfo")
+        if (callInfoParcelable != null) {
+            callInfo = callInfoParcelable as CallInfo
+            mCallState = callInfo?.state!!
+        }
+        miniAppListInfo = intent.getParcelableExtra("miniAppListInfo") as? MiniAppList
+
+        if (sLogger.isDebugActivated) {
+            sLogger.debug("onCreate miniAppInfo :$miniApp")
+            sLogger.debug("onCreate mCallInfo :$callInfo")
+        }
+    }
+
     private fun checkMiniAppPermissions(permissions: MutableList<PermissionData>) {
         if (permissions.isEmpty()) {
             hasAllPermission = true
             sLogger.info("checkMiniAppPermissions permissions is empty, return")
+            initData()
             return
         } else {
             miniApp?.let {
@@ -205,6 +225,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         val map = permissionMap.filterValues { !it }
         if (map.isEmpty()) {
             hasAllPermission = true
+            initData()
         } else {
             onPermissionNotGranted()
             hasAllPermission = false
@@ -263,13 +284,16 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     }
 
     private fun initData(){
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                miniApp?.lastUseTime = System.currentTimeMillis()
-                miniAppDbRepo?.upsert(miniApp!!)
+        if(!hasDataInit){
+            hasDataInit = true
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    miniApp?.lastUseTime = System.currentTimeMillis()
+                    miniAppDbRepo?.upsert(miniApp!!)
+                }
             }
+            miniToParentManager.bindService(this)
         }
-        miniToParentManager.bindService(this)
     }
 
     private fun setWebViewSettings(dWebView: DWebView) {
@@ -296,7 +320,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
     private fun notifyMiniAppState(state:String){
         val map = mapOf("miniAppState" to state)
-        callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
+       callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
         sLogger.debug("notifyMiniAppState state:$state")
     }
 
@@ -351,13 +375,13 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                 mBinding.tvPageName.setTextColor(Color.WHITE)
                 mBinding.ivBack.setImageResource(R.drawable.icon_mini_back_white)
                 mBinding.ivBackground.setImageResource(R.drawable.icon_mini_to_background_white)
-                mBinding.ivSetting.setImageResource(R.drawable.icon_setting_white)
+                mBinding.ivSetting.setImageResource(R.drawable.icon_mini_setting_white)
                 mBinding.ivClose.setImageResource(R.drawable.icon_mini_close_white)
             } else {
                 mBinding.tvPageName.setTextColor(Color.BLACK)
                 mBinding.ivBack.setImageResource(R.drawable.icon_mini_back)
                 mBinding.ivBackground.setImageResource(R.drawable.icon_mini_to_background)
-                mBinding.ivSetting.setImageResource(R.drawable.icon_setting)
+                mBinding.ivSetting.setImageResource(R.drawable.icon_mini_setting)
                 mBinding.ivClose.setImageResource(R.drawable.icon_mini_close)
             }
         }
@@ -420,6 +444,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         if (!hasAllPermission){
             miniApp?.let {
                 viewModel.startGrantPermission(this, it, ::checkMiniAppPermissions, ::finishAndKillMiniAppActivity)
+
             }
         }
     }
@@ -549,9 +574,14 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     }
 
     override fun invokeOnServiceConnected() {
-        val path = miniApp?.path
+        sLogger.debug("onServiceConnected")
+        loadUrl()
+    }
+
+    private fun loadUrl() {
         setWindowStyle()
-        sLogger.debug("onServiceConnected loadUrl path:$path")
+        val path = miniApp?.path
+        sLogger.debug("loadUrl path:$path, param:${miniApp?.startByOthersParams}")
         val params = if (!miniApp?.startByOthersParams.isNullOrEmpty()){"?${miniApp?.startByOthersParams}"}else{""}
         mBinding.webView.loadUrl("file://$path/index.html${params}")
     }

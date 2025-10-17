@@ -20,6 +20,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.PERMISSION_TYPE_IN_APP
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.databinding.ActivitySettingsBinding
@@ -62,7 +63,7 @@ class SettingsActivity : BaseAppCompatActivity() {
             if (binding.swNewcall.isChecked){
                 this.startLocalTestActivity()
             } else {
-                ToastUtils.showShortToast(this@SettingsActivity,"请先开启5G增强通话")
+                ToastUtils.showShortToast(this@SettingsActivity,getString(R.string.please_open))
             }
         }
         binding.swNewcall.setOnCheckedChangeListener { _, isChecked ->
@@ -94,10 +95,15 @@ class SettingsActivity : BaseAppCompatActivity() {
             binding.swNewcall.isChecked = SDKPermissionUtils.hasAllPermissions(this)
         }
         if (binding.swNewcall.isChecked){
-            binding.closeTips.text = "开启表明您已经同意《隐私政策》和《用户协议》"
+            binding.closeTips.text = getString(R.string.open_switch_tips)
         } else {
-            binding.closeTips.text = "关闭表明您不同意或撤回同意《隐私政策》和《用户协议》"
+            binding.closeTips.text = getString(R.string.close_switch_tips)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateView()
     }
 
 }

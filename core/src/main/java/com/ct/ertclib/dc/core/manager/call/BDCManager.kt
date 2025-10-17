@@ -139,7 +139,6 @@ class BDCManager(
     private var mDc: IImsDataChannel? = null
     private var mDc100: IImsDataChannel? = null
     private var mLastDcStatus : ImsDCStatus ?= null
-    private var checkPermissionAfterCall = false
     private var isInCallOnTop = false
 
     inner class DcMessageHandler(looper: Looper) : Handler(looper) {
@@ -286,8 +285,8 @@ class BDCManager(
                 if (miniAppList.applications == null) {
                     sLogger.info("$mTag receiveMiniAppList applications is null")
                 } else {
-                    // 成功获取小程序列表后进行授权
-                    checkPermissionOnMiniAppListLoaded(miniAppList)
+                    miniAppManager.onMiniAppListLoaded(miniAppList)
+                    checkTopTask()
                 }
             }
         } catch (e: Exception) {
@@ -295,22 +294,6 @@ class BDCManager(
                 sLogger.error("$mTag receiveMiniAppList error", e)
             }
         }
-    }
-
-    private fun checkPermissionOnMiniAppListLoaded(miniAppList: MiniAppList){
-        sLogger.debug("checkPermissionOnMiniAppListLoaded")
-        val permissionHelper = SDKPermissionHelper(Utils.getApp(),object : IPermissionCallback {
-            @RequiresApi(Build.VERSION_CODES.Q)
-            override fun onAgree() {
-                miniAppManager.onMiniAppListLoaded(miniAppList)
-                checkTopTask()
-            }
-            override fun onDenied() {
-                checkPermissionAfterCall = true
-                sLogger.debug("checkPermissionOnMiniAppListLoaded onDenied and will check permission after call")
-            }
-        })
-        permissionHelper.checkAndRequestPermission(NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL)
     }
 
     private fun handleSendDataResult(state: Int) {
@@ -581,12 +564,6 @@ class BDCManager(
         mRequestMessageQueue.clear()
         if (!mHandlerThreadQuited){
             mHandlerThreadQuited = mHandlerThread.quit()
-        }
-        // 结束后授权
-        if (checkPermissionAfterCall){
-            checkPermissionAfterCall = false
-            val permissionHelper = SDKPermissionHelper(Utils.getApp(),null)
-            permissionHelper.checkAndRequestPermission(NewCallAppSdkInterface.PERMISSION_TYPE_AFTER_CALL)
         }
     }
 

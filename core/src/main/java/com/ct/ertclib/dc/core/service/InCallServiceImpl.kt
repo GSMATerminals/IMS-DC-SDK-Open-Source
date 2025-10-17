@@ -27,6 +27,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.Utils
+import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
+import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT_KEY
@@ -67,6 +70,8 @@ class InCallServiceImpl : InCallService(), KoinComponent {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val mCallsMap = ConcurrentHashMap<String, Call>()
+
+    private var checkPermissionAfterCall = false
 
     override fun onBind(intent: Intent?): IBinder? {
         LogConfig.upDateLogEnabled()
@@ -109,6 +114,21 @@ class InCallServiceImpl : InCallService(), KoinComponent {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCallAdded(call: Call?) {
+        val permissionHelper = SDKPermissionHelper(Utils.getApp(),object : IPermissionCallback {
+            @RequiresApi(Build.VERSION_CODES.Q)
+            override fun onAgree() {
+                dealCall(call)
+            }
+            override fun onDenied() {
+                checkPermissionAfterCall = true
+                sLogger.debug("checkPermission onCallAdded onDenied and will check permission after call")
+            }
+        })
+        permissionHelper.checkAndRequestPermission(NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun dealCall(call: Call?){
         // 开机未解锁过，增强通话功能不能使用。sp会有异常，直接catch住就可以了。
         try {
             if (call == null){
@@ -182,10 +202,10 @@ class InCallServiceImpl : InCallService(), KoinComponent {
                 mCallsManager?.onCallRemoved(it)
                 mCallsMap.remove(it)
             }
-            // TODO: 应该区分不同的通话
+            // 只会结束主进程中的所以Activity，是合理的
             activityManager.finishAllActivity()
             // 防止系统没有回调onUnbind
-            if (mCallsMap.size == 0){
+            if (mCallsMap.isEmpty()){
                 release()
             }
         }catch (e:Exception){
@@ -210,6 +230,13 @@ class InCallServiceImpl : InCallService(), KoinComponent {
             mCallsManager?.onCallServiceUnBind()
             mCallsManager = null
             mCallsMap.clear()
+
+            // 结束后授权
+            if (checkPermissionAfterCall){
+                checkPermissionAfterCall = false
+                val permissionHelper = SDKPermissionHelper(Utils.getApp(),null)
+                permissionHelper.checkAndRequestPermission(NewCallAppSdkInterface.PERMISSION_TYPE_AFTER_CALL)
+            }
         }
     }
 }

@@ -3,6 +3,7 @@
     <string name="ims_data_channel_service_package_name" translatable="false"></string>
     <string name="ims_data_channel_service_cls" translatable="false"></string>
     <string name="ims_data_channel_service_action" translatable="false"></string>
+    <string name="ims_data_channel_service_mccmnc" translatable="false"></string>
     <string name="screenshareservice_package_name" translatable="false"></string>
     <string name="screenshareservice_name" translatable="false"></string>
     <string name="screenshareservice_action" translatable="false"></string>
@@ -13,13 +14,17 @@
     <string name="arcall_oem_name" translatable="false">com.android.incallui.ARCalTOEMService</string>
     <string name="arcall_oem_action" translatable="false">com.newcalib.arcall.ARCallOEMService</string>
 
-    <string name="request_nc_permission_dialog_content">使用增强通话功能需要显示在其他应用上层和读取通话的权限</string>
-    <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
-    <string name="request_nc_permission_dialog_user">《用户协议》</string>
-    <string name="request_nc_permission_dialog_title">需要授予增强通话权限</string>
+    <string name="request_nc_permission_dialog_title">5G Enhanced Call Permissions Required</string>
+    <string name="request_nc_permission_dialog_content">5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator\'s IMS network, which improve the user experience for both individual and enterprise users. The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.\nUsing enhanced call features requires the \"Display over other apps\" and \"Read call log\" permissions.</string>
+    <string name="request_nc_permission_dialog_privacy">Privacy Policy</string>
+    <string name="request_nc_permission_dialog_user">User Agreement</string>
+    <string name="request_nc_permission_dialog_click">Click and read</string>
+    <string name="request_nc_permission_dialog_privacy_change_title">5G Enhanced Call Privacy changed</string>
 
     <string name="cancel_btn">Cancel</string>
     <string name="ok_btn">OK</string>
+    <string name="accept_btn">Accept</string>
+    <string name="later_btn">Later</string>
     <string name="permission_request_title">The following permissions are required for "%s"</string>
     <string name="permission_allowed">Allowed</string>
     <string name="permission_denied">Denied</string>
@@ -32,6 +37,7 @@
     <string name="location_title">Location</string>
     <string name="call_state_title">Call status</string>
     <string name="contacts">Contacts</string>
+    <string name="wifi">Wi-Fi</string>
 
     <string name="camera_description">For taking photos or videos</string>
     <string name="vibrate_description">For reminding</string>
@@ -41,6 +47,7 @@
     <string name="location_description">For providing location services</string>
     <string name="call_state_description">For providing new call services</string>
     <string name="contact_description">For providing contact info</string>
+    <string name="wifi_description">For providing Wi-Fi info</string>
 
     <string name="permission_preference_title">Permission settings</string>
     <string name="version_preference_title">Version</string>
@@ -72,4 +79,21 @@
 
     <string name="toast_download_mini_app_failed">The download of the mini program failed. </string>
     <string name="recently_used_mini_app">The Mini App used in this call</string>
+
+    <string name="open_tips"> 5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator\'s IMS network, which improve the user experience for both individual and enterprise users. \n The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.</string>
+    <string name="main_activity_title">5G Enhanced Call</string>
+    <string name="used_miniapp_title">used mini apps</string>
+    <string name="open_btn_title">Go to Enable</string>
+
+    <string name="open_switch_title">open/close 5G Enhanced Call</string>
+    <string name="local_debug_entry">local debug entry</string>
+    <string name="please_open">You should open 5G Enhanced Call first.</string>
+    <string name="open_switch_tips">By proceeding, you indicate that you have agreed to the 《Privacy Policy》 and 《User Agreement》.</string>
+    <string name="close_switch_tips">Closing indicates that you do not agree or withdraw your consent to the 《Privacy Policy》 and 《User Agreement》.</string>
+    <string name="authorize_and_enable">Authorize and Enable</string>
+    <string name="after_call_use">This entry is only available after a call.</string>
+    <string name="authorize_tips">Please read and check the box to agree to the Privacy Policy and User Agreement</string>
+    <string name="miss_permission_tips">Insufficient permissions. Enhanced call features will be unavailable.</string>
+    <string name="download_model_title">Downloading model</string>
+    <string name="download_model_description">Downloading model</string>
 </resources>

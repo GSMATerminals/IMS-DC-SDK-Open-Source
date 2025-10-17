@@ -65,11 +65,13 @@ public class AndroidAppender extends Appender {
     }
 
     private static void largeLog(String tag, String content) {
-        if (content.length() > 4000) {
-            Log.v(tag, content.substring(0, 4000));
-            largeLog(tag, content.substring(4000));
-        } else {
-            Log.v(tag, content);
+        int maxLength = 4000;
+        int length = content.length();
+
+        for (int i = 0; i < length; i += maxLength) {
+            int end = Math.min(length, i + maxLength);
+            String part = content.substring(i, end);
+            Log.v(tag, part);
         }
     }
 }

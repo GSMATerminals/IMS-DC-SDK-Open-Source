@@ -118,23 +118,6 @@ object NewCallAppSdkInterface {
         SDKPermissionUtils.setNewCallEnable(isEnabled)
     }
 
-    /**
-     * 启动5G增强通话权限设置页面
-     */
-    @JvmStatic
-    fun checkAndRequestPermission(type: Int,onAgree: () -> Unit, onDenied: () -> Unit){
-        val permissionHelper = SDKPermissionHelper(Utils.getApp(),object : IPermissionCallback {
-            @RequiresApi(Build.VERSION_CODES.Q)
-            override fun onAgree() {
-                onAgree()
-            }
-            override fun onDenied() {
-                onDenied()
-            }
-        })
-        permissionHelper.checkAndRequestPermission(type)
-    }
-
 
     /**
      * 获取历史使用的小程序列表
@@ -179,7 +162,7 @@ object NewCallAppSdkInterface {
     @JvmStatic
     fun startMiniAppOutOfCall(context: Context, miniAppInfo: MiniAppInfo) {
         LogUtils.debug(TAG, "startMiniAppOutOfCall, miniAPPName: ${miniAppInfo.appName}")
-        MiniAppStartManager.startMiniApp(context, miniAppInfo, null,null)
+        MiniAppStartManager.startMiniApp(context, miniAppInfo, null,null, null)
     }
 
     /**

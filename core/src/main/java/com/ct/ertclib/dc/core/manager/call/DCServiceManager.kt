@@ -27,7 +27,9 @@ import com.newcalllib.datachannel.V1_0.IImsDataChannelServiceController
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.port.dc.ImsDcServiceConnectionCallback
+import com.ct.ertclib.dc.core.utils.common.CallUtils
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
+import com.ct.ertclib.dc.core.utils.common.JsonUtil
 
 
 object DCServiceManager {
@@ -77,6 +79,7 @@ object DCServiceManager {
         var dcPackage = context.getString(R.string.ims_data_channel_service_package_name)
         var dcClass = context.getString(R.string.ims_data_channel_service_cls)
         var dcAction = context.getString(R.string.ims_data_channel_service_action)
+        var mccMncList = context.getString(R.string.ims_data_channel_service_mccmnc)
 
         // 本地测试
         if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
@@ -86,11 +89,19 @@ object DCServiceManager {
             dcClass = "com.ct.ertclib.dc.feature.testing.TestImsDataChannelService"
 
             dcAction = "com.newcalllib.datachannel.V1_0.ImsDataChannelService"
+
+            mccMncList = "[ALL]"
         }
 
-        sLogger.info("bindDcService: $dcPackage $dcClass $dcAction")
-
+        sLogger.info("bindDcService: $dcPackage $dcClass $dcAction $mccMncList")
         val intent = Intent(dcAction)
+        try {
+            val mutableListOf = JsonUtil.fromJson(mccMncList, ArrayList::class.java)
+            intent.putExtra("mccMncList",mutableListOf)
+        } catch (e: Exception){
+            e.printStackTrace()
+            sLogger.info("bindDcService getMccMncList failed ${e.message}")
+        }
         intent.component = ComponentName(dcPackage, dcClass)
 
         try {

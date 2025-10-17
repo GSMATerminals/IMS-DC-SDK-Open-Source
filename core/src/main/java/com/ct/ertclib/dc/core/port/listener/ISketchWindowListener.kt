@@ -29,6 +29,4 @@ interface ISketchWindowListener {
     )
 
     fun onLocalWindowNotified(width: Float, height: Float)
-
-    fun onCtrlPanelInit()
 }

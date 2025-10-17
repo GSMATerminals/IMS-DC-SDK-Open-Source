@@ -62,7 +62,6 @@ class MiniAppJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_GET_CONTACT_LIST -> miniAppEventUseCase.getContactList(context, request.params,handler)
             FUNCTION_IS_SPEAKERPHONE_ON -> miniAppEventUseCase.isSpeakerphoneOn(context, request.params,handler)
             FUNCTION_IS_MUTED -> miniAppEventUseCase.isMuted(context, request.params,handler)
-
         }
     }
 

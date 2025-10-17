@@ -43,7 +43,7 @@
                 android:background="@drawable/dialog_confirm_dismiss_btn_bg"
                 android:gravity="center"
                 android:singleLine="true"
-                android:text="取消"
+                android:text="@string/cancel_btn"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp" />
 
@@ -55,7 +55,7 @@
                 android:background="@drawable/dialog_confirm_accept_btn_bg"
                 android:gravity="center"
                 android:singleLine="true"
-                android:text="接收"
+                android:text="@string/accept_btn"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp" />
         </LinearLayout>

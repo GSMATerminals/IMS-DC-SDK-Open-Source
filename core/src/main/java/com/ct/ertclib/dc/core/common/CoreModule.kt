@@ -16,6 +16,8 @@
 
 package com.ct.ertclib.dc.core.common
 
+import com.ct.ertclib.dc.core.manager.common.FileDownloadManager
+import com.ct.ertclib.dc.core.manager.common.ModelManager
 import com.ct.ertclib.dc.core.manager.context.ActivityManager
 import com.ct.ertclib.dc.core.manager.context.AppServiceManager
 import com.ct.ertclib.dc.core.manager.context.MiniToParentManager
@@ -25,7 +27,9 @@ import com.ct.ertclib.dc.core.miniapp.db.PermissionDbRepo
 import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
 import com.ct.ertclib.dc.core.port.manager.IAppServiceManager
+import com.ct.ertclib.dc.core.port.manager.IFileDownloadManager
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.manager.IScreenShareManager
 import com.ct.ertclib.dc.core.port.manager.IScreenShareSketchManager
 import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
@@ -36,6 +40,7 @@ import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IAppMiniUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IECUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
+import com.ct.ertclib.dc.core.port.usecase.mini.ISystemMiniUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IScreenShareMiniUseCase
 import com.ct.ertclib.dc.core.usecase.main.ScreenShareUseCase
 import com.ct.ertclib.dc.core.usecase.main.SketchBoardUseCase
@@ -44,6 +49,7 @@ import com.ct.ertclib.dc.core.usecase.miniapp.FileMiniUseCase
 import com.ct.ertclib.dc.core.usecase.miniapp.AppMiniUseCase
 import com.ct.ertclib.dc.core.usecase.common.PermissionUseCase
 import com.ct.ertclib.dc.core.usecase.miniapp.ECUseCase
+import com.ct.ertclib.dc.core.usecase.miniapp.SystemMiniUseCase
 import com.ct.ertclib.dc.core.usecase.miniapp.ScreenShareMiniUseCase
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -52,7 +58,8 @@ val coreModule = module {
 
     single<IDCMiniEventUseCase> { DCMiniUseCase(get()) }
     single<IECUseCase> { ECUseCase(get()) }
-    single<IFileMiniEventUseCase> { FileMiniUseCase(get(), get()) }
+
+
     single<IAppMiniUseCase> { AppMiniUseCase(get(), get()) }
     single<IScreenShareMiniUseCase> { ScreenShareMiniUseCase(get()) }
     single<IMiniToParentManager> { MiniToParentManager() }
@@ -72,4 +79,11 @@ val coreModule = module {
     single<IPermissionDbRepo> { PermissionDbRepo() }
 
     single<IActivityManager> { ActivityManager() }
+
+    single<IModelManager> { ModelManager() }
+
+    single<IFileDownloadManager> { FileDownloadManager(androidContext()) }
+
+    single<ISystemMiniUseCase> { SystemMiniUseCase(get(), get()) }
+    single<IFileMiniEventUseCase> { FileMiniUseCase(get(), get(), get(), get()) }
 }

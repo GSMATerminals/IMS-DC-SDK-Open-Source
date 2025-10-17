@@ -1,1 +1,30 @@
-<resources></resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete_btn">delete</string>
+    <string name="confirm">Confirm</string>
+    <string name="discard_edit">Discard edits?</string>
+    <string name="delete_miniappp_tips">Delete this mini program from the repository?</string>
+    <string name="delete_successful">Delete successful</string>
+    <string name="edit_all_info">Please complete all information.</string>
+    <string name="exist_autoload">exist miniApp as autoload</string>
+    <string name="saved_ok">Saved</string>
+    <string name="miss_some_permissions">miss some permissions</string>
+    <string name="miss_permission_forever">Authorization has been permanently denied. Please grant permissions manually.</string>
+    <string name="got_permissions">Got all permissions!</string>
+    <string name="choose_package">Please choose miniApp package</string>
+    <string name="save_btn">Save</string>
+    <string name="used_precall">precall:</string>
+    <string name="edit_miniapp_title">Edit MiniApp</string>
+    <string name="miniapp_package_path">miniApp package path：</string>
+    <string name="miniapp_id">ID：</string>
+    <string name="miniapp_name">Name：</string>
+    <string name="version">version:</string>
+    <string name="support_scene">supportScene：</string>
+    <string name="support_scene_tips">1: Audio; 2: Video; 3: Audio and Video</string>
+    <string name="autoload">autoload</string>
+    <string name="miniapp_repository">MiniApp Repository</string>
+    <string name="create_btn">Create</string>
+    <string name="local_debug">Local debug</string>
+    <string name="config_btn">Config</string>
+    <string name="simulate_call">Simulate call</string>
+</resources>

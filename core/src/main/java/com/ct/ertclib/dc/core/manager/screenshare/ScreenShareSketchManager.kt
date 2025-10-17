@@ -109,7 +109,7 @@ class ScreenShareSketchManager(
             sketchWindowListener?.onLocalWindowNotified(rectF.width(), rectF.height())
         } else {
             this.rotation = 0
-            sketchWindowListener?.onLocalWindowNotified(ScreenUtils.getScreenHeight(context).toFloat(), ScreenUtils.getScreenHeight(context).toFloat())
+            sketchWindowListener?.onLocalWindowNotified(ScreenUtils.getScreenWidth(context).toFloat(), ScreenUtils.getScreenHeight(context).toFloat())
         }
         if (rotation != this.rotation) {
             sketchView?.clearCanvas(true)
@@ -163,7 +163,8 @@ class ScreenShareSketchManager(
             it.mSketchCallback = object : SketchView.SketchCallback {
                 override fun onSketchEvent(drawingInfo: DrawingInfo) {
                     logger.info("onSketchEvent")
-                    sketchWindowListener?.onSketchEvent(calculateDrawInfo(drawingInfo))
+                    val drawInfo = calculateDrawInfo(drawingInfo)
+                    sketchWindowListener?.onSketchEvent(drawInfo)
                 }
             }
         }
@@ -183,10 +184,6 @@ class ScreenShareSketchManager(
                     sketchLayout?.let {
                         setSketchViewVisibility(!it.isVisible)
                     }
-                }
-
-                override fun onInit() {
-                    sketchWindowListener?.onCtrlPanelInit()
                 }
             })
         }
@@ -286,6 +283,7 @@ class ScreenShareSketchManager(
         } else {
             val widthRate = remoteWindowWidth / localWidth
             val heightRate = remoteWindowHeight / localHeight
+            LogUtils.debug(TAG, "calculateDrawInfo widthRate: $widthRate, heightRate: $heightRate")
             DrawingInfo().apply {
                 width = it.width
                 color = it.color
@@ -293,8 +291,6 @@ class ScreenShareSketchManager(
                 val originPoints = it.points
                 points = PointsInfo()
                     .apply {
-                        encoding = originPoints.encoding
-                        encodedData = originPoints.encodedData
                         pointS = originPoints.pointS.map { bean ->
                             val pointPair = getRotationCoordination(rectF.centerX(), rectF.centerY(), bean.x, bean.y)
                             PointBean((pointPair.first - localTranslationX) * widthRate, (pointPair.second - localTranslationY) * heightRate)

@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
@@ -22,9 +23,11 @@
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
 
+    <!-- 给外部查询用的 -->
     <permission
-        android:name="com.ct.ertclib.dc.PROVIDER_ACCESS"
-        android:label="provider permission" />
+        android:name="com.ct.ertclib.dc.provider.PERMISSION"
+        android:protectionLevel="normal" />
+
     <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
 
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -33,6 +36,16 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="false"
         tools:replace="android:supportsRtl,android:allowBackup">
+        <activity
+            android:name="com.ct.ertclib.dc.core.ui.activity.MainActivity"
+            android:permission="com.ct.ertclib.dc.main_permission"
+            android:screenOrientation="portrait"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.newcall.action.START_MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".common.ConfirmActivity"
             android:exported="false"
@@ -171,7 +184,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".common.sdkpermission.SDKPermissionActivity"
+            android:name=".ui.activity.SDKPermissionActivity"
             android:launchMode="singleTask"
             android:theme="@style/Theme.TranslucentTheme"
             android:exported="false" />
@@ -206,6 +219,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <provider
+            android:name="com.ct.ertclib.dc.core.providers.CtSDKProvider"
+            android:authorities="com.ct.ertclib.dc.provider"
+            android:exported="true"
+            android:permission="com.ct.ertclib.dc.provider.PERMISSION" />
+
     </application>
 
 </manifest>

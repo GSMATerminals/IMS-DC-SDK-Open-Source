@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.miniapp.bridge
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.view.View
 import android.webkit.ConsoleMessage
@@ -34,6 +35,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import androidx.core.graphics.createBitmap
 
 class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChromeClient(), KoinComponent {
 
@@ -122,5 +124,9 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
                 sLogger.warn("onPermissionRequest, permission not granted")
             }
         }
+    }
+
+    override fun getDefaultVideoPoster(): Bitmap? {
+        return createBitmap(1, 1)
     }
 }

@@ -199,15 +199,15 @@ class SketchView : View {
                     mLocalPaint.color = getPaintColor()
                     currentDrawingInfo = DrawingInfo()
                         .apply {
-                            this.color = ColorUtils.int2ArgbString(getPaintColor())
-                            this.erase = mCurrType == MODE.MODE_ERASE
-                            this.width = mLocalPathSize
-                            this.points = PointsInfo()
-                                .apply {
-                                    pointS = mutableListOf()
-                                }
-                            this.points.pointS.add(PointBean(x, y))
+                        this.color = ColorUtils.int2ArgbString(getPaintColor())
+                        this.erase = mCurrType == MODE.MODE_ERASE
+                        this.width = mLocalPathSize
+                        this.points = PointsInfo()
+                            .apply {
+                            pointS = mutableListOf()
                         }
+                        this.points.pointS.add(PointBean(x, y))
+                    }
                 }
 
                 MotionEvent.ACTION_UP -> {

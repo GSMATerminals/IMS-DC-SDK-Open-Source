@@ -23,7 +23,7 @@ plugins {
 android {
     namespace = "com.ct.ertclib.dc.base"
     defaultConfig {
-        minSdk = 21
+        minSdk = 26
         compileSdk = 34
     }
 
