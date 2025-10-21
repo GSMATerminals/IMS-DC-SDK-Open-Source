@@ -2,8 +2,9 @@
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
 
-- 5G增强通话终端SDK（下文称SDK）由中国电信研究院开发。通话建立后，芯片与网络会协商IMS Data Channel的建立，终端对IMS Data Channel的调用逻辑进行封装并通过AIDL接口（即Android接口定义语言Android Interface Definition Language）提供给SDK，SDK作为5G增强通话小程序（下文称小程序）的运行载体，将操作IMS Data Channel和终端其他能力接口通过统一的接口提供给小程序调用。
+- 5G增强通话终端SDK（下文称SDK）由中国电信研究院开发。通话建立后，芯片与网络会协商IMS Data Channel的建立，终端对IMS Data Channel的调用逻辑进行封装并通过AIDL接口（即Android接口定义语言[Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl?hl=zh-cn)）提供给SDK，SDK作为5G增强通话小程序（下文称小程序）的运行载体，将操作IMS Data Channel和终端其他能力接口通过统一的接口提供给小程序调用。
 
+![屏幕共享（发起方）.gif](images/屏幕共享（发起方）.gif) ![屏幕共享（接收方）.gif](images/屏幕共享（接收方）.gif)
 ## 一、功能特性
 SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性：
 - 与通话状态紧关联，负责小程序的生命周期管理，为小程序提供稳定的运行环境；  
@@ -76,11 +77,11 @@ NewCall
    ./gradlew assembleRelease 
 
 - 终端适配：  
-端网联调或商用发布前，终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](/document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
+终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](/document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
 
 - 发布：  
 终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
-当用户通话时，终端原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间。
+当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，且按照适配规范实现，原生通话界面会出现固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
 
 ## 七、小程序开发调试
 使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序。
