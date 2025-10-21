@@ -5,7 +5,7 @@ Note: This document aims to help developers understand the architectural design 
 
 - The 5G New Calling Terminal SDK (hereinafter referred to as the SDK) is developed by the China Telecom Research Institute. After a call is established, the chip and the network negotiate the establishment of the IMS Data Channel. The terminal encapsulates the call logic for the IMS Data Channel and provides it to the SDK via AIDL interfaces ([Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl)). The SDK serves as the runtime environment for the 5G New Calling Application (hereinafter referred to as IMS Data Channel Application) and provides a unified interface for IMS Data Channel Application to call, enabling them to operate the IMS Data Channel and other terminal capability interfaces.
 
-![ScreenShare(Initiator).gif](images/ScreenShare(Initiator).gif) ![ScreenShare(Receiver).gif](images/ScreenShare(Receiver).gif)
+<img src="images/ScreenShare(Initiator).gif" alt="Description" width="200" /> <img src="images/ScreenShare(Receiver).gif" alt="Description" width="200" />  
 
 ## I. Features
 While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
@@ -102,7 +102,7 @@ NewCall
    ./gradlew assembleRelease 
 
 - Terminal Adaptation:
-Terminals must be adapted according to the [《5G New Calling SDK Terminal Adaptation Specification》](/document/5G New Calling SDK Terminal Adaptation Specification.docx) to ensure the proper functioning of all SDK features.
+Terminals must be adapted according to the [《5G New Calling SDK Terminal Adaptation Specification》](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) to ensure the proper functioning of all SDK features.
 
 - Release:
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
@@ -111,7 +111,7 @@ When a user is on a call, if the device integrates the Normal version, a 5G New 
 ## VII. IMS Data Channel Application Development & Debugging
 Using the Local (Local debugging version) SDK, developers can debug IMS Data Channel Applications on ordinary Android terminals without relying on an IMS Data Channel network environment or terminal adaptation.
 
-- IMS Data Channel Application Development: Developers need to follow web standards like HTML5, CSS3, ES6 for web development. The document [《5G New Calling IMS Data Channel JS API》](/document/5G New Calling IMS Data Channel JS API.docx) lists all interfaces exposed by the SDK to IMS Data Channel Applications. IMS Data Channel Application developers should refer to this document for development. Refer to example IMS Data Channel Application code: [miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code).  
+- IMS Data Channel Application Development: Developers need to follow web standards like HTML5, CSS3, ES6 for web development. The document [《5G New Calling IMS Data Channel JS API》](./document/5G%20New%20Calling%20IMS%20Data%20Channel%20JS%20API.docx) lists all interfaces exposed by the SDK to IMS Data Channel Applications. IMS Data Channel Application developers should refer to this document for development. Refer to example IMS Data Channel Application code: [miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code).  
 
 - IMS Data Channel Application Packaging: Package the web project into an offline zip format compressed package, i.e., the IMS Data Channel Application package. The index.html and properties.json files must be in the root directory of the zip package. Refer to the example IMS Data Channel Application package: [miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip).  
 

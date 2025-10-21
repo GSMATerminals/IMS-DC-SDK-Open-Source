@@ -4,7 +4,7 @@
 
 - 5G增强通话终端SDK（下文称SDK）由中国电信研究院开发。通话建立后，芯片与网络会协商IMS Data Channel的建立，终端对IMS Data Channel的调用逻辑进行封装并通过AIDL接口（即Android接口定义语言[Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl?hl=zh-cn)）提供给SDK，SDK作为5G增强通话小程序（下文称小程序）的运行载体，将操作IMS Data Channel和终端其他能力接口通过统一的接口提供给小程序调用。
 
-![屏幕共享（发起方）.gif](images/屏幕共享（发起方）.gif) ![屏幕共享（接收方）.gif](images/屏幕共享（接收方）.gif)
+<img src="images/屏幕共享（发起方）.gif" alt="描述文字" width="200" /> <img src="images/屏幕共享（接收方）.gif" alt="描述文字" width="200" />
 ## 一、功能特性
 SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性：
 - 与通话状态紧关联，负责小程序的生命周期管理，为小程序提供稳定的运行环境；  
@@ -77,7 +77,7 @@ NewCall
    ./gradlew assembleRelease 
 
 - 终端适配：  
-终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](/document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
+终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
 
 - 发布：  
 终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
@@ -85,7 +85,7 @@ NewCall
 
 ## 七、小程序开发调试
 使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序。
-- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，[《中国电信5G增强实时通信系统技术要求 IMS Data Channel JS API》](/document/中国电信5G增强实时通信系统技术要求%20IMS%20Data%20Channel%20JS%20API.docx)列举了SDK开放给小程序的所有接口，小程序开发者根据这份文档进行小程序的开发，小程序参考示例代码：[miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code)。  
+- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，[《中国电信5G增强实时通信系统技术要求 IMS Data Channel JS API》](./document/中国电信5G增强实时通信系统技术要求%20IMS%20Data%20Channel%20JS%20API.docx)列举了SDK开放给小程序的所有接口，小程序开发者根据这份文档进行小程序的开发，小程序参考示例代码：[miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code)。  
 - 小程序打包：将web项目打包为离线的zip格式压缩包，即小程序包，index.html和properties.json文件需在zip压缩包的一级目录中,参考示例小程序包：[miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip)。  
 - 小程序本地调试：按照普通apk安装方式将Local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后从手机桌面启动“电信增强通话”app，按照指引授权后，打开设置-本地调试入口，即可配置并调试小程序。  
   <img src="images/localtestCN.png" alt="描述文字" width="200" />  
