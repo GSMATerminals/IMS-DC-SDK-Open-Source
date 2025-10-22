@@ -19,13 +19,8 @@ package com.ct.ertclib.dc.core.common
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import com.blankj.utilcode.util.SPUtils
-import com.blankj.utilcode.util.Utils
-import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
-import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.constants.CommonConstants.FLOATING_DISPLAY
@@ -45,7 +40,6 @@ import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
-import com.ct.ertclib.dc.core.ui.activity.MainActivity
 import com.ct.ertclib.dc.core.ui.activity.StyleSettingActivity
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
@@ -76,7 +70,7 @@ object NewCallAppSdkInterface {
 
     const val SDK_FLOATING_DISPLAY = FLOATING_DISPLAY
 
-    const val YI_SHARE_APP_ID = CommonConstants.DC_YI_SHARE
+    const val YI_SHARE_APP_NAME = CommonConstants.DC_YI_SHARE
 
     const val DEBUG_LEVEL = "debug_level"
     const val ERROR_LEVEL = "error_level"

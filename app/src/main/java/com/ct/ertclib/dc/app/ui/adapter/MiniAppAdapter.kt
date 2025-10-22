@@ -80,8 +80,8 @@ class MiniAppAdapter(
             stableItemList.clear()
             itemViewMap.clear()
             newData?.forEach { miniAppInfo ->
-                if (miniAppInfo.appId == NewCallAppSdkInterface.YI_SHARE_APP_ID && !miniAppInfo.appIcon.isNullOrEmpty()){
-                    // 拆分该小程序的子功能
+                if (miniAppInfo.appName == NewCallAppSdkInterface.YI_SHARE_APP_NAME && !miniAppInfo.appIcon.isNullOrEmpty()){
+                    // 拆分翼分享小程序的子功能
                     val parseInfo = NewCallAppSdkInterface.parseImgData(miniAppInfo.appIcon!!)
                     if (parseInfo.isNotEmpty()){
                         val list = parseInfo.split("&")

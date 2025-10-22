@@ -227,9 +227,9 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
             mAdcMap[getAdcKey(callId, dc.dcLabel)] = dc
             val adcListenerKey = getAdcListenerKey(callId, appIdFromDcLabel)
 
-            // 协商adc不用回调给小程序
-            if (dc.dcLabel.equals("local_${CommonConstants.DC_APPID_OWN}_1_${CommonConstants.DC_LABEL_OWN}")) {
-                // 自有adc
+            // 有些ADC不用回调给小程序
+            if (dc.dcLabel.contains("_${CommonConstants.DC_APPID_OWN}_")) {
+                // SDK与AS自有adc
                 val controlAdcCreateListener = mControlAdcCreateListenerMap[callId]
                 if (controlAdcCreateListener != null && appIdFromDcLabel != null) {
                     controlAdcCreateListener.onOwnDataChannelCreated(

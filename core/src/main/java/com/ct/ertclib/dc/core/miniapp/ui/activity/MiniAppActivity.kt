@@ -427,7 +427,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             permissionDialog?.dismiss()
         }
         miniToParentManager.unBindService(this@MiniAppActivity)
-        if (miniApp?.appId == CommonConstants.DC_YI_SHARE){
+        if (miniApp?.appName == CommonConstants.DC_YI_SHARE){
             NewCallAppSdkInterface.saveShareType("")
         }
         stopPlayVoice()

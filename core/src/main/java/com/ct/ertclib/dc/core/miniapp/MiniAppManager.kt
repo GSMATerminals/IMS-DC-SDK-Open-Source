@@ -415,10 +415,8 @@ class MiniAppManager(private val callInfo: CallInfo) :
         val iterator = applications.iterator()
         while (iterator.hasNext()){
             val miniAppInfo = iterator.next()
-            if (miniAppInfo.appId == CommonConstants.DC_APPID_OWN || miniAppInfo.appId == CommonConstants.DC_APPID_SDKAS){
+            if (miniAppInfo.appId == CommonConstants.DC_APPID_OWN){
                 iterator.remove()
-            } else if (miniAppInfo.appId == CommonConstants.DC_APPID_SCREENSAHRE || miniAppInfo.appId == CommonConstants.DC_APPID_SCREENSAHRE_OLD){
-                miniAppInfo.appName = "屏幕共享"
             }
         }
 
@@ -691,7 +689,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     private fun isNativeMiniApp(appId: String?): Boolean {
-        return CommonConstants.DC_APPID_FILESHARE_OLD == appId
+        return false
     }
 
 

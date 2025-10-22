@@ -103,7 +103,7 @@ class MiniAppOwnADCImpl(private val onADCParamsOk:OnADCParamsOk){
 
     fun createDC() {
         val labels = mutableListOf<String>()
-        val label = "local_${CommonConstants.DC_APPID_OWN}_1_${CommonConstants.DC_LABEL_OWN}"
+        val label = "local_${CommonConstants.DC_APPID_OWN}_0_${CommonConstants.DC_LABEL_OWN}"
         labels.add(label)
         val description =
             "<DataChannelAppInfo><DataChannelApp appId=\"${CommonConstants.DC_APPID_OWN}\"><DataChannel dcId=\"${CommonConstants.DC_LABEL_OWN}\"><StreamId></StreamId><DcLabel>${label}</DcLabel><UseCase>0</UseCase><Subprotocol></Subprotocol><Ordered></Ordered><MaxRetr></MaxRetr><MaxTime></MaxTime><Priority></Priority><AutoAcceptDcSetup></AutoAcceptDcSetup><Bandwidth></Bandwidth><QosHint></QosHint></DataChannel></DataChannelApp></DataChannelAppInfo>"

@@ -38,15 +38,10 @@ object CommonConstants {
     const val DC_AUTOACCEPTDCSETUP: String = "dc_autoacceptdcsetup"
     const val DC_SUBPROTOCOL: String = "dc_subprotocol"
 
-    const val DC_APPID_SCREENSAHRE:String = ""
-    const val DC_APPID_SCREENSAHRE_OLD:String = ""
-    const val DC_APPID_SDKAS:String = ""
-    const val DC_APPID_FILESHARE:String = ""
-    const val DC_APPID_FILESHARE_OLD:String = ""
     const val DC_LABEL_CONTROL:String = "miniappcontrollll"
-    const val DC_APPID_OWN:String = ""
-    const val DC_LABEL_OWN:String = ""
-    const val DC_YI_SHARE:String = ""
+    const val DC_APPID_OWN:String = "xxxxxx"//todo 待定
+    const val DC_LABEL_OWN:String = "miniappown"
+    const val DC_YI_SHARE:String = "翼分享"
 
     const val DC_SEND_DATA_OK: Int = 20000 //发送成功
     const val DC_SEND_DATA_CACHE_FULL: Int = 20001 //发送缓存已满
@@ -127,7 +122,7 @@ object CommonConstants {
     const val SHARE_PREFERENCE_CONSTANTS = "user"
     const val SHARE_PREFERENCE_STYLE_PARAMS = "style"
 
-    const val SDK_PRIVACY_VERSION_URL = ""
-    const val SDK_PRIVACY_URL = ""
-    const val SDK_USER_SERVICE_URL = ""
+    const val SDK_PRIVACY_VERSION_URL = "https://m.ct5g.cn/sdk/version"
+    const val SDK_PRIVACY_URL = "https://m.ct5g.cn/sdk/privacy.html"
+    const val SDK_USER_SERVICE_URL = "https://m.ct5g.cn/sdk/service.html"
 }

@@ -44,15 +44,6 @@
         tools:replace="android:supportsRtl,android:allowBackup"
         tools:targetApi="34">
 
-        <activity
-            android:name="com.ct.ertclib.dc.core.ui.activity.MainActivity"
-            android:permission="com.ct.ertclib.dc.main_permission"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.newcall.action.START_MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
 
         <activity
             android:name=".ui.activity.MiniAppExpandedActivity"
