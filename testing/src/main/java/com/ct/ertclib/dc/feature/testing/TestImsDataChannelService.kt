@@ -20,6 +20,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.ct.ertclib.dc.core.utils.logger.Logger
+import com.ct.ertclib.dc.feature.testing.socket.DCSocketManager
 
 class TestImsDataChannelService : Service() {
     private val TAG = "TestImsDataChannelService"
@@ -27,6 +28,7 @@ class TestImsDataChannelService : Service() {
     override fun onBind(intent: Intent?): IBinder? {
         var list = intent?.getStringArrayListExtra("mccMncList")
         sLogger.debug("onBind mccMncList : $list")
+        TestImsDataChannelManager.onBind()
         return TestImsDataChannelManager.mDcController
     }
 

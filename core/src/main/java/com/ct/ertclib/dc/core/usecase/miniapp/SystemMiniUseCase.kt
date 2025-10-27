@@ -54,7 +54,7 @@ class SystemMiniUseCase(
                 modelList.forEach {
                     responseModelList.add(ModelInfo(it.modelId, it.modelName, it.modelType, it.modelVersion, it.modelPath))
                 }
-                handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mapOf("modelList" to JsonUtil.toJson(responseModelList)))))
+                handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mapOf("modelList" to responseModelList))))
             }
 
             PARAMS_INFORMATION_CAPABILITY -> {
@@ -79,7 +79,7 @@ class SystemMiniUseCase(
                     appList.applications?.forEach {
                         pluginMiniAppList.add(PluginMiniAppInfo(it.appId, it.appName, it.eTag))
                     }
-                    val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mutableMapOf("miniAppList" to JsonUtil.toJson(pluginMiniAppList)))
+                    val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mutableMapOf("miniAppList" to pluginMiniAppList))
                     handler.complete(JsonUtil.toJson(response))
                 } ?: run {
                     handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "miniApp list is null"))))

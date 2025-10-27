@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
+import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -45,6 +46,20 @@ object SystemUtils {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         val wifiInfo = wifiManager?.connectionInfo
         return wifiInfo?.rssi ?: INVALID_RSSI
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    fun isWiFiConnected(context: Context): Boolean {
+        val connectManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectManager.activeNetworkInfo
+        networkInfo?.let {
+            val result = networkInfo.isConnected && networkInfo.type == ConnectivityManager.TYPE_WIFI
+            LogUtils.debug(TAG, "isWiFiConnected result: $result")
+            return result
+        } ?: run {
+            LogUtils.debug(TAG, "isWiFiConnected result false")
+            return false
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)

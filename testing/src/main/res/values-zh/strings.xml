@@ -27,4 +27,6 @@
     <string name="local_debug">本地调试</string>
     <string name="config_btn">配置</string>
     <string name="simulate_call">模拟通话</string>
+    <string name="start">启动</string>
+    <string name="stop">停止</string>
 </resources>

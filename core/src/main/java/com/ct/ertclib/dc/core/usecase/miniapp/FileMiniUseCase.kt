@@ -24,6 +24,7 @@ import android.location.Criteria
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Environment
 import android.provider.Settings
 import android.text.TextUtils
 import androidx.appcompat.app.AlertDialog
@@ -64,6 +65,7 @@ import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
+import com.ct.ertclib.dc.core.utils.common.SystemUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1227,13 +1229,18 @@ class FileMiniUseCase(
             handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "empty params"))))
             return
         }
+        if (!SystemUtils.isWiFiConnected(context)) {
+            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "network not Wi-Fi"))))
+        }
         when (downloadEvent) {
             PARAMS_MODEL -> {
                 scope.launch {
                     val modelInfo = JsonUtil.fromJson(infoJson, ModelInfo::class.java)
                     val modelName = modelInfo?.modelName
-                    val downloadFileFolder = "${context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName"
-                    val downloadFilePath = "$downloadFileFolder${File.separator}$modelName$.zip"
+                    val fileName = "$modelName.zip"
+                    val downloadFileFolder = "${context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)}"
+                    val downloadFilePath = "$downloadFileFolder${File.separator}$fileName"
+                    val targetFileDir = "${context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName${File.separator}"
                     val downloadListener = object : IDownloadListener {
                         override fun onDownloadProgress(progress: Int) {
                             LogUtils.debug(TAG, "onDownloadProgress progress: $progress")
@@ -1241,12 +1248,16 @@ class FileMiniUseCase(
 
                         override fun onDownloadSuccess() {
                             LogUtils.debug(TAG, "onDownloadSuccess")
-                            ZipUtils.unzipFile(downloadFilePath, downloadFileFolder)
+                            kotlin.runCatching {
+                                ZipUtils.unzipFile(downloadFilePath, targetFileDir)
+                            }.onFailure {
+                                LogUtils.error(TAG, "onDownloadSuccess unzipFile failed: $this")
+                            }
                             val zipFile = File(downloadFilePath)
                             if (zipFile.exists()) {
                                 zipFile.delete()
                             }
-                            val modelFilePath = "$downloadFileFolder${File.separator}config.json"
+                            val modelFilePath = "${targetFileDir}config.json"
                             modelInfo?.let {
                                 val modelEntity = ModelEntity(modelId = modelInfo.modelId, modelName = modelInfo.modelName, modelPath = modelFilePath, modelVersion = modelInfo.modelVersion, modelType = modelInfo.modelType, "")
                                 modelManager.insertOrUpdate(modelEntity)
@@ -1261,7 +1272,7 @@ class FileMiniUseCase(
                         }
                     }
                     val downloadData = DownloadData(url, context.getString(R.string.download_model_title), context.getString(
-                        R.string.download_model_description), downloadFilePath)
+                        R.string.download_model_description), fileName)
                     fileDownloadManager.startDownload(downloadData, downloadListener)
                 }
             }

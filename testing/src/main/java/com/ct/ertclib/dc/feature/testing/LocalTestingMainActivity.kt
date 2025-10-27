@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.feature.testing
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -24,7 +23,6 @@ import android.os.Bundle
 import android.telecom.Call
 import android.telecom.Call.STATE_RINGING
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.utils.logger.Logger
@@ -34,16 +32,15 @@ import com.ct.ertclib.dc.core.manager.call.BDCManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.manager.call.DCManager
-import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
 import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.feature.testing.databinding.ActivityLocalTestingMainBinding
+import com.ct.ertclib.dc.feature.testing.socket.DCSocketManager
+import com.ct.ertclib.dc.feature.testing.socket.HotspotIpHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class LocalTestingMainActivity : BaseAppCompatActivity() {
@@ -69,6 +66,25 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
         viewModel = ViewModelProvider(this).get(TestingViewModel::class.java)
         scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         spUtils = SPUtils.getInstance()
+        DCSocketManager.registerCallObserver { value ->
+            when(value){
+                "added" -> {
+                    scope.launch(Dispatchers.Main){
+                        createCall()
+                    }
+                }
+                "hangup" -> {
+                    scope.launch(Dispatchers.Main){
+                        hangup()
+                    }
+                }
+                "active" -> {
+                    scope.launch(Dispatchers.Main){
+                        activeCall()
+                    }
+                }
+            }
+        }
 
         binding.backIcon.setOnClickListener {
             finish()
@@ -79,112 +95,126 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
         }
 
         binding.btnFakePrecall.setOnClickListener {
-            val enableNewCall = spUtils.getBoolean("enableNewCall", false)
-            if (!enableNewCall) {
-                ToastUtils.showShortToast(this@LocalTestingMainActivity, getString(com.ct.ertclib.dc.core.R.string.please_open))
-                return@setOnClickListener
-            }
-            binding.btnSetting.isEnabled = false
-            binding.btnFakePrecall.isEnabled = false
-            binding.btnFakeIncall.isEnabled = true
-            binding.btnFakeEndcall.isEnabled = true
-
-
-            var myNumber: String? = "12345678901"
-            var remoteNumber: String? = "12345678902"
-
-            testNetworkManager = DCManager()
-
-            callInfo = CallInfo(
-                slotId = 0,
-                telecomCallId = "TC@1",
-                myNumber = myNumber,
-                remoteNumber = remoteNumber,
-                state = STATE_RINGING,
-                videoState = 0,
-                isConference = false,
-                isOutgoingCall = false,
-                isCtCall = true
-            )
-
-            spUtils.put("myNumber", myNumber)
-
-            val callList = ArrayList<CallInfo>().also {
-                it.add(callInfo!!)
-            }
-            callsManager = NewCallsManager(callList)
-            MiniAppManager.setCallsManager(callsManager!!)
-            MiniAppManager.setNetworkManager(testNetworkManager!!)
-            val miniAppPackageManagerImpl = MiniAppManager(callInfo!!)
-            miniAppPackageManagerImpl.setMiniAppStartManager(MiniAppStartManager)
-            mCallGuideManager = BDCManager(callInfo!!, miniAppPackageManagerImpl)
-            testNetworkManager?.setCurrentCallId("TC@1")
-            testNetworkManager?.registerBDCCallback(
-                "TC@1",
-                mCallGuideManager!!
-            )
-            callsManager?.addCallStateListener("TC@1", testNetworkManager!!)
-            callsManager?.addCallStateListener("TC@1", miniAppPackageManagerImpl)
-            callsManager?.addCallStateListener("TC@1", mCallGuideManager!!)
-            callsManager?.addCallStateListener("TC@1", object : ICallStateListener{
-                override fun onCallAdded(
-                    context: Context,
-                    callInfo: CallInfo
-                ) {
-                }
-
-                override fun onCallRemoved(
-                    context: Context,
-                    callInfo: CallInfo
-                ) {
-                }
-
-                override fun onCallStateChanged(
-                    info: CallInfo,
-                    state: Int
-                ) {
-                    scope.launch(Dispatchers.Main) {
-                        if (state == Call.STATE_DISCONNECTED){
-                            binding.btnSetting.isEnabled = true
-                            binding.btnFakePrecall.isEnabled = true
-                            binding.btnFakeIncall.isEnabled = false
-                            binding.btnFakeEndcall.isEnabled = false
-                            TestImsDataChannelManager.closeBdc(0, "TC@1")
-                            testNetworkManager?.unBindService(Utils.getApp())
-                            sLogger.info("onImsDCClose mCallGuideManager:$mCallGuideManager")
-                            mCallGuideManager?.onImsCallRemovedBDCClose()
-                            testNetworkManager = null
-                            callsManager = null
-                            callInfo = null
-                        } else if (state == Call.STATE_ACTIVE){
-                            binding.btnSetting.isEnabled = false
-                            binding.btnFakePrecall.isEnabled = false
-                            binding.btnFakeIncall.isEnabled = false
-                            binding.btnFakeEndcall.isEnabled = true
-                        }
-                    }
-                }
-
-                override fun onAudioDeviceChange() {
-                }
-
-            })
-            callsManager?.notifyOnCallAdded(callInfo!!)
-
+            createCall()
+            DCSocketManager.notifyCallAdded()
         }
 
         binding.btnFakeIncall.setOnClickListener {
-            scope.launch {
-                callInfo?.let {
-                    it.state = Call.STATE_ACTIVE
-                    sLogger.info("testNotifyCallStateChange")
-                    callsManager?.testNotifyCallStateChange(it.telecomCallId, it.state)
-                }
-            }
+            activeCall()
+            DCSocketManager.notifyCallActive()
         }
         binding.btnFakeEndcall.setOnClickListener {
             hangup()
+            DCSocketManager.notifyHangUp()
         }
+    }
+
+    fun activeCall(){
+        scope.launch {
+            callInfo?.let {
+                it.state = Call.STATE_ACTIVE
+                sLogger.info("testNotifyCallStateChange")
+                callsManager?.testNotifyCallStateChange(it.telecomCallId, it.state)
+            }
+        }
+    }
+
+    fun createCall(){
+        val enableNewCall = spUtils.getBoolean("enableNewCall", false)
+        if (!enableNewCall) {
+            ToastUtils.showShortToast(this@LocalTestingMainActivity, getString(com.ct.ertclib.dc.core.R.string.please_open))
+            return
+        }
+        binding.btnSetting.isEnabled = false
+        binding.btnFakePrecall.isEnabled = false
+        binding.btnFakeIncall.isEnabled = true
+        binding.btnFakeEndcall.isEnabled = true
+
+
+        var myNumber: String? = "12345678901"
+        var remoteNumber: String? = "12345678902"
+
+        testNetworkManager = DCManager()
+
+        callInfo = CallInfo(
+            slotId = 0,
+            telecomCallId = "TC@1",
+            myNumber = myNumber,
+            remoteNumber = remoteNumber,
+            state = STATE_RINGING,
+            videoState = 0,
+            isConference = false,
+            isOutgoingCall = false,
+            isCtCall = true
+        )
+
+        spUtils.put("myNumber", myNumber)
+
+        val callList = ArrayList<CallInfo>().also {
+            it.add(callInfo!!)
+        }
+        callsManager = NewCallsManager(callList)
+        MiniAppManager.setCallsManager(callsManager!!)
+        MiniAppManager.setNetworkManager(testNetworkManager!!)
+        val miniAppPackageManagerImpl = MiniAppManager(callInfo!!)
+        miniAppPackageManagerImpl.setMiniAppStartManager(MiniAppStartManager)
+        mCallGuideManager = BDCManager(callInfo!!, miniAppPackageManagerImpl)
+        testNetworkManager?.setCurrentCallId("TC@1")
+        testNetworkManager?.registerBDCCallback(
+            "TC@1",
+            mCallGuideManager!!
+        )
+        callsManager?.addCallStateListener("TC@1", testNetworkManager!!)
+        callsManager?.addCallStateListener("TC@1", miniAppPackageManagerImpl)
+        callsManager?.addCallStateListener("TC@1", mCallGuideManager!!)
+        callsManager?.addCallStateListener("TC@1", object : ICallStateListener{
+            override fun onCallAdded(
+                context: Context,
+                callInfo: CallInfo
+            ) {
+            }
+
+            override fun onCallRemoved(
+                context: Context,
+                callInfo: CallInfo
+            ) {
+            }
+
+            override fun onCallStateChanged(
+                info: CallInfo,
+                state: Int
+            ) {
+                scope.launch(Dispatchers.Main) {
+                    if (state == Call.STATE_DISCONNECTED){
+                        if (callInfo!=null){
+                            DCSocketManager.notifyHangUp()
+                        }
+                        binding.btnSetting.isEnabled = true
+                        binding.btnFakePrecall.isEnabled = true
+                        binding.btnFakeIncall.isEnabled = false
+                        binding.btnFakeEndcall.isEnabled = false
+                        TestImsDataChannelManager.closeBdc(0, "TC@1")
+                        testNetworkManager?.unBindService(Utils.getApp())
+                        sLogger.info("onImsDCClose mCallGuideManager:$mCallGuideManager")
+                        mCallGuideManager?.onImsCallRemovedBDCClose()
+                        testNetworkManager = null
+                        callsManager = null
+                        callInfo = null
+
+                    } else if (state == Call.STATE_ACTIVE){
+                        binding.btnSetting.isEnabled = false
+                        binding.btnFakePrecall.isEnabled = false
+                        binding.btnFakeIncall.isEnabled = false
+                        binding.btnFakeEndcall.isEnabled = true
+                    }
+                }
+            }
+
+            override fun onAudioDeviceChange() {
+            }
+
+        })
+        callsManager?.notifyOnCallAdded(callInfo!!)
     }
 
     fun hangup(){
@@ -202,5 +232,6 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         hangup()
+        DCSocketManager.unRegisterCallObserver()
     }
 }

@@ -27,4 +27,6 @@
     <string name="local_debug">Local debug</string>
     <string name="config_btn">Config</string>
     <string name="simulate_call">Simulate call</string>
+    <string name="start">start</string>
+    <string name="stop">stop</string>
 </resources>

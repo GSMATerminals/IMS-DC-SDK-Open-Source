@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.feature.testing
 
 import android.annotation.SuppressLint
 import com.ct.ertclib.dc.core.utils.logger.Logger
+import com.ct.ertclib.dc.feature.testing.socket.DCSocketManager
 import com.newcalllib.datachannel.V1_0.IImsDataChannelCallback
 import com.newcalllib.datachannel.V1_0.IImsDataChannelServiceController
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
@@ -83,9 +84,18 @@ object TestImsDataChannelManager {
 
     }
 
+    fun onBind(){
+        DCSocketManager.registerADCObserver{ labels ->
+            // 来自对端的ADC
+//            sLogger.info("DCSocket onBind ADC labels:$labels")
+            labels?.let { notifyADCResponse(it, ImsDCStatus.DC_STATE_OPEN) }
+        }
+    }
+
     fun onUnbind() {
         mDCMaps.clear()
         mCallback = null
+        DCSocketManager.unRegisterADCObserver()
     }
 
     fun close(tag: String) {
@@ -94,7 +104,7 @@ object TestImsDataChannelManager {
 
     class TestServiceController : IImsDataChannelServiceController.Stub() {
         override fun createImsDataChannel(
-            dcIds: Array<out String>?,
+            labels: Array<out String>?,
             appInfoXml: String?,
             slotId: Int,
             callId: String?,
@@ -102,12 +112,14 @@ object TestImsDataChannelManager {
         ) {
 
             val list = ArrayList<String>()
-            dcIds?.forEach {
+            labels?.forEach {
                 if (mDCMaps[it] == null) {
                     list.add(it)
                 }
             }
-            notifyADCResponse(dcIds, mCallback, ImsDCStatus.DC_STATE_CONNECTING)
+            notifyADCResponse(list, ImsDCStatus.DC_STATE_CONNECTING)
+            // 通知对端建立ADC
+            DCSocketManager.notifyCreateADC(list)
         }
 
         override fun setImsDataChannelCallback(
@@ -130,20 +142,15 @@ object TestImsDataChannelManager {
 
     }
 
-    private fun sendData(data: TestData) {
-        //通过socket发送数据
-    }
-
     private fun notifyADCResponse(
-        dcIds: Array<out String>?,
-        callback: IImsDataChannelCallback?,
-        dcStateConnecting: ImsDCStatus
+        labels: ArrayList<String>,
+        dcState: ImsDCStatus
     ) {
-        sLogger.info("notifyADCResponse dcIds:$dcIds")
-        if (dcIds == null) {
+        sLogger.info("notifyADCResponse labels:$labels")
+        if (labels == null) {
             return
         }
-        dcIds.forEach {
+        labels.forEach {
             var imsDataChannelImpl = mDCMaps[it]
             if (imsDataChannelImpl == null) {
                 sLogger.info("notifyADCResponse imsDataChannelImpl is null, create it")
@@ -154,14 +161,14 @@ object TestImsDataChannelManager {
                 imsDataChannelImpl.setTelecomCallId(mCallId!!)
                 imsDataChannelImpl.setDcLabel(it)
                 imsDataChannelImpl.setStreamId((1000+(mDCMaps.size)*2).toString())
-                imsDataChannelImpl.setDcStatus(dcStateConnecting)
+                imsDataChannelImpl.setDcStatus(dcState)
                 mDCMaps[it] = imsDataChannelImpl
-            } else if (ImsDCStatus.DC_STATE_CONNECTING != dcStateConnecting) {
-                imsDataChannelImpl.setDcStatus(dcStateConnecting)
+            } else if (ImsDCStatus.DC_STATE_CONNECTING != dcState) {
+                imsDataChannelImpl.setDcStatus(dcState)
             }
-            if (callback != null) {
+            if (mCallback != null) {
                 try {
-                    callback.onApplicationDataChannelResponse(imsDataChannelImpl)
+                    mCallback?.onApplicationDataChannelResponse(imsDataChannelImpl)
                 } catch (e: Exception) {
                     sLogger.error("notifyADCResponse error", e)
                 }

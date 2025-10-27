@@ -68,6 +68,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartCallback
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
@@ -494,6 +495,15 @@ class MiniAppManager(private val callInfo: CallInfo) :
         startAppMsg.sendToTarget()
     }
 
+    fun queryMiniAPpStatus(appId: String, startCallback: IStartAppCallback) {
+        LogUtils.debug(TAG, "queryMiniAPpStatus appId: $appId")
+        mStartAppCallback[appId]?.let {
+            val progress = it.progress
+            mStartAppCallback[appId] = startCallback
+            startCallback.onDownloadProgressUpdated(appId, progress)
+        }
+    }
+
     // 获取当前缓存的最新版本
     private fun getInstalledPath(appId: String): String? {
         val appPath = "${Utils.getApp().getDir("miniApps", Context.MODE_PRIVATE)}${File.separator}$appId"
@@ -757,7 +767,10 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     fun onMiniAppDownloadProgressUpdated(appId: String, progress: Int) {
-        mStartAppCallback[appId]?.onDownloadProgressUpdated(appId, progress)
+        mStartAppCallback[appId]?.let {
+            it.onDownloadProgressUpdated(appId, progress)
+            it.progress = progress
+        }
     }
 
     fun unregisterMiniAppListLoadedCallback() {
@@ -1126,12 +1139,16 @@ class MiniAppManager(private val callInfo: CallInfo) :
                     override fun onAccept() {
                         mPassivelyMiniAppMap[appInfo.appId] = miniApp
                         sLogger.debug("onAccept miniapp path: ${miniApp}")
-                        startMiniApp(appInfo.appId,object : IStartAppCallback {
+                        startMiniApp(appInfo.appId, object : IStartAppCallback() {
                             override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
                                 if (sLogger.isDebugActivated) {
                                     sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
                                 }
                                 mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
+                            }
+
+                            override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
                             }
                         }, startType = PASSIVE_START_TYPE)
                     }

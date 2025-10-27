@@ -4,5 +4,5 @@ data class DownloadData(
     var url: String,
     var title: String,
     var description: String,
-    var filePath: String
+    var fileName: String
 )

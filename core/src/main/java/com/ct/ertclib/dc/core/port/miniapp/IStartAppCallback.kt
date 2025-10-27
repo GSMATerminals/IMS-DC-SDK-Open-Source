@@ -18,8 +18,11 @@ package com.ct.ertclib.dc.core.port.miniapp
 
 import com.ct.ertclib.dc.core.data.common.Reason
 
-interface IStartAppCallback {
-    fun onStartResult(appId:String, isSuccess:Boolean, reason: Reason?)
+abstract class IStartAppCallback {
 
-    fun onDownloadProgressUpdated(appId: String, progress: Int) {  }
+    var progress: Int = 0
+
+    abstract fun onStartResult(appId:String, isSuccess:Boolean, reason: Reason?)
+
+    abstract fun onDownloadProgressUpdated(appId: String, progress: Int)
 }

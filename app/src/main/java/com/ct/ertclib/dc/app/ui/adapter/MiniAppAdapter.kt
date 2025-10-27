@@ -164,6 +164,7 @@ class MiniAppAdapter(
         itemViewMap[miniAppInfo.appId] = holder.itemview
         if (callInfo != null) {
             holder.itemview.bindData(miniAppInfo, callInfo, NewCallAppSdkInterface.floatingBallStyle.value?.let { viewModel.getTextColor(context, it) })
+            NewCallAppSdkInterface.queryMiniAppStatus(callInfo.telecomCallId, miniAppInfo.appId, ::onStartResult, ::onDownloadProgressUpdated)
         }
         holder.itemview.setOnClickListener {
             handleStartApp(miniAppInfo)

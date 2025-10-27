@@ -69,7 +69,8 @@
             android:id="@+id/btn_fake_precall"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="模拟来电" />
+            android:text="@string/simulate_call" />
+
     </LinearLayout>
 
 

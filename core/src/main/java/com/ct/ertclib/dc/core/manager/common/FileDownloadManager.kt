@@ -3,6 +3,7 @@ package com.ct.ertclib.dc.core.manager.common
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
+import android.os.Environment
 import com.ct.ertclib.dc.core.data.common.DownloadData
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import androidx.core.net.toUri
@@ -35,7 +36,7 @@ class FileDownloadManager(private val context: Context): IFileDownloadManager {
                 val request = DownloadManager.Request(downloadData.url.toUri())
                 request.setTitle(downloadData.title)
                 request.setDescription(downloadData.description)
-                request.setDestinationInExternalFilesDir(context, "", downloadData.filePath)
+                request.setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, downloadData.fileName)
                 request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 val downloadId = it.enqueue(request)

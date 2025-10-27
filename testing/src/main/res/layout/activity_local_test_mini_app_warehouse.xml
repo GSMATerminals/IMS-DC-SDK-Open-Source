@@ -47,5 +47,62 @@
         android:layout_weight="1"
         android:id="@+id/recyclerview"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <RadioButton
+                android:id="@+id/bt_client"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="client"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioButton
+                android:id="@+id/bt_server"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="server"
+                android:textSize="16sp"/>
+        </RadioGroup>
+        <LinearLayout
+            android:layout_marginLeft="5dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <EditText
+                android:id="@+id/et_ip"
+                android:inputType="numberDecimal"
+                android:digits="0123456789."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"/>
+            <TextView
+                android:id="@+id/tv_ip"
+                android:inputType="numberDecimal"
+                android:digits="0123456789."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"/>
+        </LinearLayout>
+        <Button
+            android:id="@+id/btn_save_tcp"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:text="@string/start" />
+        <Button
+            android:id="@+id/btn_stop_tcp"
+            android:layout_width="50dp"
+            android:layout_marginLeft="4dp"
+            android:layout_height="match_parent"
+            android:text="@string/stop" />
+    </LinearLayout>
 </LinearLayout>

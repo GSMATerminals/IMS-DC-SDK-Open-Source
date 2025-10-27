@@ -343,7 +343,11 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
 
     fun registerAppDataChannelCallback(callId: String, appId:String, dcCreateListener: IDcCreateListener) {
         mAdcCreateListenerMap[getAdcListenerKey(callId, appId)] = dcCreateListener
-        notifyCachedAppDataChannels(callId, appId, dcCreateListener)
+        // 这里要确保小程序已经加载完毕再通知，否则就会丢失，先简单等待500毫秒
+        scope.launch {
+            delay(500)
+            notifyCachedAppDataChannels(callId, appId, dcCreateListener)
+        }
     }
 
     fun registerControlAppDataChannelCallback(callId: String, dcCreateListener: IControlDcCreateListener) {

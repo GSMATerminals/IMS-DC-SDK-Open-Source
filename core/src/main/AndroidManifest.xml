@@ -23,6 +23,8 @@
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- 给外部查询用的 -->
     <permission
         android:name="com.ct.ertclib.dc.provider.PERMISSION"

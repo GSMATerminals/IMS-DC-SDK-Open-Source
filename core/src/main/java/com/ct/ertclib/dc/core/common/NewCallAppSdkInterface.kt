@@ -139,13 +139,36 @@ object NewCallAppSdkInterface {
         onDownloadProgressUpdate: ((String, Int) -> Unit)? = null) {
         LogUtils.debug(TAG, "startMiniApp")
         MiniAppManager.getAppPackageManager(callId)?.startMiniApp(appId, object :
-            IStartAppCallback {
+            IStartAppCallback() {
+
             override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
                 onStartResult.invoke(appId, isSuccess, reason)
             }
 
             override fun onDownloadProgressUpdated(appId: String, progress: Int) {
                 onDownloadProgressUpdate?.invoke(appId, progress)
+            }
+        })
+    }
+
+    /**
+     * 查询当前小程序下载状态
+     */
+    @JvmStatic
+    fun queryMiniAppStatus(
+        callId: String,
+        appId: String,
+        onStartResult: (String, Boolean, Reason?) -> Unit,
+        onDownloadProgressUpdate: ((String, Int) -> Unit)
+    ) {
+        LogUtils.debug(TAG, "queryMiniAppStatus")
+        MiniAppManager.getAppPackageManager(callId)?.queryMiniAPpStatus(appId, object : IStartAppCallback() {
+            override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
+                onStartResult.invoke(appId, isSuccess, reason)
+            }
+
+            override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+                onDownloadProgressUpdate.invoke(appId, progress)
             }
         })
     }

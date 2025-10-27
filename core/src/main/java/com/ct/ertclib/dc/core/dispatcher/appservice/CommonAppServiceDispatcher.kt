@@ -66,7 +66,7 @@ class CommonAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
                 val params = appRequest.map["params"]
                 callId.let {
                     MiniAppManager.getAppPackageManager(it as String)
-                        ?.startMiniApp(appId as String, object :IStartAppCallback{
+                        ?.startMiniApp(appId as String, object :IStartAppCallback() {
                             override fun onStartResult(
                                 appId: String,
                                 isSuccess: Boolean,
@@ -79,6 +79,10 @@ class CommonAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
                                         MiniAppConstants.IS_STARTED to isSuccess)
                                 ).toJson()
                                 iMessageCallback?.reply(replayMessage)
+                            }
+
+                            override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
                             }
                         },isStartByOthers = true, startByOthersParams = params?.toString())
                 }
