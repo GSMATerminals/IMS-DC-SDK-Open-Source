@@ -82,4 +82,6 @@
     <string name="miss_permission_tips">缺少权限增强通话功能将无法使用</string>
     <string name="download_model_title">正在下载模型</string>
     <string name="download_model_description">正在下载模型</string>
+    <string name="download_file_title">正在下载文件</string>
+    <string name="download_file_description">正在下载文件</string>
 </resources>

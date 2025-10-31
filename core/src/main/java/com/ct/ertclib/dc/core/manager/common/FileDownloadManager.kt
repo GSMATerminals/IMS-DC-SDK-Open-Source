@@ -28,7 +28,7 @@ class FileDownloadManager(private val context: Context): IFileDownloadManager {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     @Volatile
-    private var isDownloading = false
+    override var isDownloading = false
 
     override fun startDownload(downloadData: DownloadData, downloadListener: IDownloadListener) {
         kotlin.runCatching {

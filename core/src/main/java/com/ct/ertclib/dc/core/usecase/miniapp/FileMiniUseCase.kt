@@ -42,6 +42,9 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.KEY_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_EVENT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_URL
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_EXTRA_INFO
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_FILE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_FILE_NAME
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_FILE_PATH
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_MODEL
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_MESSAGE
@@ -1271,8 +1274,43 @@ class FileMiniUseCase(
                             handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("result" to "false"))))
                         }
                     }
-                    val downloadData = DownloadData(url, context.getString(R.string.download_model_title), context.getString(
-                        R.string.download_model_description), fileName)
+                    if (fileDownloadManager.isDownloading) {
+                        handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "other task is running"))))
+                    } else {
+                        val downloadData = DownloadData(url, context.getString(R.string.download_model_title), context.getString(
+                            R.string.download_model_description), fileName)
+                        fileDownloadManager.startDownload(downloadData, downloadListener)
+                    }
+                }
+            }
+            PARAMS_FILE -> {
+                val filePath = params[PARAMS_FILE_PATH] as? String
+                val fileName = params[PARAMS_FILE_NAME] as? String
+                if (filePath == null || fileName == null) {
+                    handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "empty params"))))
+                    return
+                }
+                val downloadListener = object : IDownloadListener {
+                    override fun onDownloadProgress(progress: Int) {
+                        LogUtils.debug(TAG, "onDownloadProgress progress: $progress")
+                    }
+
+                    override fun onDownloadSuccess() {
+                        LogUtils.debug(TAG, "onDownloadSuccess")
+                        val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mapOf("result" to "true"))
+                        handler.complete(JsonUtil.toJson(response))
+                    }
+
+                    override fun onDownloadFailed() {
+                        LogUtils.debug(TAG, "onDownloadFailed")
+                        handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("result" to "false"))))
+                    }
+                }
+                if (fileDownloadManager.isDownloading) {
+                    handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "other task is running"))))
+                } else {
+                    val downloadData = DownloadData(url, context.getString(R.string.download_file_title), context.getString(
+                        R.string.download_file_description), "${filePath}${File.separator}${fileName}")
                     fileDownloadManager.startDownload(downloadData, downloadListener)
                 }
             }
@@ -1287,6 +1325,7 @@ class FileMiniUseCase(
         val locationMap = mutableMapOf<String, String>()
         val locationManager =
             context.getSystemService(LocationManager::class.java)
+        var hasRemoveUpdates = false
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
             && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         ) {
@@ -1298,7 +1337,12 @@ class FileMiniUseCase(
                 locationMap["lon"] = location.longitude.toString()
                 locationMap["lat"] = location.latitude.toString()
                 locationListener?.let {
-                    locationManager.removeUpdates(it)
+                    hasRemoveUpdates = true
+                    try {
+                        locationManager.removeUpdates(it)
+                    } catch (e:Exception){
+                        e.printStackTrace()
+                    }
                 }
                 val response = JSResponse("0", "success", locationMap)
                 handler.complete(JsonUtil.toJson(response))
@@ -1321,8 +1365,14 @@ class FileMiniUseCase(
                         locationListener
                     )
                     scope.launch {
-                        delay(1000)
-                        locationManager.removeUpdates(locationListener)
+                        delay(3000)
+                        if (!hasRemoveUpdates){
+                            try {
+                                locationManager.removeUpdates(locationListener)
+                            } catch (e:Exception){
+                                e.printStackTrace()
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     logger.error(e.message, e)

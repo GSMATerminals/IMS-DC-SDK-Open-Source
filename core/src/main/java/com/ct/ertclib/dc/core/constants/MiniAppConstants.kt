@@ -167,7 +167,10 @@ object MiniAppConstants {
     const val PARAMS_INFORMATION_APPLICATION = "application"
     const val PARAMS_DOWNLOAD_EVENT = "downloadEvent"
     const val PARAMS_DOWNLOAD_URL = "downloadURL"
+    const val PARAMS_FILE_PATH = "filePath"
+    const val PARAMS_FILE_NAME = "fileName"
     const val PARAMS_MODEL = "model"
+    const val PARAMS_FILE = "file"
     const val PARAMS_EXTRA_INFO = "extraInfo"
 
     const val LICENSE = "license"

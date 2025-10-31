@@ -96,4 +96,6 @@
     <string name="miss_permission_tips">Insufficient permissions. Enhanced call features will be unavailable.</string>
     <string name="download_model_title">Downloading model</string>
     <string name="download_model_description">Downloading model</string>
+    <string name="download_file_title">Downloading model</string>
+    <string name="download_file_description">Downloading model</string>
 </resources>
