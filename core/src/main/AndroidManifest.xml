@@ -28,7 +28,8 @@
     <!-- 给外部查询用的 -->
     <permission
         android:name="com.ct.ertclib.dc.provider.PERMISSION"
-        android:protectionLevel="normal" />
+        android:protectionLevel="signatureOrSystem"
+        tools:ignore="SignatureOrSystemPermissions" />
 
     <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
 
