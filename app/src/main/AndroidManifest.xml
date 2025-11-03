@@ -79,9 +79,4 @@
         </intent>
     </queries>
 
-<!--    定义进入SDK主页面的权限，需要相同签名-->
-    <permission
-        android:name="com.ct.ertclib.dc.main_permission"
-        android:protectionLevel="normal" />
-
 </manifest>

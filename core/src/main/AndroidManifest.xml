@@ -31,6 +31,12 @@
         android:protectionLevel="signatureOrSystem"
         tools:ignore="SignatureOrSystemPermissions" />
 
+    <!--    定义进入SDK主页面的权限，需要相同签名-->
+    <permission
+        android:name="com.ct.ertclib.dc.main_permission"
+        android:protectionLevel="signatureOrSystem"
+        tools:ignore="SignatureOrSystemPermissions" />
+
     <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
 
     <uses-permission android:name="android.permission.VIBRATE" />
