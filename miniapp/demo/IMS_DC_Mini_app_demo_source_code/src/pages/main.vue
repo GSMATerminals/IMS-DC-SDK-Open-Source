@@ -383,7 +383,7 @@ export default {
     },
     getHttpResult() {
       // 打开app组件
-      const paramsJson = `{"name":"test","password":"test"}`
+      const paramsJson = `{"name":"test"}`
       const base64Params = btoa(String.fromCharCode.apply(null, this.str2ByteArray(paramsJson)))
       const headerJson = `{"head1":"test","head2":"test"}`
       const base64Header = btoa(String.fromCharCode.apply(null, this.str2ByteArray(headerJson)))

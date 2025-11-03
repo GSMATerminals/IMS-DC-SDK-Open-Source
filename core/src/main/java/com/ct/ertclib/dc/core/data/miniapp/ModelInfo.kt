@@ -5,5 +5,5 @@ data class ModelInfo(
     var modelName: String,
     var modelType: String,
     var modelVersion: String,
-    var modelPath: String
+    var modelPath: String = ""
 )

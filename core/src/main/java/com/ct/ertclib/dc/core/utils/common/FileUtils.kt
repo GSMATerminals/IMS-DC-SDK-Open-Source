@@ -394,25 +394,17 @@ object FileUtils {
                             } else if (!file.createNewFile()) {
                                 throw IOException("$file create file error")
                             } else {
-                                var fileOutputStream: FileOutputStream? = null
                                 try {
-                                    fileOutputStream = FileOutputStream(file)
-                                    val bufferArray = ByteArray(1024)
-                                    while (true) {
-                                        val read = tarInputStream.read(bufferArray)
-                                        if (read == -1) {
-                                            break
+                                    FileOutputStream(file).use { fileOutputStream ->
+                                        val bufferArray = ByteArray(1024)
+                                        while (true) {
+                                            val read = tarInputStream.read(bufferArray)
+                                            if (read == -1) break
+                                            fileOutputStream.write(bufferArray, 0, read)
                                         }
-                                        fileOutputStream.write(bufferArray, 0, read)
                                     }
                                 } catch (e: Exception) {
-                                    sLogger.warn(e.message)
-                                } finally {
-                                    try {
-                                        fileOutputStream?.close()
-                                    } catch (e: Exception) {
-                                        sLogger.warn(e.message)
-                                    }
+                                    sLogger.warn("Error during file extraction: ${e.message}")
                                 }
                             }
                         }
