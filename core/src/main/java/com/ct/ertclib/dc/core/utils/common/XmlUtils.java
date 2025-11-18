@@ -26,4 +26,12 @@ public class XmlUtils {
         xStream.processAnnotations(cls);
         return cls.cast(xStream.fromXML(xml));
     }
+
+    public static String toXml(Object obj, Class[] classes) {
+        XStream xStream = new XStream();
+        xStream.allowTypes(classes);
+        xStream.ignoreUnknownElements();
+        xStream.processAnnotations(obj.getClass());
+        return xStream.toXML(obj);
+    }
 }

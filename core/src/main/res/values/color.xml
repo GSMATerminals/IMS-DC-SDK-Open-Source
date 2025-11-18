@@ -30,7 +30,12 @@
     <color name="white_alpha_90">#e5ffffff</color>
 
     <color name="expanded_dialog_bg_color">#EE666666</color>
-    <color name="expanded_dialog_bg_color_white">#F9F9F9</color>
+    <color name="expanded_dialog_bg_color_light">#F9F9F9</color>
 
     <color name="common_dialog_bg_white">#F5F5F5</color>
+
+    <color name="common_layout_background">#F9F9F9</color>
+    <color name="common_text_black">#D9000000</color>
+    <color name="common_text_neutral_black">#A8000000</color>
+    <color name="common_divider_color">#e7e7e7</color>
 </resources>

@@ -74,6 +74,9 @@ class SettingsActivity : BaseAppCompatActivity() {
                 viewModel.checkAndRequestPermission(this@SettingsActivity, PERMISSION_TYPE_IN_APP, ::onPermissionAgree, ::onPermissionDenied)
             }
         }
+        binding.swDialer.setOnCheckedChangeListener { _, isChecked ->
+            SDKPermissionUtils.setFellowDialer(isChecked)
+        }
         binding.privacyPolicyTextview.setOnClickListener{
             SDKPermissionUtils.startPrivacyActivity(this@SettingsActivity)
         }
@@ -98,6 +101,10 @@ class SettingsActivity : BaseAppCompatActivity() {
             binding.closeTips.text = getString(R.string.open_switch_tips)
         } else {
             binding.closeTips.text = getString(R.string.close_switch_tips)
+        }
+
+        if (binding.swDialer.isChecked != SDKPermissionUtils.isFellowDialer()){
+            binding.swDialer.isChecked = SDKPermissionUtils.isFellowDialer()
         }
     }
 

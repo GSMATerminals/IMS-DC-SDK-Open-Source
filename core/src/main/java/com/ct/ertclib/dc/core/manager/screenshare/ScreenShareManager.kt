@@ -24,6 +24,7 @@ import android.os.IBinder
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.port.manager.IScreenShareManager
+import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.newcalllib.sharescreen.IScreenShareHandler
 import com.newcalllib.sharescreen.IScreenShareStatusListener
 import com.newcalllib.sharescreen.ScreenShareStatus
@@ -100,8 +101,16 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
         val packageName = context.resources.getString(R.string.screenshareservice_package_name)
         val serviceName = context.getString(R.string.screenshareservice_name)
         val actionName = context.getString(R.string.screenshareservice_action)
+
         val intent = Intent().apply {
-            component = ComponentName(packageName, serviceName)
+            when(PkgUtils.brand()){
+                PkgUtils.XIAOMI -> {
+                    `package` = packageName
+                }
+                else -> {
+                    component = ComponentName(packageName, serviceName)
+                }
+            }
             action = actionName
         }
         kotlin.runCatching {

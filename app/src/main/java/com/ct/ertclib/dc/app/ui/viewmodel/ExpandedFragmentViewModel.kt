@@ -51,7 +51,7 @@ class ExpandedFragmentViewModel : ViewModel() {
 
     fun getBackgroundDrawableColor(context:Context, style: Int): Int {
         return when (style) {
-            SDK_STYLE_WHITE -> context.resources.getColor(com.ct.ertclib.dc.core.R.color.expanded_dialog_bg_color_white)
+            SDK_STYLE_WHITE -> context.resources.getColor(com.ct.ertclib.dc.core.R.color.expanded_dialog_bg_color_light)
             else -> context.resources.getColor(com.ct.ertclib.dc.core.R.color.expanded_dialog_bg_color)
         }
     }

@@ -67,6 +67,7 @@ import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
+import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.SystemUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
@@ -1225,6 +1226,19 @@ class FileMiniUseCase(
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
+        miniToParentManager.getMiniAppInfo()?.let {
+            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
+                logger.warn("fileDownload, permission not granted, return")
+                return
+            }
+        } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
+            logger.warn("fileDownload, appInfo is null, return")
+            return
+        }
         val downloadEvent = params[PARAMS_DOWNLOAD_EVENT] as? String
         val url = params[PARAMS_DOWNLOAD_URL] as? String
         val infoJson = params[PARAMS_EXTRA_INFO] as? String
@@ -1241,7 +1255,7 @@ class FileMiniUseCase(
                     val modelInfo = JsonUtil.fromJson(infoJson, ModelInfo::class.java)
                     val modelName = modelInfo?.modelName
                     val fileName = "$modelName.zip"
-                    val downloadFileFolder = "${context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)}"
+                    val downloadFileFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path
                     val downloadFilePath = "$downloadFileFolder${File.separator}$fileName"
                     val targetFileDir = "${context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName${File.separator}"
                     val downloadListener = object : IDownloadListener {
@@ -1252,6 +1266,7 @@ class FileMiniUseCase(
                         override fun onDownloadSuccess() {
                             LogUtils.debug(TAG, "onDownloadSuccess")
                             kotlin.runCatching {
+                                FileUtils.deletePath(targetFileDir)
                                 ZipUtils.unzipFile(downloadFilePath, targetFileDir)
                             }.onFailure {
                                 LogUtils.error(TAG, "onDownloadSuccess unzipFile failed: $this")

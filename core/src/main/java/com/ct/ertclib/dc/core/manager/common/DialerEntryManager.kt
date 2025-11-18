@@ -56,13 +56,11 @@ class DialerEntryManager {
         job = scope.launch(Dispatchers.Main) {
             dialerEntryStatusFlow.distinctUntilChanged().collect { floatingBallData ->
                 sLogger.info("floatingBallStatusFlow status: ${floatingBallData.showStatus}")
-                if (floatingBallData.showStatus == FLOATING_DISPLAY) {
-                    floatingBallData.miniAppList?.let {
-                        enable = true
-                        notifyEnable(context,true)
-                        miniAppList = floatingBallData.miniAppList
-                        callInfo = floatingBallData.callInfo
-                    }
+                floatingBallData.miniAppList?.let {
+                    enable = floatingBallData.showStatus == FLOATING_DISPLAY
+                    notifyEnable(context,enable)
+                    miniAppList = floatingBallData.miniAppList
+                    callInfo = floatingBallData.callInfo
                 }
             }
         }
@@ -86,6 +84,10 @@ class DialerEntryManager {
                                 }
 
                                 "expand" -> {
+                                    if (callInfo?.isRinging() != true && callInfo?.isInCall() != true){
+                                        sLogger.info("DialerEntryManager expand callInfo is not ringing or inCall")
+                                        return
+                                    }
                                     val intent = Intent(INTENT_MINI_EXPANDED)
                                     intent.putExtra("miniAppList", miniAppList)
                                     intent.putExtra("callInfo", callInfo)

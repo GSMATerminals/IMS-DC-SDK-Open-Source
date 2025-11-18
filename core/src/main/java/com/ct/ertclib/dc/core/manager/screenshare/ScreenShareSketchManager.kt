@@ -25,7 +25,11 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.PopupWindow
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
@@ -76,6 +80,7 @@ class ScreenShareSketchManager(
 
     private var rotation = 0
     private var rectF = RectF()
+    private var isFirstShowPopupWindow = true
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -188,6 +193,34 @@ class ScreenShareSketchManager(
             })
         }
         windowManager?.addView(ctrlPanel, ctrlPanelLayoutParams)
+        showPopupWindow()
+    }
+
+    private fun showPopupWindow() {
+        if (isFirstShowPopupWindow) {
+            ctrlPanel?.post {
+                LogUtils.debug(TAG, "addSketchView show popup window")
+                val view = LayoutInflater.from(context).inflate(R.layout.layout_screen_share_tips, null, false)
+                val closeIv = view.findViewById<AppCompatImageView>(R.id.close_image)
+                val popupWindow = PopupWindow(
+                    view,
+                    context.resources.getDimensionPixelSize(R.dimen.screen_share_tips_width),
+                    context.resources.getDimensionPixelSize(R.dimen.screen_share_tips_height),
+                    true)
+                closeIv.setOnClickListener {
+                    if (popupWindow.isShowing) {
+                        popupWindow.dismiss()
+                    }
+                }
+
+                ctrlPanel?.let {
+                    val ctrlPanelHeight = it.height
+                    val ctrlPanelWidth = it.width
+                    popupWindow.showAsDropDown(it, -ctrlPanelWidth, ctrlPanelHeight / 2 + popupWindow.height / 2)
+                }
+            }
+            isFirstShowPopupWindow = false
+        }
     }
 
     private var ctrlLayoutTouchListener = object : View.OnTouchListener {

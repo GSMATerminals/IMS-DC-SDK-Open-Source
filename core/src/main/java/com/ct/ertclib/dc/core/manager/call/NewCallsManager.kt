@@ -16,20 +16,18 @@
 
 package com.ct.ertclib.dc.core.manager.call
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Build
+import android.os.Bundle
 import android.telecom.Call
 import android.telecom.Call.*
 import android.telecom.CallAudioState
+import android.telecom.Connection
 import android.telecom.InCallService
 import android.telecom.VideoProfile
-import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.utils.common.CallUtils
-import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
@@ -53,8 +51,7 @@ class NewCallsManager() {
 
     private var mCallInfoMap = ConcurrentHashMap<String, CallInfo>()
     private val mCallsMap = ConcurrentHashMap<String, Call>()
-    private val mTelephonyManagerMap = ConcurrentHashMap<String, TelephonyManager>()
-    private val mTelephonyCallbackMap = ConcurrentHashMap<String, TelephonyCallback>()
+    private val mCallbackMap = ConcurrentHashMap<String, CallBack>()
     private val mCallStateListMap = ConcurrentHashMap<String, ArrayList<ICallStateListener>>()
     private val mCallInfoUpdateListMap = ConcurrentHashMap<String, ArrayList<ICallInfoUpdateListener>>()
     private val audioControlHelper by lazy { AudioControlHelper(Utils.getApp()) }
@@ -65,7 +62,6 @@ class NewCallsManager() {
 
     private val sLogger: Logger = Logger.getLogger(TAG)
 
-    private val mCallBack: CallBack = CallBack()
 
     init {
         audioControlHelper.registerAudioDeviceCallback(object : AudioControlHelper.OnAudioDeviceChangeListener {
@@ -86,9 +82,8 @@ class NewCallsManager() {
 
     init {
         job1 = scope.launch {
-            StateFlowManager.callStateDataFlow.distinctUntilChanged().collect { callState ->
+            StateFlowManager.callInfoFlow.distinctUntilChanged().collect { callState ->
                 updateCallInfo(callState.callInfo.telecomCallId)
-                dispatchCallStateChange(callState.callInfo.telecomCallId)
             }
         }
     }
@@ -128,15 +123,9 @@ class NewCallsManager() {
                 if (sLogger.isDebugActivated) {
                     sLogger.debug("onCallAdded callInfo: $callInfo")
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SDKPermissionUtils.checkPermissions(Utils.getApp(), Manifest.permission.READ_PHONE_STATE)){
-                    val telephonyManager = (Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).createForSubscriptionId(
-                        CallUtils.getSubId(call))
-                    val telephonyCallback = TelephonyCallback(callInfo.telecomCallId)
-                    telephonyManager.registerTelephonyCallback(Utils.getApp().mainExecutor,telephonyCallback)
-                    mTelephonyManagerMap[callInfo.telecomCallId] = telephonyManager
-                    mTelephonyCallbackMap[callInfo.telecomCallId] = telephonyCallback
-                }
-                call.registerCallback(mCallBack)
+                val callBack = CallBack()
+                mCallbackMap[callInfo.telecomCallId] = callBack
+                call.registerCallback(callBack)
                 mCallInfoMap[callInfo.telecomCallId] = callInfo
                 mCallsMap[callInfo.telecomCallId] = call
                 return callInfo
@@ -145,16 +134,6 @@ class NewCallsManager() {
             }
         }
         return null
-    }
-
-    @RequiresApi(Build.VERSION_CODES.S)
-    inner class TelephonyCallback(val callId: String): android.telephony.TelephonyCallback(), android.telephony.TelephonyCallback.CallStateListener{
-        override fun onCallStateChanged(state: Int) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("TelephonyCallback onCallStateChanged state: $state, callId: $callId")
-            }
-            dispatchCallStateChange(callId)
-        }
     }
 
     @SuppressLint("NewApi")
@@ -166,6 +145,30 @@ class NewCallsManager() {
             val callId = CallUtils.getTelecomCallId(call)
             if (callId != null) {
                 dispatchCallStateChange(callId)
+            }
+        }
+
+        override fun onConnectionEvent(call: Call?, event: String?, extras: Bundle?) {
+            super.onConnectionEvent(call, event, extras)
+            // 对端呼叫保持
+            // event: android.telecom.event.CALL_REMOTELY_HELD, extras: null
+            // event: android.telephony.event.EVENT_SUPPLEMENTARY_SERVICE_NOTIFICATION, extras: Bundle[mParcelledData.dataSize=332]
+
+            // 对方解除保持
+            // event: android.telecom.event.CALL_REMOTELY_UNHELD, extras: null
+            // event: android.telephony.event.EVENT_SUPPLEMENTARY_SERVICE_NOTIFICATION, extras: Bundle[mParcelledData.dataSize=324]
+            sLogger.info("onConnectionEvent event: $event, extras: $extras")
+            val callId = CallUtils.getTelecomCallId(call)
+            if (callId != null) {
+                when(event){
+                    Connection.EVENT_CALL_REMOTELY_HELD ->{
+                        dispatchRemoteCallStateChange(callId,STATE_HOLDING)
+
+                    }
+                    Connection.EVENT_CALL_REMOTELY_UNHELD->{
+                        dispatchRemoteCallStateChange(callId,STATE_ACTIVE)
+                    }
+                }
             }
         }
     }
@@ -182,6 +185,37 @@ class NewCallsManager() {
 //            sLogger.debug("dispatchCallStateChange state is null")
             return
         }
+        val callInfo = getCallInfo(callId)
+        if (callInfo == null) {
+            sLogger.debug("dispatchCallStateChange call info is null")
+            return
+        }
+        if (state == callInfo.state) {
+//            sLogger.debug("onStateChanged call state not change")
+            return
+        }
+        if (state == STATE_ACTIVE) {
+            mCurrentTelecomCallId = callInfo.telecomCallId
+        } else if (state == STATE_SELECT_PHONE_ACCOUNT || state == STATE_CONNECTING) {
+            sLogger.debug("dispatchCallStateChange call state not need change")
+            return
+        }
+
+        callInfo.state = state
+        sLogger.debug("dispatchCallStateChange call state change to $state")
+
+        val callStateList = mCallStateListMap.getOrDefault(callInfo.telecomCallId, null)
+        if (callStateList == null) {
+            sLogger.info("dispatchCallStateChange callStateList is null")
+            return
+        }
+        callStateList.forEach {
+            it.onCallStateChanged(callInfo, state)
+        }
+    }
+
+    @SuppressLint("NewApi")
+    fun dispatchRemoteCallStateChange(callId: String,state: Int) {
         val callInfo = getCallInfo(callId)
         if (callInfo == null) {
             sLogger.debug("dispatchCallStateChange call info is null")
@@ -307,7 +341,8 @@ class NewCallsManager() {
     @SuppressLint("NewApi")
     fun onCallRemoved(callId: String) {
         val call = mCallsMap[callId]
-        call?.unregisterCallback(mCallBack)
+        val callBack = mCallbackMap[callId]
+        call?.unregisterCallback(callBack)
         val callInfo = getCallInfo(callId)
         if (sLogger.isDebugActivated) {
             sLogger.debug("onCallRemoved callInfo: $callInfo")
@@ -317,13 +352,6 @@ class NewCallsManager() {
                 mCurrentTelecomCallId = null
             }
             callInfo.state = STATE_DISCONNECTED
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                mTelephonyCallbackMap[callInfo.telecomCallId]?.let { it1 ->
-                    mTelephonyManagerMap[callInfo.telecomCallId]?.unregisterTelephonyCallback(
-                        it1
-                    )
-                }
-            }
             mCallStateListMap[callInfo.telecomCallId]?.forEach { stateListener ->
                 stateListener.onCallRemoved(Utils.getApp(), callInfo)
             }
@@ -331,8 +359,7 @@ class NewCallsManager() {
             mCallInfoUpdateListMap.remove(callInfo.telecomCallId)
             mCallInfoMap.remove(callInfo.telecomCallId)
             mCallsMap.remove(callInfo.telecomCallId)
-            mTelephonyManagerMap.remove(callInfo.telecomCallId)
-            mTelephonyCallbackMap.remove(callInfo.telecomCallId)
+            mCallbackMap.remove(callInfo.telecomCallId)
         }
     }
 
@@ -347,8 +374,7 @@ class NewCallsManager() {
         mCallInfoUpdateListMap.clear()
         mCallInfoMap.clear()
         mCallsMap.clear()
-        mTelephonyManagerMap.clear()
-        mTelephonyCallbackMap.clear()
+        mCallbackMap.clear()
         audioControlHelper.unregisterAudioDeviceCallback()
         inCallService = null
     }

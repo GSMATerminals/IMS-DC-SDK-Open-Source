@@ -74,7 +74,7 @@ data class CallInfo(
     }
 
     fun isRinging() : Boolean {
-        return this.state == Call.STATE_RINGING
+        return this.state == Call.STATE_RINGING || this.state == Call.STATE_DIALING
     }
 
 }

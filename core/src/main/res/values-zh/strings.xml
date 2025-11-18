@@ -84,4 +84,6 @@
     <string name="download_model_description">正在下载模型</string>
     <string name="download_file_title">正在下载文件</string>
     <string name="download_file_description">正在下载文件</string>
+    <string name="screen_share_tips">已开启屏幕共享，可通过右侧的控制按钮开启或关闭涂鸦画板</string>
+    <string name="fellow_dialer">悬浮球跟随系统通话APP</string>
 </resources>

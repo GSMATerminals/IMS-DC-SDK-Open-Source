@@ -40,4 +40,6 @@
     <dimen name="expanded_margin_bottom">8dp</dimen>
     <integer name="dialog_anim_duration">300</integer>
 
+    <dimen name="screen_share_tips_width">160dp</dimen>
+    <dimen name="screen_share_tips_height">60dp</dimen>
 </resources>

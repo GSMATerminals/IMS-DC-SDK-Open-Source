@@ -22,6 +22,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
@@ -253,16 +254,26 @@ class MiniAppExpandedDialogFragment(
         }
         NewCallAppSdkInterface.floatingBallStyle.observe(this) { style ->
             NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "viewModel.style.observe: style: $style")
-            activity?.let {
-                val textColor = viewModel.getTextColor(it, style)
-                val backgroundColor = viewModel.getBackgroundDrawableColor(it, style)
-                val iconStyle = viewModel.getIconStyle(style)
-                refreshBackgroundColor(backgroundColor)
-                refreshTextColor(textColor)
-                refreshIcon(iconStyle)
-            }
+            refreshPanelUI()
         }
 
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshPanelUI()
+    }
+
+    private fun refreshPanelUI() {
+        val style = NewCallAppSdkInterface.floatingBallStyle.value ?: return
+        activity?.let {
+            val textColor = viewModel.getTextColor(it, style)
+            val backgroundColor = viewModel.getBackgroundDrawableColor(it, style)
+            val iconStyle = viewModel.getIconStyle(style)
+            refreshBackgroundColor(backgroundColor)
+            refreshTextColor(textColor)
+            refreshIcon(iconStyle)
+        }
     }
 
     private fun refreshBackgroundColor(color: Int) {

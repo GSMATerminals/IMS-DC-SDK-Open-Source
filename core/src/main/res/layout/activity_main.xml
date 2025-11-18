@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white"
+    android:background="@color/common_layout_background"
     tools:context="com.ct.ertclib.dc.core.ui.activity.MainActivity">
     <FrameLayout
         android:layout_width="match_parent"
@@ -15,7 +15,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:textColor="@color/black"
+            android:textColor="@color/common_text_black"
             android:textSize="20sp"
             android:text="@string/main_activity_title"/>
         <ImageView
@@ -29,7 +29,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#e7e7e7"/>
+        android:background="@color/common_divider_color"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -51,6 +51,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
+                    android:textColor="@color/common_text_black"
                     android:text="@string/used_miniapp_title"/>
                 <androidx.fragment.app.FragmentContainerView
                     android:id="@+id/fragment_container"
@@ -71,6 +72,7 @@
                     android:layout_marginBottom="30dp"
                     android:layout_marginLeft="30dp"
                     android:layout_marginRight="30dp"
+                    android:textColor="@color/common_text_neutral_black"
                     android:textSize="18dp"
                     android:text="@string/open_tips"/>
                 <Button
