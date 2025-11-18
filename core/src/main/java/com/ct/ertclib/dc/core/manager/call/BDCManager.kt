@@ -17,7 +17,6 @@
 package com.ct.ertclib.dc.core.manager.call
 
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -25,12 +24,10 @@ import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
 import android.telecom.Call
-import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
-import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
-import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
+import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.utils.httpstack.HttpStackResponse
 import com.ct.ertclib.dc.core.utils.httpstack.HttpStackHelper
 import com.ct.ertclib.dc.core.utils.logger.Logger
@@ -54,7 +51,7 @@ import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.port.call.ICallInfoUpdateListener
 import com.ct.ertclib.dc.core.port.dc.IDcCreateListener
-import com.ct.ertclib.dc.core.utils.common.InCallStateUtils
+import com.ct.ertclib.dc.core.utils.common.UsageStateUtils
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback
 import com.newcalllib.datachannel.V1_0.IImsDCObserver
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
@@ -89,13 +86,9 @@ class BDCManager(
     private var mHandlerThreadQuited = false
     private var mAskToUnlock = false
 
-    private var mFlowViewStatus = FLOATING_DISMISS
-
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job1 :Job ?= null
     private var job2 :Job ?= null
-    private var job3 :Job ?= null
-    private var job4 :Job ?= null
 
     init {
         mAskToUnlock = false
@@ -103,20 +96,6 @@ class BDCManager(
         mHandlerThreadQuited = false
         sLogger.info("init $mTag")
         job1 = scope.launch {
-            NewCallAppSdkInterface.floatingBallStatusFlow.distinctUntilChanged().collect { floatingBallStatus ->
-                sLogger.debug("collect floatingBallStatusFlow status: $floatingBallStatus")
-                if (floatingBallStatus.callInfo.telecomCallId == callInfo.telecomCallId) {
-                    mFlowViewStatus = floatingBallStatus.showStatus
-                }
-            }
-        }
-        job4 = scope.launch {
-            StateFlowManager.dialerEntryStatusFlow.distinctUntilChanged().collect { floatingBallStatus ->
-                sLogger.debug("collect dialerEntryStatusFlow status: $floatingBallStatus")
-                mFlowViewStatus = floatingBallStatus.showStatus
-            }
-        }
-        job2 = scope.launch {
             NewCallAppSdkInterface.miniAppListEventFlow.distinctUntilChanged().collect { event ->
                 sLogger.debug("collect miniAppListEventFlow event: ${event.message}")
                 if (MiniAppListGetEvent.TO_REFRESH == event.message && callInfo.telecomCallId == event.miniAppListInfo?.callId){
@@ -139,7 +118,9 @@ class BDCManager(
     private var mDc: IImsDataChannel? = null
     private var mDc100: IImsDataChannel? = null
     private var mLastDcStatus : ImsDCStatus ?= null
-    private var isInCallOnTop = false
+
+    //防止重复打印日志
+    private var hideReason = 0
 
     inner class DcMessageHandler(looper: Looper) : Handler(looper) {
 
@@ -165,6 +146,26 @@ class BDCManager(
                 )
 
                 else -> sLogger.info("handleMessage not deal with what${msg.what}")
+            }
+        }
+    }
+
+    private fun checkTopTask() {
+        if (job2 != null){// 防止任务重复启动
+            return
+        }
+        sLogger.info("${mTag}checkTopActivityTask...")
+        job2 = scope.launch {
+            while (isActive && mDc?.state == ImsDCStatus.DC_STATE_OPEN && callInfo.state!=Call.STATE_DISCONNECTED) {
+                // 利用定时任务顺便刷新一下通话信息
+                StateFlowManager.emitCallInfoFlow(
+                    CallStateData(
+                        callInfo,
+                        SystemClock.currentThreadTimeMillis()
+                    )
+                )
+                updateMiniAppEntryHolder()
+                delay(300)
             }
         }
     }
@@ -520,44 +521,14 @@ class BDCManager(
         getMiniAppList(0)
     }
 
-    private fun checkTopTask() {
-        if (job3 != null){// 防止任务重复启动
-            return
-        }
-        sLogger.info("${mTag}checkTopActivityTask...")
-        job3 = scope.launch {
-            while (isActive && mDc?.state == ImsDCStatus.DC_STATE_OPEN && callInfo.state!=Call.STATE_DISCONNECTED) {
-                // 利用定时任务顺便刷新一下通话信息
-                StateFlowManager.emitCallStateFlow(
-                    CallStateData(
-                        callInfo,
-                        SystemClock.currentThreadTimeMillis()
-                    )
-                )
-
-                val newIsInCallOnTop = InCallStateUtils.isInCallOnTop()
-                if (newIsInCallOnTop != isInCallOnTop){ //有变化才处理后面逻辑
-                    isInCallOnTop = newIsInCallOnTop
-                    updateMiniAppEntryHolder()
-                }
-                delay(300)
-            }
-        }
-    }
-
     fun onImsCallRemovedBDCClose() {
         // 可能会执行两次
         sLogger.info("$mTag onImsCallRemovedBDCClose")
         job1?.cancel()
         job2?.cancel()
-        job3?.cancel()
-        job4?.cancel()
         job1 = null
         job2 = null
-        job3 = null
-        job4 = null
         mDc = null
-        isInCallOnTop = false
         miniAppManager.onImsBDCClose()
         miniAppManager.unregisterMiniAppListLoadedCallback()
         updateMiniAppEntryHolder()
@@ -702,61 +673,72 @@ class BDCManager(
 //            hideMiniAppEntryHolder()
 //        } else
         if (!callInfo.isInCall() && !callInfo.isRinging()) {
-            sLogger.info("$mTag updateMiniAppEntryHolder callInfo not in call or ringing, state:${callInfo.state}")
+            if (hideReason != 1){
+                sLogger.info("$mTag updateMiniAppEntryHolder hide callInfo not in call or ringing, state:${callInfo.state}")
+                hideReason = 1
+            }
             hideMiniAppEntryHolder()
-        } else if (!isInCallOnTop && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
-            sLogger.info("$mTag updateMiniAppEntryHolder not in call on top")
+        } else if (SDKPermissionUtils.isFellowDialer() && !UsageStateUtils.isInCallOnTop() &&  FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
+            if (hideReason != 2){
+                sLogger.info("$mTag updateMiniAppEntryHolder hide when in call not top")
+                hideReason = 2
+            }
+            hideMiniAppEntryHolder()
+        } else if (!SDKPermissionUtils.isFellowDialer() && UsageStateUtils.isMiniAppExpandedActivityShow() && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
+            if (hideReason != 3){
+                sLogger.info("$mTag updateMiniAppEntryHolder hide when expended list")
+                hideReason = 3
+            }
             hideMiniAppEntryHolder()
         } else if (miniAppManager.getMiniAppInfoList() == null) {
-            sLogger.info("$mTag updateMiniAppEntryHolder miniAppList is null")
+            if (hideReason != 4){
+                sLogger.info("$mTag updateMiniAppEntryHolder hide miniAppList is null")
+                hideReason = 4
+            }
             hideMiniAppEntryHolder()
         } else {
+            hideReason = 0
             miniAppManager.getMiniAppList()?.let {
-                if (mFlowViewStatus != FLOATING_DISPLAY) {
-                    if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
-                        StateFlowManager.emitDialerEntryDataFlow(
-                            FloatingBallData(
-                                FLOATING_DISPLAY,
-                                callInfo,
-                                it,
-                                NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
-                            )
+                if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
+                    StateFlowManager.emitDialerEntryDataFlow(
+                        FloatingBallData(
+                            FLOATING_DISPLAY,
+                            callInfo,
+                            it,
+                            NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
                         )
-                    } else {
-                        StateFlowManager.emitFloatingBallDataFlow(
-                            FloatingBallData(
-                                FLOATING_DISPLAY,
-                                callInfo,
-                                it,
-                                NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
-                            )
+                    )
+                } else {
+                    StateFlowManager.emitFloatingBallDataFlow(
+                        FloatingBallData(
+                            FLOATING_DISPLAY,
+                            callInfo,
+                            it,
+                            NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
                         )
-                    }
+                    )
                 }
             }
         }
     }
 
     private fun hideMiniAppEntryHolder() {
-        if (mFlowViewStatus != FLOATING_DISMISS) {
-            sLogger.info("$mTag hideMiniAppEntryHolder")
-            if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
-                StateFlowManager.emitDialerEntryDataFlow(
-                    FloatingBallData(
-                        FLOATING_DISMISS,
-                        callInfo,
-                        null
-                    )
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
+            StateFlowManager.emitDialerEntryDataFlow(
+                FloatingBallData(
+                    FLOATING_DISMISS,
+                    callInfo,
+                    null
                 )
-            } else {
-                StateFlowManager.emitFloatingBallDataFlow(
-                    FloatingBallData(
-                        FLOATING_DISMISS,
-                        callInfo,
-                        null
-                    )
+            )
+        } else {
+            StateFlowManager.emitFloatingBallDataFlow(
+                FloatingBallData(
+                    FLOATING_DISMISS,
+                    callInfo,
+                    null
                 )
-            }
+            )
         }
     }
 

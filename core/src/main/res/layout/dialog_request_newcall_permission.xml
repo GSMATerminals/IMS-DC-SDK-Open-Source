@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/common_layout_background"
     android:orientation="vertical">
 
     <TextView
@@ -11,7 +12,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
         android:text="@string/request_nc_permission_dialog_title"
-        android:textColor="@color/black"
+        android:textColor="@color/common_text_black"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -24,6 +25,7 @@
         android:layout_marginStart="@dimen/common_margin_start_end"
         android:layout_marginEnd="@dimen/common_margin_start_end"
         android:text="@string/request_nc_permission_dialog_content"
+        android:textColor="@color/common_text_neutral_black"
         android:textSize="14sp" />
     <LinearLayout
         android:gravity="center_vertical"
@@ -45,6 +47,7 @@
             android:layout_height="match_parent"
             android:text="@string/request_nc_permission_dialog_click"
             android:textAlignment="center"
+            android:textColor="@color/common_text_neutral_black"
             android:textSize="14sp" />
         <TextView
             android:textColor="@color/ps_color_blue"

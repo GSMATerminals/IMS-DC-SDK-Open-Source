@@ -16,11 +16,10 @@
 
 dependencyResolutionManagement {
     repositories {
-        maven(url = "https://artifact.srdcloud.cn:443/artifactory/public-maven-virtual/")
-//        maven(url = "https://maven.aliyun.com/repository/public")
-//        maven(url = "https://maven.aliyun.com/repository/google")
-//        google()
-//        mavenCentral()
+        maven(url = "https://maven.aliyun.com/repository/public")
+        maven(url = "https://maven.aliyun.com/repository/google")
+        google()
+        mavenCentral()
     }
     versionCatalogs {
         create("libs") {

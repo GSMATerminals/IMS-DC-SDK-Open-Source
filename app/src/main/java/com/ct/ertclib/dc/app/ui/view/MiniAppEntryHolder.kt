@@ -37,6 +37,7 @@ import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_INTENT_MINI_EXPANDED
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.port.common.IUIChangeListener
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import kotlin.math.absoluteValue
 
@@ -69,6 +70,12 @@ class MiniAppEntryHolder(private val context: Context) {
     var miniAppList: MiniAppList? = null
     var callInfo: CallInfo? = null
     var style: Int = 0
+
+    private val uiChangeListener: IUIChangeListener = object : IUIChangeListener {
+        override fun onUIChanged() {
+            refreshUI()
+        }
+    }
 
     private val handler: Handler = object: Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -108,12 +115,12 @@ class MiniAppEntryHolder(private val context: Context) {
                         switchToExpandedView()
                     }
                 }
+                view.uiListener = uiChangeListener
             }
             setMoveListener()
         }
+        refreshUI()
         miniAppEntryView?.let {
-            it.setFloatingBallIcon(style)
-            it.setFloatingHalfBallIcon(style, isLeftSide(NewCallAppSdkInterface.floatPositionX.toFloat()))
             if (!it.isAttachedToWindow) {
                 miniAppEntryView?.isVisible = true
                 startEntryShowAnimation()
@@ -138,6 +145,13 @@ class MiniAppEntryHolder(private val context: Context) {
             }
         }
         currentMode = EntryMode.DISMISS
+    }
+
+    private fun refreshUI() {
+        miniAppEntryView?.let {
+            it.setFloatingBallIcon(style)
+            it.setFloatingHalfBallIcon(style, isLeftSide(NewCallAppSdkInterface.floatPositionX.toFloat()))
+        }
     }
 
     private fun switchToExpandedView() {

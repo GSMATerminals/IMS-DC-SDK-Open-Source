@@ -21,6 +21,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -30,6 +31,7 @@ import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_STYLE_WHITE
+import com.ct.ertclib.dc.core.port.common.IUIChangeListener
 
 @SuppressLint("AppCompatCustomView", "MissingInflatedId")
 class MiniAppEntryView : FrameLayout {
@@ -51,6 +53,7 @@ class MiniAppEntryView : FrameLayout {
     private val halfIcon: ImageView
     var isActive = true
     var isLeft = true
+    var uiListener: IUIChangeListener? = null
 
     init {
         val rootView = LayoutInflater.from(context).inflate(R.layout.miniapp_entry_view, this, true)
@@ -103,6 +106,11 @@ class MiniAppEntryView : FrameLayout {
             }
         }
         halfIcon.layoutParams = layoutParams
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        uiListener?.onUIChanged()
     }
 
     private fun hideIconWithAnimation() {

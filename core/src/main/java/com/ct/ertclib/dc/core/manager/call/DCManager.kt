@@ -28,11 +28,15 @@ import com.ct.ertclib.dc.core.port.dc.IControlDcCreateListener
 import com.ct.ertclib.dc.core.port.dc.ImsDcServiceConnectionCallback
 import com.ct.ertclib.dc.core.data.event.CloseAdcEvent
 import com.ct.ertclib.dc.core.data.miniapp.CreateAdcParams
+import com.ct.ertclib.dc.core.data.miniapp.DataChannel
+import com.ct.ertclib.dc.core.data.miniapp.DataChannelApp
+import com.ct.ertclib.dc.core.data.miniapp.DataChannelAppInfo
 import com.ct.ertclib.dc.core.manager.common.DialerEntryManager
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.port.dc.IAdverseDcCreateListener
 import com.ct.ertclib.dc.core.utils.common.DCUtils
+import com.ct.ertclib.dc.core.utils.common.XmlUtils
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Class
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 
@@ -463,7 +468,9 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
             canCreateADC = true
             return
         }
-        val result = DCServiceManager.createImsDc(shouldCreateLabels.toTypedArray(), description, slotId, callId, remoteNumber)
+        val shouldCreateDescription = createNewXml(shouldCreateLabels.toTypedArray(), description)
+        sLogger.debug("createApplicationDataChannels shouldCreateLabels:$shouldCreateLabels, shouldCreateDescription:$shouldCreateDescription")
+        val result = DCServiceManager.createImsDc(shouldCreateLabels.toTypedArray(), shouldCreateDescription, slotId, callId, remoteNumber)
         if (result == 1){
             canCreateADC = true
         }
@@ -471,5 +478,36 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
 
     fun setCurrentCallId(callId:String?){
         currentCallId = callId
+    }
+
+    private fun createNewXml(labels: Array<String>, description: String): String {
+        return try {
+            val classes = arrayOf<Class<*>>(
+                DataChannelAppInfo::class.java,
+                DataChannelApp::class.java,
+                DataChannel::class.java
+            )
+
+            // 解析XML
+            val dataChannelAppInfo = XmlUtils.parseXml(description, classes, DataChannelAppInfo::class.java)
+
+            // 过滤DataChannel列表，只保留包含在labels中的dcLabel
+            val filteredDataChannels = dataChannelAppInfo.dataChannelApp.dataChannelList
+                .filter { dataChannel ->
+                    labels.contains(dataChannel.dcLabel)
+                }
+                .toMutableList() // 转换为可变列表以便后续操作
+
+            // 更新dataChannelList
+            dataChannelAppInfo.dataChannelApp.dataChannelList = filteredDataChannels
+
+            // 序列化回XML
+            XmlUtils.toXml(dataChannelAppInfo, classes)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // 发生异常时返回原始description
+            description
+        }
     }
 }

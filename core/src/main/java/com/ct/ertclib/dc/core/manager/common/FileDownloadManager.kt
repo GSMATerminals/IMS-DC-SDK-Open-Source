@@ -36,7 +36,7 @@ class FileDownloadManager(private val context: Context): IFileDownloadManager {
                 val request = DownloadManager.Request(downloadData.url.toUri())
                 request.setTitle(downloadData.title)
                 request.setDescription(downloadData.description)
-                request.setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, downloadData.fileName)
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, downloadData.fileName)
                 request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 val downloadId = it.enqueue(request)

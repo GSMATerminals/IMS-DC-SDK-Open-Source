@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/screen_share_tips_width"
+    android:layout_height="60dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tips_layout"
+        android:background="@drawable/screen_share_tips_background"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHeight="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:textColor="@color/white"
+            android:layout_width="100dp"
+            android:maxWidth="@dimen/screen_share_tips_width"
+            android:layout_height="match_parent"
+            android:text="@string/screen_share_tips"
+            android:textSize="10dp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="4dp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintHeight="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/close_image"
+            />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/close_image"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            app:layout_constraintHeight="true"
+            android:layout_marginEnd="2dp"
+            android:clickable="true"
+            app:layout_constrainedWidth="true"
+            android:src="@drawable/icon_mini_close_white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_tips_arrow"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tips_layout"
+        />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

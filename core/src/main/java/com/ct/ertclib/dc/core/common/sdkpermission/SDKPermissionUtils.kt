@@ -17,16 +17,19 @@
 package com.ct.ertclib.dc.core.common.sdkpermission
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.AppOpsManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.SPUtils
 import com.ct.ertclib.dc.core.common.WebActivity
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.data.common.PolicyValue
-import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
-import com.hjq.permissions.XXPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,25 +49,57 @@ object SDKPermissionUtils {
     const val POLICY_VERSION_KEY = "policy_version_key"
     const val ENABLE_NEW_CALL_SP_KEY = "enableNewCall"
     const val POLICY_CHANGE_KEY = "policy_change_key"
-    val PERMISSIONS = arrayOf(
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.PACKAGE_USAGE_STATS,
-    )
+    const val FELLOW_DIALER_KEY = "fellow_dialer_key"
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     fun hasAllPermissions(context: Context):Boolean{
-        return isNewCallEnable() && XXPermissions.isGranted(context, PERMISSIONS) && Settings.canDrawOverlays(context)
+        return isNewCallEnable() && getNotGrantedPermissions(context).isEmpty() && Settings.canDrawOverlays(context)
     }
 
-    fun hasPhonePermissions(context: Context):Boolean{
-        return XXPermissions.isGranted(context, PERMISSIONS) && Settings.canDrawOverlays(context)
+    // 这个权限的判断比较特殊,有特权和没有特权的判断要兼容，以保证在普通终端上运行local版本
+    @SuppressLint("ObsoleteSdkInt")
+    fun hasUsageStatsPermission(context: Context): Boolean {
+        val state =  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            val mode = appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                context.packageName
+            )
+            mode == AppOpsManager.MODE_ALLOWED
+        } else {
+            true
+        }
+        return state || checkPermissions(context, Manifest.permission.PACKAGE_USAGE_STATS)
     }
 
+    // 列出需要但是没有获取的权限
+    fun getNotGrantedPermissions(context: Context): Array<String> {
+        val list = mutableListOf<String>()
+        if (!hasUsageStatsPermission(context)){
+            list.add(Manifest.permission.PACKAGE_USAGE_STATS)
+        }
+        if (!checkPermissions(context, Manifest.permission.READ_PHONE_STATE)){
+            list.add(Manifest.permission.READ_PHONE_STATE)
+        }
+        return list.toTypedArray()
+    }
+
+    // 保存需要立即生效
     fun setNewCallEnable(enable:Boolean){
-        SPUtils.getInstance().put(ENABLE_NEW_CALL_SP_KEY, enable)
+        SPUtils.getInstance().put(ENABLE_NEW_CALL_SP_KEY, enable,true)
     }
 
     fun isNewCallEnable():Boolean{
         return SPUtils.getInstance().getBoolean(ENABLE_NEW_CALL_SP_KEY, false)
+    }
+
+    // 保存需要立即生效
+    fun setFellowDialer(enable:Boolean){
+        SPUtils.getInstance().put(FELLOW_DIALER_KEY, enable,true)
+    }
+
+    fun isFellowDialer():Boolean{
+        return SPUtils.getInstance().getBoolean(FELLOW_DIALER_KEY, false)
     }
 
     fun isPrivacyChanged():Boolean{
@@ -74,7 +109,7 @@ object SDKPermissionUtils {
     fun addPermissionDidOnce(){
         // 累加一次
         val num = SPUtils.getInstance().getInt(PERMISSION_DID_CALL_NUM_SP_KEY,0)
-        SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY, num+1)
+        SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY, num+1,true)
     }
 
     fun permissionDoneAllTimes():Boolean{
@@ -84,11 +119,11 @@ object SDKPermissionUtils {
     }
 
     fun setPermissionDidZero(){
-        SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY,0)
+        SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY,0,true)
     }
 
-    fun checkPermissions(context: Context, vararg permissions: String): Boolean {
-        return XXPermissions.isGranted(context, permissions)
+    fun checkPermissions(context: Context, permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
     // 更新隐私条款版本号，如果和本地不一致，就取消之前的授权，以触发重新弹窗；并缓存新的版本号
@@ -117,9 +152,9 @@ object SDKPermissionUtils {
                             // 一定是在有变化的时候才重置，防止第一次授权后，第二次使用时又弹窗
                             if (!oldVersion.isNullOrEmpty() && responseBody.value.version != oldVersion){
                                 setNewCallEnable(false)
-                                SPUtils.getInstance().put(POLICY_CHANGE_KEY,true)
+                                SPUtils.getInstance().put(POLICY_CHANGE_KEY,true,true)
                             }
-                            SPUtils.getInstance().put(POLICY_VERSION_KEY,responseBody.value.version)
+                            SPUtils.getInstance().put(POLICY_VERSION_KEY,responseBody.value.version,true)
                         }
                     } catch (e: Exception){
                         e.printStackTrace()

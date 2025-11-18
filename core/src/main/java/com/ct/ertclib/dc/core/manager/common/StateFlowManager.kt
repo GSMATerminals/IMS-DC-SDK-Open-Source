@@ -40,7 +40,7 @@ object StateFlowManager: KoinComponent {
 
     val dialerEntryStatusFlow = MutableSharedFlow<FloatingBallData>()
 
-    val callStateDataFlow = MutableSharedFlow<CallStateData>()
+    val callInfoFlow = MutableSharedFlow<CallStateData>()
 
     val permissionAgreeFlow = MutableSharedFlow<Boolean>()
 
@@ -84,9 +84,9 @@ object StateFlowManager: KoinComponent {
     }
 
     @JvmStatic
-    fun emitCallStateFlow(callStateData: CallStateData) {
+    fun emitCallInfoFlow(callStateData: CallStateData) {
         scope.launch {
-            callStateDataFlow.emit(callStateData)
+            callInfoFlow.emit(callStateData)
         }
     }
 }

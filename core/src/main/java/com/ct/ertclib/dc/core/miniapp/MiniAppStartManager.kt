@@ -55,7 +55,7 @@ import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
 
 object MiniAppStartManager : IMiniAppStartManager {
-    private const val TAG = "MiniAppControlImpl"
+    private const val TAG = "MiniAppStartManager"
     private val sLogger: Logger = Logger.getLogger(TAG)
     private val mMiniAppInfoList = ArrayList<MiniAppInfoWrapper>()
     private var appService: MiniAppService? = null

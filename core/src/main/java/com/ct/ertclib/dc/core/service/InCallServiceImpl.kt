@@ -202,7 +202,7 @@ class InCallServiceImpl : InCallService(), KoinComponent {
                 mCallsManager?.onCallRemoved(it)
                 mCallsMap.remove(it)
             }
-            // 只会结束主进程中的所以Activity，是合理的
+            // 只会结束主进程中的所有Activity，是合理的
             activityManager.finishAllActivity()
             // 防止系统没有回调onUnbind
             if (mCallsMap.isEmpty()){

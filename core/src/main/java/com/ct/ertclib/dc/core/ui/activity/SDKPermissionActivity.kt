@@ -14,10 +14,12 @@ import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.databinding.DialogRequestNewcallPermissionBinding
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
+import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
+import androidx.core.net.toUri
 
 /**
  * 问题：被叫首次使用增强通话，手机顶部悬浮窗显示电话，同时弹出权限授权弹窗。用户点击接听后，授权弹窗会被覆盖。
@@ -33,7 +35,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             context.startActivity(intent)
         }
 
-        private const val REQUEST_CODE_OVERLAY = 10000
+        private const val REQUEST_CODE_PERMISSION = 10000
         private const val TAG = "SDKPermissionActivity"
     }
     private val sLogger: Logger = Logger.getLogger(TAG)
@@ -48,6 +50,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        sLogger.debug("onStart")
         checkPermission()
     }
 
@@ -61,7 +64,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             startActivity(this,type)
         }
     }
-    // 分三步：sdk控制开关-通话状态权限-悬浮窗权限
+    // 分三步：sdk控制开关-通话状态等权限-悬浮窗权限
     private fun checkPermission(){
         dismissDialog()
 
@@ -72,7 +75,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             val binding = DialogRequestNewcallPermissionBinding.inflate(layoutInflater)
             builder.setView(binding.root)
             mDialog = builder.create()
-            val window = mDialog!!.window
+            val window = mDialog?.window
             window?.let {
                 val attributes = it.attributes
                 attributes.gravity = Gravity.BOTTOM
@@ -99,10 +102,8 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             }
             binding.btnCancel.setOnClickListener {
                 userClicked = true
-                mDialog!!.dismiss()
-                if (sLogger.isDebugActivated) {
-                    sLogger.debug("btnCancel")
-                }
+                dismissDialog()
+                sLogger.debug("btnCancel")
                 denied()
             }
             binding.btnOk.setOnClickListener {
@@ -112,60 +113,88 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
                 }
                 userClicked = true
                 SDKPermissionUtils.setNewCallEnable(true)
-                mDialog!!.dismiss()
-                XXPermissions.with(this@SDKPermissionActivity)
-                    .permission(SDKPermissionUtils.PERMISSIONS)
-                    .unchecked()
-                    .request(object : OnPermissionCallback {
-                        override fun onGranted(permissions: MutableList<String>, allGranted: Boolean) {
-                            if (sLogger.isDebugActivated) {
-                                sLogger.debug("allGranted: $allGranted")
+                dismissDialog()
+                // 有些厂商默认授予权限，这里要过滤一下，优化体验
+                val notGrantedPermissions = SDKPermissionUtils.getNotGrantedPermissions(this@SDKPermissionActivity)
+                if (notGrantedPermissions.isEmpty()){
+                    checkOverlayPermission()
+                } else {
+                    XXPermissions.with(this@SDKPermissionActivity)
+                        .permission(notGrantedPermissions)
+                        .unchecked()
+                        .request(object : OnPermissionCallback {
+                            override fun onGranted(permissions: MutableList<String>, allGranted: Boolean) {
+                                if (sLogger.isDebugActivated) {
+                                    sLogger.debug("allGranted: $allGranted, canDrawOverlays:${Settings.canDrawOverlays(this@SDKPermissionActivity)}")
+                                }
+                                if (allGranted){
+                                    checkOverlayPermission()
+                                }
+                                // 如果没有全部授权，就会走到onDenied
                             }
-                            if (allGranted){
-                                if (!Settings.canDrawOverlays(this@SDKPermissionActivity)) {
-                                    val intent = Intent(
-                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                        Uri.parse("package:${packageName}")
-                                    )
-                                    startActivityForResult(intent, REQUEST_CODE_OVERLAY)
+
+                            override fun onDenied(
+                                permissions: MutableList<String>,
+                                doNotAskAgain: Boolean
+                            ) {
+                                if (sLogger.isDebugActivated) {
+                                    sLogger.debug("doNotAskAgain: $doNotAskAgain")
+                                }
+                                // 用户选择不再提示，跳转到应用详情页，用户可以手动开启权限
+                                if (doNotAskAgain) {
+                                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                    intent.data = Uri.fromParts("package", packageName, null)
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(intent)
                                 } else {
-                                    agree()
+                                    ToastUtils.showShortToast(this@SDKPermissionActivity, getString(R.string.miss_permission_tips))
+                                    denied()
                                 }
                             }
-                            // 如果没有全部授权，就会走到onDenied
-                        }
+                        })
+                }
 
-                        override fun onDenied(
-                            permissions: MutableList<String>,
-                            doNotAskAgain: Boolean
-                        ) {
-                            if (sLogger.isDebugActivated) {
-                                sLogger.debug("doNotAskAgain: $doNotAskAgain")
-                            }
-                            if (doNotAskAgain) {
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                intent.data = Uri.fromParts("package", packageName, null)
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(intent)
-                            } else {
-                                ToastUtils.showShortToast(this@SDKPermissionActivity, getString(R.string.miss_permission_tips))
-                                denied()
-                            }
-                        }
-                    })
             }
-            mDialog!!.show()
+            mDialog?.show()
         } else {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("AGREE")
+            agree()
+        }
+    }
+
+    fun checkOverlayPermission(){
+        if (!Settings.canDrawOverlays(this@SDKPermissionActivity)) {
+            // 悬浮窗授权，这里各个终端情况不一样
+            val brand = PkgUtils.brand()
+            sLogger.debug("brand:$brand")
+            when(brand){
+                PkgUtils.SAMSUNG -> {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.fromParts("package", packageName, null)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra(":settings:fragment_args_key", "system_alert_window");
+                    startActivity(intent)
+                }
+
+                PkgUtils.XIAOMI -> {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${packageName}".toUri())
+                    intent.setClassName("com.android.settings","com.android.settings.SubSettings")
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra(":settings:show_fragment", "com.android.settings.applications.appinfo.DrawOverlayDetails");
+                    startActivity(intent)
+                }
+                else -> {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${packageName}".toUri())
+                    startActivity(intent)
+                }
             }
+        } else {
             agree()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        sLogger.debug("AGREE")
+        sLogger.debug("onDestroy")
         dismissDialog()
     }
 
@@ -176,22 +205,14 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
         mDialog = null
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (!Settings.canDrawOverlays(this)) {
-            ToastUtils.showShortToast(this@SDKPermissionActivity, getString(R.string.miss_permission_tips))
-            denied()
-        } else {
-            agree()
-        }
-    }
-
     private fun agree(){
+        sLogger.debug("AGREE")
         StateFlowManager.emitPermissionAgreeFlow(isAgree = true)
         finishAndRemoveTask()
     }
 
     private fun denied(){
+        sLogger.debug("denied")
         StateFlowManager.emitPermissionAgreeFlow(isAgree = false)
         finishAndRemoveTask()
     }

@@ -36,6 +36,28 @@ import com.ct.ertclib.dc.core.ui.activity.MainActivity
 object PkgUtils {
     const val SHORTCUT_DID_CALL_NUM_SP_KEY = "shortcut_did_call_num_sp_key"
 
+    const val SAMSUNG = "samsung"
+    const val XIAOMI = "xiaomi"
+    const val HUAWEI = "huawei"
+    const val HONOR = "honor"
+    const val OPPO = "oppo"
+    const val VIVO = "vivo"
+    const val ONEPLUS = "oneplus"
+    const val REALME = "realme"
+    const val MEIZU = "meizu"
+    const val LENOVO = "lenovo"
+    const val MOTOROLA = "motorola"
+    const val NOKIA = "nokia"
+    const val SONY = "sony"
+    const val GOOGLE = "google"
+    const val ONEPLUS2 = "oneplus" // 注意：有些设备可能使用全小写
+    const val LG = "lg"
+    const val HTC = "htc"
+    const val ASUS = "asus"
+    const val ZTE = "zte"
+    const val COOLPAD = "coolpad"
+    const val GIONEE = "gionee"
+
     private fun addShortcutDidOnce(){
         // 累加一次
         val num = SPUtils.getInstance().getInt(SHORTCUT_DID_CALL_NUM_SP_KEY,0)
@@ -149,5 +171,13 @@ object PkgUtils {
 //            }
 //            addShortcutDidOnce()
 //        }
+    }
+
+    fun brand():String{
+        return try {
+            Build.BRAND.lowercase()
+        }catch (e: Exception){
+            ""
+        }
     }
 }

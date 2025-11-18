@@ -72,7 +72,7 @@
     <string name="btn_refuse">Refuse</string>
 
     <string name="holder_call_state_tips">The relevant call is in holding, and the Mini-App can continue to be used after the call is resumed.</string>
-    <string name="save">save</string>
+    <string name="save">Save</string>
     <string name="start_miniapp_tips">The other party invites you to use the %s mini program.</string>
 
     <string name="expanded_menu_title">My miniApps</string>
@@ -82,11 +82,11 @@
 
     <string name="open_tips"> 5G Enhanced Call refers to a series of services that enhance system capabilities and enable service innovation based on the operator\'s IMS network, which improve the user experience for both individual and enterprise users. \n The most notable technical feature is the addition of a data channel and AR technology on top of the existing IMS audio and video channels, and it relies on the IMS DC SDK on the device, enabling interactive information exchange during calls and upgrading the user experience.</string>
     <string name="main_activity_title">5G Enhanced Call</string>
-    <string name="used_miniapp_title">used mini apps</string>
+    <string name="used_miniapp_title">Used mini apps</string>
     <string name="open_btn_title">Go to Enable</string>
 
-    <string name="open_switch_title">open/close 5G Enhanced Call</string>
-    <string name="local_debug_entry">local debug entry</string>
+    <string name="open_switch_title">Open/Close 5G Enhanced Call</string>
+    <string name="local_debug_entry">Local debug entry</string>
     <string name="please_open">You should open 5G Enhanced Call first.</string>
     <string name="open_switch_tips">By proceeding, you indicate that you have agreed to the 《Privacy Policy》 and 《User Agreement》.</string>
     <string name="close_switch_tips">Closing indicates that you do not agree or withdraw your consent to the 《Privacy Policy》 and 《User Agreement》.</string>
@@ -98,4 +98,6 @@
     <string name="download_model_description">Downloading model</string>
     <string name="download_file_title">Downloading model</string>
     <string name="download_file_description">Downloading model</string>
+    <string name="screen_share_tips">Screen sharing has been enabled. You can turn the drawing board on or off via the control buttons on the right side.</string>
+    <string name="fellow_dialer">Floating Ball Follow System Call APP.</string>
 </resources>
