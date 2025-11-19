@@ -83,9 +83,7 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
     }
 
     override fun onHideCustomView() {
-        if (sLogger.isDebugActivated) {
-            sLogger.info("onHideCustomView")
-        }
+        sLogger.info("onHideCustomView")
         val decorView = miniAppActivity.window.decorView
         (decorView as FrameLayout).removeView(mCustomView)
         mCallback?.onCustomViewHidden()
