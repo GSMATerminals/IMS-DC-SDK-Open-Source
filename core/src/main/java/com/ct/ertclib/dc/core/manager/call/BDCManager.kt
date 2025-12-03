@@ -699,48 +699,24 @@ class BDCManager(
         } else {
             hideReason = 0
             miniAppManager.getMiniAppList()?.let {
-                if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
-                    StateFlowManager.emitDialerEntryDataFlow(
-                        FloatingBallData(
-                            FLOATING_DISPLAY,
-                            callInfo,
-                            it,
-                            NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
-                        )
-                    )
-                } else {
-                    StateFlowManager.emitFloatingBallDataFlow(
-                        FloatingBallData(
-                            FLOATING_DISPLAY,
-                            callInfo,
-                            it,
-                            NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT
-                        )
-                    )
-                }
+                FloatingBallDataManager.update(
+                    FloatingBallData(
+                    FLOATING_DISPLAY,
+                    callInfo,
+                    it,
+                    NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT)
+                )
             }
         }
     }
 
     private fun hideMiniAppEntryHolder() {
-        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_DIALER){
-            StateFlowManager.emitDialerEntryDataFlow(
-                FloatingBallData(
-                    FLOATING_DISMISS,
-                    callInfo,
-                    null
-                )
+        FloatingBallDataManager.update(
+            FloatingBallData(
+                FLOATING_DISMISS,
+                callInfo,
+                null
             )
-        } else {
-            StateFlowManager.emitFloatingBallDataFlow(
-                FloatingBallData(
-                    FLOATING_DISMISS,
-                    callInfo,
-                    null
-                )
-            )
-        }
+        )
     }
-
-
 }

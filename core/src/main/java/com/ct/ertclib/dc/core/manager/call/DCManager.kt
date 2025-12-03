@@ -322,6 +322,7 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
         DCServiceManager.unbindDcService(context)
         ExpandingCapacityManager.instance.release(context)
         DialerEntryManager.instance.release(context)
+        FloatingBallDataManager.release()
     }
 
     fun createApplicationDataChannels(

@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.common;
 
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -53,6 +54,33 @@ public class ConfirmActivity extends BaseFragmentActivity {
                 @Override
                 public void onDismiss() {
                     finish();
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // 如果锁屏就请求用户解锁
+        KeyguardManager keyguardManager = getSystemService(KeyguardManager.class);
+        boolean locked = keyguardManager.isKeyguardLocked();
+        if (locked) {
+            keyguardManager.newKeyguardLock("unLock");
+            keyguardManager.requestDismissKeyguard(this, new KeyguardManager.KeyguardDismissCallback() {
+                @Override
+                public void onDismissError() {
+                    super.onDismissError();
+                }
+
+                @Override
+                public void onDismissSucceeded() {
+                    super.onDismissSucceeded();
+                }
+
+                @Override
+                public void onDismissCancelled() {
+                    super.onDismissCancelled();
                 }
             });
         }

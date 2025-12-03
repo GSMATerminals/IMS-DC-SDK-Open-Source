@@ -72,7 +72,7 @@ NewCall
 - Android SDK 版本 compileSdk-34，minSdk-26
 - 推荐开发工具 AndroidStudio
 
-## 六、构建发布
+## 六、快速开始（构建发布）
 - 打包：目前共配置了三个渠道包：Normal(悬浮球入口版本)、Dialer(拨号盘入口版本)、Local(本地调试版本，仅用于本地调试)
    ```bash
    ./gradlew assembleRelease 
