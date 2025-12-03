@@ -96,7 +96,7 @@ NewCall
 
 - Recommended Development Tool: AndroidStudio
 
-## VI. Build & Release
+## VI. Quick Start(Build & Release)
 - Packaging: Currently configured for three distribution channels: Normal (Floating Ball entry version), Dialer (Dialer entry version), Local (Local debugging version, for local debugging only)
    ```bash
    ./gradlew assembleRelease 
