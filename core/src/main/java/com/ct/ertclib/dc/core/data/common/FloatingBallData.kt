@@ -24,5 +24,6 @@ data class FloatingBallData(
     val showStatus: Int,
     val callInfo: CallInfo,
     val miniAppList: MiniAppList?,
-    val style: Int = STYLE_DEFAULT
+    val style: Int = STYLE_DEFAULT,
+    var uniqueId: Long = System.nanoTime() // 确保每次都更新
 )

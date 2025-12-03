@@ -48,7 +48,7 @@ object FloatingBallManager: KoinComponent {
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "initManager")
         scope.launch(Dispatchers.Main) {
             NewCallAppSdkInterface.floatingBallStatusFlow.distinctUntilChanged().collect { floatingBallData ->
-                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "floatingBallStatusFlow status: ${floatingBallData.showStatus}")
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "floatingBallStatusFlow floatingBallData: $floatingBallData")
                 if (floatingBallData.showStatus == SDK_FLOATING_DISPLAY) {
                     floatingBallData.miniAppList?.let {
                         show(floatingBallData.callInfo, it, floatingBallData.style)
@@ -69,11 +69,10 @@ object FloatingBallManager: KoinComponent {
     private fun show(callInfo: CallInfo, miniAppList: MiniAppList, style: Int) {
         scope.launch(Dispatchers.Main) {
             if (entryHolder == null){
-                entryHolder = MiniAppEntryHolder(context).apply {
-                    this.callInfo = callInfo
-                    this.miniAppList = miniAppList
-                }
+                entryHolder = MiniAppEntryHolder(context)
             }
+            entryHolder?.callInfo = callInfo
+            entryHolder?.miniAppList = miniAppList
             entryHolder?.show(style)
         }
     }
