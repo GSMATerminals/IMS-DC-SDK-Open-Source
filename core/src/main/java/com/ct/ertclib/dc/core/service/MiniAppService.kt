@@ -26,22 +26,16 @@ import android.os.RemoteException
 import android.text.TextUtils
 import androidx.annotation.RequiresApi
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_AUDIO_DEVICE_CHANGE
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REGISTER_EC
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
-import com.ct.ertclib.dc.core.data.common.SdkInfo
 import com.ct.ertclib.dc.core.port.dc.IDcCreateListener
 import com.ct.ertclib.dc.core.data.event.CloseAdcEvent
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_CALL_STATUS_CHANGE
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_CHECK_ALIVE
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_EC_CALLBACK
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_GET_SDK_VERSION
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REQUEST_EC
 import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.miniapp.AppRequest
-import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.factory.AppServiceEventDispatcherFactory
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
@@ -51,7 +45,6 @@ import com.ct.ertclib.dc.core.miniapp.aidl.IDCCallback
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.miniapp.aidl.IMiniToParent
 import com.ct.ertclib.dc.core.miniapp.aidl.IParentToMini
-import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
 import com.ct.ertclib.dc.core.port.manager.IAppServiceManager
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
@@ -205,6 +198,13 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
             if (lables.isNullOrEmpty() || appId.isNullOrEmpty() || descrption.isNullOrEmpty()) {
                 return 1
             }
+            lables.forEach {
+                // 单边DC不能发起P2P
+                if (it.contains("_1_") && MiniAppManager.getAppPackageManager(telecomCallId)?.isPeerSupportDc() != true){
+                    sLogger.error("MiniToParentImpl cannot create P2P when peer not support DC")
+                    return 1
+                }
+            }
             return MiniAppManager.getAppPackageManager(telecomCallId)
                 ?.createApplicationDataChannelsInternal(
                     appId,
@@ -256,63 +256,8 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
                 if (appId.isEmpty() || message.isEmpty()) {
                     return
                 }
-
-                //后续appRequest尽量放到dispatchers类中进行处理，避免代码过于臃肿，不好扩展
                 val appRequest = JsonUtil.fromJson(message, AppRequest::class.java)
                 appRequest?.let {
-                    val replayMessage: String
-                    when (appRequest.actionName) {
-                        ACTION_GET_SDK_VERSION -> {
-                            val packageInfo = appService.applicationContext.packageManager.getPackageInfo(
-                                appService.applicationContext.packageName,
-                                0
-                            )
-                            val versionCode = packageInfo.versionCode
-                            val versionName = packageInfo.versionName
-
-                            replayMessage = AppResponse(
-                                1,
-                                "success",
-                                mapOf("getSdkVersions" to SdkInfo(versionCode, versionName ?: ""))
-                            ).toJson()
-                            iMessageCallback?.reply(replayMessage)
-                        }
-                        ACTION_REGISTER_EC -> {
-                            if (appRequest.map["providerModules"] != null){
-                                val list = appRequest.map["providerModules"] as ArrayList<String>
-                                val providerModules = ConcurrentHashMap<String, ArrayList<String>>()
-                                list.forEach {
-                                    if (it.contains("-")){
-                                        val provider = it.split("-")[0]
-                                        val module = it.split("-")[1]
-                                        if (providerModules[provider] == null){
-                                            providerModules[provider] = ArrayList<String>()
-                                        }
-                                        providerModules[provider]?.add(module)
-                                    }
-                                }
-                                ExpandingCapacityManager.instance.registerECListener(telecomCallId,appId,providerModules,object :IExpandingCapacityListener{
-                                    override fun onCallback(content: String?) {
-                                        val event = NotifyEvent(
-                                            ACTION_EC_CALLBACK,
-                                            mutableMapOf("msg" to content)
-                                        )
-                                        if (sLogger.isDebugActivated) {
-                                            sLogger.debug("ExpandingCapacityManager onCallback content: $content appId:$appId, request:$event")
-                                        }
-                                        mParentToMiniCallbackMap[getKey(telecomCallId,appId)]?.sendMessageToMini(appId,JsonUtil.toJson(event),null)
-                                    }
-                                })
-                            }
-                        }
-                        ACTION_REQUEST_EC -> {
-                            val requestStr = JsonUtil.toJson(appRequest.map)
-                            ExpandingCapacityManager.instance.request(this@MiniAppService,telecomCallId,appId,requestStr)
-                        }
-                        else -> {
-                            sLogger.info("other request...")
-                        }
-                    }
                     AppServiceEventDispatcherFactory.getDispatcher(appRequest.eventName).dispatchEvent(telecomCallId, appId, appRequest, iMessageCallback)
                 }
             } catch (e:Exception){

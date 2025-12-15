@@ -25,6 +25,7 @@
     <string name="contacts">联系人</string>
     <string name="wifi">Wi-Fi</string>
 
+    <string name="bluetooth">附近的设备</string>
     <string name="camera_description">用于拍照或录像</string>
     <string name="vibrate_description">用于提醒用户实时消息与实时状态</string>
     <string name="read_contact_description">用于读取与保存联系人</string>
@@ -35,6 +36,7 @@
     <string name="contact_description">用于获取联系人信息</string>
     <string name="wifi_description">用于获取Wi-Fi信息</string>
 
+    <string name="bluetooth_description">用于蓝牙连接（包括扫描设备，被设备发现，连接设备）</string>
     <string name="permission_preference_title">权限设置</string>
     <string name="version_preference_title">版本号</string>
     <string name="setting_preference_title">设置</string>

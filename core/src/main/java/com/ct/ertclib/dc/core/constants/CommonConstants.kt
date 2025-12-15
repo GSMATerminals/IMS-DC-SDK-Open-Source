@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.constants
 
+// SDK 内部使用的常量
 object CommonConstants {
 
     const val FW_ROOT_PATH = "frame/"
@@ -62,13 +63,14 @@ object CommonConstants {
     const val CALL_APP_EVENT = "callAppEvent"
     const val COMMON_APP_EVENT = "commonAppEvent"
     const val SCREEN_SHARE_APP_EVENT = "screenAppEvent"
+    const val EC_EVENT = "ecEvent"
 
     const val ACTION_IS_PEER_SUPPORT_DC = "isPeerSupportDc"
     const val ACTION_HANGUP = "hangUp"
     const val ACTION_ANSWER = "answer"
     const val ACTION_PLAY_DTMF_TONE = "playDtmfTone"
-    const val ACTION_GET_SDK_VERSION = "getSdkVersions"
     const val ACTION_START_APP = "startApp"
+    const val ACTION_QUERY_EC = "queryEC"
     const val ACTION_REGISTER_EC = "registerEC"
     const val ACTION_REQUEST_EC = "requestEC"
     const val ACTION_SET_SPEAKERPHONE = "setSpeakerphone"
@@ -122,7 +124,7 @@ object CommonConstants {
     const val SHARE_PREFERENCE_CONSTANTS = "user"
     const val SHARE_PREFERENCE_STYLE_PARAMS = "style"
 
-    const val SDK_PRIVACY_VERSION_URL = "https://m.ct5g.cn/sdk/version"
-    const val SDK_PRIVACY_URL = "https://m.ct5g.cn/sdk/privacy.html"
-    const val SDK_USER_SERVICE_URL = "https://m.ct5g.cn/sdk/service.html"
+    const val SDK_PRIVACY_VERSION_URL = ""
+    const val SDK_PRIVACY_URL = ""
+    const val SDK_USER_SERVICE_URL = ""
 }

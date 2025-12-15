@@ -53,6 +53,14 @@ class ExpandingCapacityManager {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val mProviderMap = ConcurrentHashMap<String, IEC>()
 
+    fun getProviderModulesMap(): Map<String, List<String>> {
+        val map = ConcurrentHashMap<String, List<String>>()
+        mProviderMap.forEach { (provider, providerInstance) ->
+            map[provider] = providerInstance.getModuleList()
+        }
+        return map
+    }
+
     // 哪通电话的哪个小程序要使用哪个能力提供者的哪些能力
     fun registerECListener(
         callId:String,

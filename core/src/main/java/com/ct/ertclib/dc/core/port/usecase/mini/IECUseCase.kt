@@ -17,8 +17,12 @@
 package com.ct.ertclib.dc.core.port.usecase.mini
 
 import android.content.Context
+import wendu.dsbridge.CompletionHandler
 
 interface IECUseCase {
-    fun request(context: Context,params: Map<String, Any>): String?
+    fun queryEC(context: Context, handler: CompletionHandler<String?>)
+
     fun register(context: Context, params: Map<String, Any>): String?
+
+    fun request(context: Context,params: Map<String, Any>): String?
 }

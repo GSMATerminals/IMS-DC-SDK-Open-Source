@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="mini_app_progress_gradient">
+        <item>#30F5F5F5</item>
+        <item>#FFF5F5F5</item>
+    </array>
+</resources>

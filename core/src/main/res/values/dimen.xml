@@ -42,4 +42,6 @@
 
     <dimen name="screen_share_tips_width">160dp</dimen>
     <dimen name="screen_share_tips_height">60dp</dimen>
+
+    <dimen name="progress_bar_layout_width_height">108dp</dimen>
 </resources>

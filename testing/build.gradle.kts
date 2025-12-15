@@ -56,5 +56,5 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     compileOnly(files("${rootProject.projectDir}\\libs\\XXPermissions-18.2.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\base-release.aar"))
+    compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
 }

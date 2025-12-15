@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.constants
 
+// JS API接口的常量定义
 object MiniAppConstants {
 
     //event
@@ -34,6 +35,7 @@ object MiniAppConstants {
     const val FUNCTION_GET_BUFFER_AMOUNT = "getBufferedAmount"
 
     //function for ec
+    const val FUNCTION_EC_QUERY = "expandingCapacityQuery"
     const val FUNCTION_EC_REQUEST = "expandingCapacityRequest"
     const val FUNCTION_EC_REGISTER = "expandingCapacityRegister"
 

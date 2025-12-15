@@ -91,6 +91,10 @@ class MiniAppManager(private val callInfo: CallInfo) :
         private const val QOS_HINT_TAIL = "</QosHint>"
         private const val ACTIVE_START_TYPE = 1
         private const val PASSIVE_START_TYPE = 2
+        private const val CONST_IMS_BDC_CLOSE: Int = 0
+        private const val CONST_MINI_APP_LIST_LOADED: Int = 1
+        private const val CONST_MINI_APP_DOWNLOADED: Int = 2
+        private const val CONST_START_MINI_APP: Int = 3
 
         val mMiniAppPMMap = ConcurrentHashMap<String, MiniAppManager>()
         @SuppressLint("StaticFieldLeak")
@@ -165,10 +169,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     private var mTag: String? = null
     private var mHandlerThread: HandlerThread? = null
     private var mHandler: MiniAppPMHandler
-    private val CONST_IMS_BDC_CLOSE: Int = 0
-    private val CONST_MINI_APP_LIST_LOADED: Int = 1
-    private val CONST_MINI_APP_DOWNLOADED: Int = 2
-    private val CONST_START_MINI_APP: Int = 3
+
 
     private var miniAppStartManager: IMiniAppStartManager? = null
 
@@ -346,7 +347,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
             return
         } else {
             val eTag = miniAppInfo.eTag
-            if (eTag.isNullOrEmpty()) {
+            if (eTag.isEmpty()) {
                 if (sLogger.isDebugActivated) sLogger.debug("$mTag handleStartMiniApp appId: $appId no version")
                 handleStartMiniAppFailed(appId, Reason.UNKNOWN)
                 return
@@ -575,9 +576,9 @@ class MiniAppManager(private val callInfo: CallInfo) :
                 fileOutputStream.write(data)
                 fileOutputStream.close()
                 //解压小程序
-                ZipUtils.unzipFile(cacheFile!!.absolutePath,filePath!!)
+                ZipUtils.unzipFile(cacheFile!!.absolutePath, filePath)
                 //删除cache
-                FileUtils.deletePath(cacheFile!!.absolutePath)
+                FileUtils.deletePath(cacheFile.absolutePath)
                 val path = miniAppInfo.path
                 if (filePath != path) {
                     miniAppInfo.path = filePath
@@ -838,7 +839,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     ): Int {
 
         if (sLogger.isDebugActivated) {
-            sLogger.debug("$mTag createApplicationDataChannelsInternal appId:$appId, labels:${toTypedArray.toString()}, description:$description")
+            sLogger.debug("$mTag createApplicationDataChannelsInternal appId:$appId, labels:$toTypedArray, description:$description")
         }
         if (mNetworkManager == null) {
             if (sLogger.isDebugActivated) {
@@ -1138,7 +1139,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
                 object : ConfirmActivity.ConfirmCallback {
                     override fun onAccept() {
                         mPassivelyMiniAppMap[appInfo.appId] = miniApp
-                        sLogger.debug("onAccept miniapp path: ${miniApp}")
+                        sLogger.debug("onAccept miniapp path: $miniApp")
                         startMiniApp(appInfo.appId, object : IStartAppCallback() {
                             override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
                                 if (sLogger.isDebugActivated) {

@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.dispatcher.js
 
 import android.content.Context
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_EC_QUERY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_EC_REGISTER
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_EC_REQUEST
 import com.ct.ertclib.dc.core.data.bridge.JSRequest
@@ -32,14 +33,14 @@ class ECJsEventDispatcher : IJsEventDispatcher, KoinComponent {
 
     override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
-
+            FUNCTION_EC_QUERY -> ecUseCase.queryEC(context, handler)
         }
     }
 
     override fun dispatchSyncMessage(context: Context, request: JSRequest): String? {
         return when (request.function) {
-            FUNCTION_EC_REQUEST -> ecUseCase.request(context, request.params)
             FUNCTION_EC_REGISTER -> ecUseCase.register(context, request.params)
+            FUNCTION_EC_REQUEST -> ecUseCase.request(context, request.params)
             else -> ""
         }
     }

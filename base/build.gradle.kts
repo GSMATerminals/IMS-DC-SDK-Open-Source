@@ -19,7 +19,7 @@ plugins {
     id("org.jetbrains.kotlin.android") // 必须添加 Kotlin 插件
     id("maven-publish")
 }
-
+val libraryVersion = "1.0.0"
 android {
     namespace = "com.ct.ertclib.dc.base"
     defaultConfig {
@@ -50,6 +50,23 @@ android {
         singleVariant("release") {
 //            withSourcesJar()
 //            withJavadocJar()
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        afterEvaluate {
+            tasks.named("assemble${variant.name.capitalize()}").configure {
+                doLast {
+                    val buildType = variant.buildType ?: "unknown"
+                    val originalFile = file("${layout.buildDirectory.get()}/outputs/aar/${project.name}-${buildType}.aar")
+                    if (originalFile.exists()) {
+                        val newFile = file("${layout.buildDirectory.get()}/outputs/aar/base-${buildType}-${libraryVersion}.aar")
+                        originalFile.renameTo(newFile)
+                    }
+                }
+            }
         }
     }
 }

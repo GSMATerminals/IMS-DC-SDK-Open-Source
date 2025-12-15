@@ -243,7 +243,7 @@ class FileMiniUseCase(
         }
         val lengthInt = (length as String).toInt()
         if (lengthInt >1000000) {
-            val response = JSResponse("1", "readFile length is too long,should less then 100000", "")
+            val response = JSResponse("1", "readFile length is too long, should less then 100000", "")
             handler.complete(JsonUtil.toJson(response))
             logger.debug("JSApi async readFile length is too long,should less then 100000")
             return
