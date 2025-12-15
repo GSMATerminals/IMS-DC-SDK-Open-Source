@@ -21,10 +21,12 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,6 +58,7 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
     private val permissionUseCase: IPermissionUseCase by inject()
     private var mediaPlayer: MediaPlayer? = null
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun startGrantPermission(
         context: Context,
         miniAppInfo: MiniAppInfo,

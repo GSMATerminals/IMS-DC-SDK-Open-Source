@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/progress_layout"
+    android:orientation="vertical"
+    android:background="@drawable/expanded_menu_dialog_bg"
+    android:layout_width="@dimen/progress_bar_layout_width_height"
+    android:layout_height="@dimen/progress_bar_layout_width_height">
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/progressIndicator"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:indeterminate="true"
+        android:layout_gravity="center_horizontal"
+        app:indeterminateAnimationType="contiguous"
+        app:indicatorColor="@array/mini_app_progress_gradient"
+        app:trackThickness="3dp" />
+
+    <TextView
+        android:id="@+id/progressText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Loading..."
+        android:textColor="@color/white_alpha_90"
+        android:textSize="16sp" />
+
+</LinearLayout>

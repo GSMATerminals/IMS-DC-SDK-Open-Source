@@ -18,6 +18,8 @@ package com.ct.ertclib.dc.core.utils.common
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
@@ -34,6 +36,7 @@ object PermissionUtils : KoinComponent {
     private const val CALL_STATE_INDEX = 5
     private const val READ_CONTACTS_INDEX = 6
     private const val ACCESS_WIFI_INDEX = 7
+    private const val BLUETOOTH_INDEX = 8
 
     private val applicationContext: Context by inject()
 
@@ -45,7 +48,8 @@ object PermissionUtils : KoinComponent {
         PermissionData(applicationContext.resources.getString(R.string.location_title), applicationContext.resources.getString(R.string.location_description)),
         PermissionData(applicationContext.resources.getString(R.string.call_state_title), applicationContext.resources.getString(R.string.call_state_description)),
         PermissionData(applicationContext.resources.getString(R.string.contacts), applicationContext.resources.getString(R.string.contact_description)),
-        PermissionData(applicationContext.resources.getString(R.string.wifi), applicationContext.resources.getString(R.string.wifi_description))
+        PermissionData(applicationContext.resources.getString(R.string.wifi), applicationContext.resources.getString(R.string.wifi_description)),
+        PermissionData(applicationContext.resources.getString(R.string.bluetooth), applicationContext.resources.getString(R.string.bluetooth_description))
     )
 
     private val permissionDataMap = mutableMapOf(
@@ -56,9 +60,11 @@ object PermissionUtils : KoinComponent {
         MiniAppPermissions.MINIAPP_LOCATION to permissionDataList[LOCATION_INDEX],
         MiniAppPermissions.MINIAPP_GET_CALL_STATE to permissionDataList[CALL_STATE_INDEX],
         MiniAppPermissions.MINIAPP_READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
-        MiniAppPermissions.MINIAPP_ACCESS_WIFI to permissionDataList[ACCESS_WIFI_INDEX]
+        MiniAppPermissions.MINIAPP_ACCESS_WIFI to permissionDataList[ACCESS_WIFI_INDEX],
+        MiniAppPermissions.MINIAPP_BLUETOOTH to permissionDataList[BLUETOOTH_INDEX]
     )
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private val systemPermissionDataMap = mutableMapOf(
         Manifest.permission.CAMERA to permissionDataList[CAMERA_INDEX],
         Manifest.permission.VIBRATE to permissionDataList[VIBRATE_INDEX],
@@ -68,7 +74,10 @@ object PermissionUtils : KoinComponent {
         Manifest.permission.ACCESS_COARSE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.READ_PHONE_STATE to permissionDataList[CALL_STATE_INDEX],
         Manifest.permission.READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
-        Manifest.permission.ACCESS_WIFI_STATE to permissionDataList[ACCESS_WIFI_INDEX]
+        Manifest.permission.ACCESS_WIFI_STATE to permissionDataList[ACCESS_WIFI_INDEX],
+        Manifest.permission.BLUETOOTH_SCAN to permissionDataList[BLUETOOTH_INDEX],
+        Manifest.permission.BLUETOOTH_CONNECT to permissionDataList[BLUETOOTH_INDEX],
+        Manifest.permission.BLUETOOTH_ADVERTISE to permissionDataList[BLUETOOTH_INDEX]
     )
 
     //将permissionDataList转换成permissionMap，方便进行权限比对
@@ -83,6 +92,7 @@ object PermissionUtils : KoinComponent {
 
 
     //将miniApp Permission列表转换成系统权限列表
+    @RequiresApi(Build.VERSION_CODES.S)
     @JvmStatic
     fun convertToSystemPermissions(permissions: List<String>): MutableList<String> {
         val allPermission = mutableListOf<String>()
@@ -99,6 +109,11 @@ object PermissionUtils : KoinComponent {
                 MiniAppPermissions.MINIAPP_GET_CALL_STATE -> allPermission.add(Manifest.permission.READ_PHONE_STATE)
                 MiniAppPermissions.MINIAPP_READ_CONTACTS -> allPermission.add(Manifest.permission.READ_CONTACTS)
                 MiniAppPermissions.MINIAPP_ACCESS_WIFI -> allPermission.add(Manifest.permission.ACCESS_WIFI_STATE)
+                MiniAppPermissions.MINIAPP_BLUETOOTH -> {
+                    allPermission.add(Manifest.permission.BLUETOOTH_SCAN)
+                    allPermission.add(Manifest.permission.BLUETOOTH_ADVERTISE)
+                    allPermission.add(Manifest.permission.BLUETOOTH_CONNECT)
+                }
             }
         }
         return allPermission
@@ -118,6 +133,9 @@ object PermissionUtils : KoinComponent {
             Manifest.permission.READ_PHONE_STATE -> MiniAppPermissions.MINIAPP_GET_CALL_STATE
             Manifest.permission.READ_CONTACTS -> MiniAppPermissions.MINIAPP_READ_CONTACTS
             Manifest.permission.ACCESS_WIFI_STATE -> MiniAppPermissions.MINIAPP_ACCESS_WIFI
+            Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT -> {
+                MiniAppPermissions.MINIAPP_BLUETOOTH
+            }
             else -> ""
         }
     }
@@ -205,6 +223,9 @@ object PermissionUtils : KoinComponent {
             }
             applicationContext.resources.getString(R.string.wifi) -> {
                 map[MiniAppPermissions.MINIAPP_ACCESS_WIFI] = permissionData.willBeGranted
+            }
+            applicationContext.resources.getString(R.string.bluetooth) -> {
+                map[MiniAppPermissions.MINIAPP_BLUETOOTH] = permissionData.willBeGranted
             }
         }
         return map

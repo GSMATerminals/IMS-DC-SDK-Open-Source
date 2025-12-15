@@ -49,7 +49,7 @@ android {
 }
 
 dependencies {
-    compileOnly(files("${rootProject.projectDir}\\libs\\base-release.aar"))
+    compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
     api(libs.koin.android)
     implementation(libs.glide)
     implementation(libs.gson)

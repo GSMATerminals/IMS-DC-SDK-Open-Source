@@ -111,6 +111,11 @@ class OemEC: IEC {
         }
     }
 
+    override fun getModuleList(): List<String> {
+        // todo 获取oem拓展能力模块列表
+        return listOf()
+    }
+
     override fun request(context: Context, callId: String, appId: String, content: String):Int {
         try {
             sLogger.info("request content: $content")

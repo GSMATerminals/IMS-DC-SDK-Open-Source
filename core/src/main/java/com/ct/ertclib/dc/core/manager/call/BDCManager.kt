@@ -272,7 +272,7 @@ class BDCManager(
         }
         try {
             val bodyString = body.string() //待调试，是否是json格式String
-            if (bodyString.isNullOrEmpty()) {
+            if (bodyString.isEmpty()) {
                 sLogger.debug("$mTag receiveMiniAppList bodyString is null")
                 return
             }
@@ -308,7 +308,7 @@ class BDCManager(
         }
 
         val firstRequestMessage = mRequestMessageQueue.first
-        firstRequestMessage.retryCount = firstRequestMessage.retryCount + 1
+        firstRequestMessage.retryCount += 1
         if (firstRequestMessage.retryCount > 3) {
             if (sLogger.isDebugActivated) {
                 sLogger.debug("$mTag requestMessage ${firstRequestMessage.messageType} retry too many")

@@ -202,6 +202,8 @@
 -dontwarn kotlinx.**
 -dontnote kotlinx.serialization.SerializationKt
 
+-keep class com.ct.ctmnnlib.** { *;}
+
 -keep class org.jetbrains.** { *; }
 -keep interface org.jetbrains.** { *; }
 -dontwarn org.jetbrains.**
@@ -211,3 +213,6 @@
 
 -dontwarn org.apache.commons.compress.archivers.ArchiveEntry
 -dontwarn org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+
+-dontwarn okhttp3.logging.**
+-dontwarn retrofit2.**

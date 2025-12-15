@@ -278,10 +278,10 @@ object MiniAppStartManager : IMiniAppStartManager {
         this.appService = appService
     }
 
-    fun sendMessageToMiniApp(callId: String,miniappId: String, message: String, callback: IMessageCallback?) {
-        LogUtils.debug(TAG, "sendMessageToMiniApp, callId: $callId, miniappId: $miniappId, message: $message")
+    fun sendMessageToMiniApp(callId: String,appId: String, message: String, callback: IMessageCallback?) {
+        LogUtils.debug(TAG, "sendMessageToMiniApp, callId: $callId, appId: $appId, message: $message")
         appService?.let {
-            it.mParentToMiniCallbackMap[it.getKey(callId,miniappId)]?.sendMessageToMini(miniappId, message, callback)
+            it.mParentToMiniCallbackMap[it.getKey(callId,appId)]?.sendMessageToMini(appId, message, callback)
         }
     }
 

@@ -25,6 +25,7 @@ import android.content.Context
  */
 interface IEC {
     fun init(context: Context, callback: IECCallback?)
+    fun getModuleList(): List<String>
     fun request(context: Context,callId:String, appId:String,content:String):Int
     fun releaseMiniApp(context: Context, callId:String, miniAppId:String)
     fun releaseAll(context: Context)

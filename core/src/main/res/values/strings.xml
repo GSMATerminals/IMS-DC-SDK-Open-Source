@@ -38,6 +38,7 @@
     <string name="call_state_title">Call status</string>
     <string name="contacts">Contacts</string>
     <string name="wifi">Wi-Fi</string>
+    <string name="bluetooth">Nearby devices</string>
 
     <string name="camera_description">For taking photos or videos</string>
     <string name="vibrate_description">For reminding</string>
@@ -48,6 +49,7 @@
     <string name="call_state_description">For providing new call services</string>
     <string name="contact_description">For providing contact info</string>
     <string name="wifi_description">For providing Wi-Fi info</string>
+    <string name="bluetooth_description">For bluetooth connection(including scanning for devices, being discovered by devices, and connecting to devices)</string>
 
     <string name="permission_preference_title">Permission settings</string>
     <string name="version_preference_title">Version</string>

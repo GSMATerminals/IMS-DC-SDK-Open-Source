@@ -18,10 +18,12 @@ package com.ct.ertclib.dc.core.factory
 
 import com.ct.ertclib.dc.core.constants.CommonConstants.CALL_APP_EVENT
 import com.ct.ertclib.dc.core.constants.CommonConstants.COMMON_APP_EVENT
+import com.ct.ertclib.dc.core.constants.CommonConstants.EC_EVENT
 import com.ct.ertclib.dc.core.constants.CommonConstants.SCREEN_SHARE_APP_EVENT
 import com.ct.ertclib.dc.core.dispatcher.appservice.CallAppServiceDispatcher
 import com.ct.ertclib.dc.core.dispatcher.appservice.CommonAppServiceDispatcher
 import com.ct.ertclib.dc.core.dispatcher.appservice.DefaultAppServiceDispatcher
+import com.ct.ertclib.dc.core.dispatcher.appservice.ECAppServiceDispatcher
 import com.ct.ertclib.dc.core.dispatcher.appservice.ScreenAppServiceDispatcher
 import com.ct.ertclib.dc.core.port.dispatcher.IAppServiceEventDispatcher
 
@@ -31,6 +33,7 @@ object AppServiceEventDispatcherFactory {
     private val commonDispatcher: IAppServiceEventDispatcher by lazy { CommonAppServiceDispatcher() }
     private val callDispatcher: IAppServiceEventDispatcher by lazy { CallAppServiceDispatcher() }
     private val screenShareDispatcher: IAppServiceEventDispatcher by lazy { ScreenAppServiceDispatcher() }
+    private val ecDispatcher: IAppServiceEventDispatcher by lazy { ECAppServiceDispatcher() }
 
     @JvmStatic
     fun getDispatcher(eventName: String): IAppServiceEventDispatcher {
@@ -38,6 +41,7 @@ object AppServiceEventDispatcherFactory {
             CALL_APP_EVENT -> callDispatcher
             COMMON_APP_EVENT -> commonDispatcher
             SCREEN_SHARE_APP_EVENT -> screenShareDispatcher
+            EC_EVENT -> ecDispatcher
             else -> defaultDispatcher
         }
     }

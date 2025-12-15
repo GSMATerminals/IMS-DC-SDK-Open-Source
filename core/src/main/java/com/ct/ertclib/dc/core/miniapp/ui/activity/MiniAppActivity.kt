@@ -439,6 +439,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         notifyMiniAppState("onBackground")
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onStart() {
         super.onStart()
         if (!hasAllPermission){
@@ -472,7 +473,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
 
     fun onMiniAppLoaded() {
-        mBinding.loadingProgressBar.isVisible = false
+//        mBinding.loadingProgressBar.progressLayout.isVisible = false
     }
 
     private fun setStatusBarColor(statusBarColor: Int) {
