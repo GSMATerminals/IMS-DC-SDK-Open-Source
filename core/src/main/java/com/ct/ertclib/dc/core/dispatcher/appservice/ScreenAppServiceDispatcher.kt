@@ -26,18 +26,19 @@ import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REQUEST_SCREEN_SH
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_SET_SCREEN_SHARE_PRIVACY_MODE
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_START_SCREEN_SHARE
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_STOP_SCREEN_SHARE
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_COLOR_PARAMS
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_DRAWING_INFO_PARAMS
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_IS_ENABLE
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_LICENSE_PARAM
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_REMOTE_HEIGHT_PARAM
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_REMOTE_WIDTH_PARAM
-import com.ct.ertclib.dc.core.constants.CommonConstants.APP_ROLE_PARAMS
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_SHARE_SIDE
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_WIDTH_PARAMS
 import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.port.dispatcher.IAppServiceEventDispatcher
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.port.usecase.main.ISketchBoardUseCase
+import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -61,13 +62,16 @@ class ScreenAppServiceDispatcher : IAppServiceEventDispatcher, KoinComponent {
             }
             ACTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShare(needNotifyToMini = false)
             ACTION_REQUEST_SCREEN_SHARE_ABILITY -> screenShareUseCase.requestScreenShareAbility(iMessageCallback)
-            ACTION_OPEN_SKETCH_BOARD -> sketchBoardUseCase.openSketchBoard(telecomCallId, appId)
+            ACTION_OPEN_SKETCH_BOARD -> {
+                val paintColor = appRequest.map[APP_COLOR_PARAMS].toString()
+                val paintWidth = appRequest.map[APP_WIDTH_PARAMS].toString().toFloat()
+                sketchBoardUseCase.openSketchBoard(telecomCallId, appId, paintColor, paintWidth)
+            }
             ACTION_CLOSE_SKETCH_BOARD -> sketchBoardUseCase.closeSketchBoard(needNotifyToMini = false)
             ACTION_ADD_DRAWING_INFO -> {
                 val drawingInfo = appRequest.map[APP_DRAWING_INFO_PARAMS]
-                val role = appRequest.map[APP_ROLE_PARAMS] as? Int
                 drawingInfo?.let {
-                    sketchBoardUseCase.addDrawingInfo(it.toString(), role ?: ROLE_SHARE_SIDE)
+                    sketchBoardUseCase.addDrawingInfo(JsonUtil.toJson(it))
                 }
             }
             ACTION_ADD_REMOTE_SIZE_INFO -> {

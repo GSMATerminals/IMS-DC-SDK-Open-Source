@@ -18,9 +18,9 @@ package com.ct.ertclib.dc.core.port.manager
 
 import android.graphics.RectF
 import com.ct.ertclib.dc.core.port.listener.ISketchWindowListener
-import com.ct.ertclib.dc.core.data.screenshare.xml.DrawingInfo
+import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
 
-interface IScreenShareSketchManager {
+interface ISketchManager {
 
     /**
      *设置涂鸦窗口监听事件
@@ -31,7 +31,7 @@ interface IScreenShareSketchManager {
     /**
      *显示共享时的画板悬浮窗
      */
-    fun showSketchControlWindow(role: Int)
+    fun showSketchControlWindow(paintColor: String, paintWidth: Float)
 
     /**
      *退出屏幕共享画板悬浮窗

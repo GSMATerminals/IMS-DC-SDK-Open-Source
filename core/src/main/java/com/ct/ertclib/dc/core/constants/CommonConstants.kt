@@ -97,7 +97,8 @@ object CommonConstants {
     const val APP_RESPONSE_CODE_SUCCESS = 0
     const val APP_RESPONSE_MESSAGE_SUCCESS = "success"
     const val APP_DRAWING_INFO_PARAMS = "drawingInfo"
-    const val APP_ROLE_PARAMS = "role"
+    const val APP_COLOR_PARAMS = "paintColor"
+    const val APP_WIDTH_PARAMS = "paintWidth"
     const val APP_REMOTE_WIDTH_PARAM = "width"
     const val APP_REMOTE_HEIGHT_PARAM = "height"
     const val APP_LICENSE_PARAM = "license"

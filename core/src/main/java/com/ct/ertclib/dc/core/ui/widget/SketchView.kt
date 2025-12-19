@@ -33,13 +33,9 @@ import com.blankj.utilcode.util.ColorUtils
 import com.blankj.utilcode.util.SizeUtils
 import kotlin.math.absoluteValue
 import com.ct.ertclib.dc.core.R
-import com.ct.ertclib.dc.core.data.screenshare.SketchBean
-import com.ct.ertclib.dc.core.data.screenshare.xml.DrawingInfo
-import com.ct.ertclib.dc.core.data.screenshare.xml.PointsInfo
-import com.ct.ertclib.dc.core.utils.logger.Logger
+import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
 import com.ct.ertclib.dc.core.utils.common.LogUtils
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_SHARE_SIDE
-import com.ct.ertclib.dc.core.data.screenshare.xml.PointBean
+import com.ct.ertclib.dc.core.data.screenshare.PointBean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,53 +43,43 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CopyOnWriteArrayList
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.createBitmap
+import androidx.core.content.withStyledAttributes
 
 
 class SketchView : View {
 
-    private val sLogger = Logger.getLogger(TAG)
-
-    enum class MODE {
-        MODE_DISABLE,
-        MODE_DRAW,
-        MODE_ERASE
-    }
-
     companion object {
         private const val TAG = "SketchView"
         private const val TOUCH_TOLERANCE = 3.0F
-        const val COLOR_PAINT_SHARE = "#ffff4444"
-        const val COLOR_PAINT_WATCH = "#ff44ff44"
+        const val COLOR_PAINT_DEFAULT = "#ffff4444"
         private const val DEFAULT_SIZE = 8.0f
         private const val SKETCH_DISAPPEAR_DELAY = 1000L
     }
 
-    private var role: Int = ROLE_SHARE_SIDE
     private var mAttr: AttributeSet? = null
 
     @ColorInt
-    private var sharePaintColor = Color.parseColor(COLOR_PAINT_SHARE)
-    @ColorInt
-    private var watchPaintColor = Color.parseColor(COLOR_PAINT_WATCH)
-    private var mLocalPathSize: Float = DEFAULT_SIZE
-    private lateinit var mLocalPaint: Paint
-    private var mLocalPath: Path = Path()
+    var paintColor = COLOR_PAINT_DEFAULT.toColorInt()
+    var localPathSize: Float = DEFAULT_SIZE
+    private lateinit var localPaint: Paint
+    private var localPath: Path = Path()
     private lateinit var historyPaint: Paint
     private var historyPath: Path = Path()
 
-    private var mBufferBitmap: Bitmap? = null
-    private var mBufferCanvas: Canvas? = null
-    private var mLastX = 0.0F
-    private var mLastY = 0.0F
-    private var mCurrType = MODE.MODE_DRAW
+    private var bufferBitmap: Bitmap? = null
+    private var bufferCanvas: Canvas? = null
+    private var lastX = 0.0F
+    private var lastY = 0.0F
     private var isDrawing = false
     private val cachedDrawingInfoList = CopyOnWriteArrayList<DrawingInfo>()
 
 
-    var mSketchCallback: SketchCallback? = null
-    var currentDrawingInfo: DrawingInfo? = null
+    var sketchCallback: SketchCallback? = null
+    private var currentDrawingInfo: DrawingInfo? = null
 
-    private var mSketchInfoList = CopyOnWriteArrayList<SketchBean>()
+    private var sketchInfoList = CopyOnWriteArrayList<DrawingInfo>()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     constructor(context: Context?) : super(context) {
@@ -117,19 +103,18 @@ class SketchView : View {
     private fun init() {
 
         mAttr?.let {
-            val obtain = context.obtainStyledAttributes(it, R.styleable.SketchView)
-            mLocalPathSize = obtain.getFloat(R.styleable.SketchView_localPathSize, DEFAULT_SIZE)
-
-            obtain.recycle()
+            context.withStyledAttributes(it, R.styleable.SketchView) {
+                localPathSize = getFloat(R.styleable.SketchView_localPathSize, DEFAULT_SIZE)
+            }
         }
 
-        mLocalPaint = Paint().apply {
+        localPaint = Paint().apply {
             //抗锯齿效果
             isAntiAlias = true
             //防抖
             isDither = true
             //颜色
-            color = getPaintColor()
+            color = paintColor
             //模式
             style = Paint.Style.STROKE
             //结合方式
@@ -137,7 +122,7 @@ class SketchView : View {
             //画笔两端样式
             strokeCap = Paint.Cap.ROUND
             //线宽
-            strokeWidth = SizeUtils.dp2px(mLocalPathSize).toFloat()
+            strokeWidth = SizeUtils.dp2px(localPathSize).toFloat()
         }
 
         historyPaint = Paint().apply{
@@ -152,68 +137,50 @@ class SketchView : View {
             //画笔两端样式
             strokeCap = Paint.Cap.ROUND
             //线宽
-            strokeWidth = SizeUtils.dp2px(mLocalPathSize).toFloat()
+            strokeWidth = SizeUtils.dp2px(localPathSize).toFloat()
         }
-    }
-
-    fun setRole(role: Int) {
-        this.role = role
-        mLocalPaint.color = getPaintColor()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         genNewBufferCanvas(w, h)
-        mSketchInfoList.clear()
+        sketchInfoList.clear()
     }
 
     override fun onDraw(canvas: Canvas) {
         // 背景透明
-        canvas.drawColor(Color.parseColor("#00000000"))
+        canvas.drawColor("#00000000".toColorInt())
         // up的时候绘制
-        mBufferBitmap?.let {
+        bufferBitmap?.let {
             canvas.drawBitmap(it, 0f, 0f, null)
         }
         // move的时候绘制
-        canvas.drawPath(mLocalPath, mLocalPaint)
+        canvas.drawPath(localPath, localPaint)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        if (mCurrType != MODE.MODE_DISABLE) {
-            return handleTouchEvent(event)
-        }
-        return super.onTouchEvent(event)
-    }
-
-    private fun handleTouchEvent(event: MotionEvent?): Boolean {
         event?.let { it ->
             val x = it.x
             val y = it.y
             when (it.action) {
                 MotionEvent.ACTION_DOWN -> {
                     isDrawing = true
-                    mLastX = x
-                    mLastY = y
-                    mLocalPath.moveTo(x, y)
-                    mLocalPaint.color = getPaintColor()
-                    currentDrawingInfo = DrawingInfo()
-                        .apply {
-                        this.color = ColorUtils.int2ArgbString(getPaintColor())
-                        this.erase = mCurrType == MODE.MODE_ERASE
-                        this.width = mLocalPathSize
-                        this.points = PointsInfo()
-                            .apply {
-                            pointS = mutableListOf()
-                        }
-                        this.points.pointS.add(PointBean(x, y))
-                    }
+                    lastX = x
+                    lastY = y
+                    localPath.moveTo(x, y)
+                    localPaint.color = paintColor
+                    currentDrawingInfo = DrawingInfo(
+                        DEFAULT_SIZE,
+                        ColorUtils.int2ArgbString(paintColor),
+                        mutableListOf<PointBean>().apply { add(PointBean(x, y)) }
+                    )
                 }
 
                 MotionEvent.ACTION_UP -> {
-                    mBufferCanvas?.apply {
-                        drawPath(mLocalPath, mLocalPaint)
-                        mLocalPath.reset()
+                    bufferCanvas?.apply {
+                        drawPath(localPath, localPaint)
+                        localPath.reset()
                     }
                     scope.launch {
                         delay(SKETCH_DISAPPEAR_DELAY)
@@ -223,7 +190,7 @@ class SketchView : View {
                         }
                     }
                     currentDrawingInfo?.let { info ->
-                        mSketchCallback?.onSketchEvent(info)
+                        sketchCallback?.onSketchEvent(info)
                     }
                     isDrawing = false
                     if (cachedDrawingInfoList.isNotEmpty()) {
@@ -237,15 +204,15 @@ class SketchView : View {
                 }
 
                 MotionEvent.ACTION_MOVE -> {
-                    val dx = (x - mLastX).absoluteValue
-                    val dy = (y - mLastY).absoluteValue
+                    val dx = (x - lastX).absoluteValue
+                    val dy = (y - lastY).absoluteValue
                     if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                        mLocalPath.quadTo(mLastX, mLastY, (x + mLastX) / 2, (y + mLastY) / 2)
-                        mLastX = x
-                        mLastY = y
+                        localPath.quadTo(lastX, lastY, (x + lastX) / 2, (y + lastY) / 2)
+                        lastX = x
+                        lastY = y
                         invalidate()
                     }
-                    currentDrawingInfo?.points?.pointS?.add(PointBean(x, y))
+                    currentDrawingInfo?.pointList?.add(PointBean(x, y))
                 }
 
                 else -> {}
@@ -255,13 +222,13 @@ class SketchView : View {
     }
 
     private fun genNewBufferCanvas(width: Int, height: Int) {
-        mBufferBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        mBufferCanvas = Canvas(mBufferBitmap!!)
+        bufferBitmap = createBitmap(width, height)
+        bufferCanvas = Canvas(bufferBitmap!!)
     }
 
     private fun drawByPath(path: Path, paint: Paint) {
         path.let {
-            mBufferCanvas?.drawPath(path, paint)
+            bufferCanvas?.drawPath(path, paint)
             path.reset()
             postInvalidate()
         }
@@ -274,24 +241,24 @@ class SketchView : View {
                 LogUtils.debug(TAG, "drawByDrawingInfo is drawing")
                 return
             }
-            mSketchInfoList.add(SketchBean(drawingInfo))
+            sketchInfoList.add(drawingInfo)
         }
         val path = if (isHistoryDrawing) {
             historyPath
         } else {
-            mLocalPath
+            localPath
         }
         val paint = if (isHistoryDrawing) {
             historyPaint
         } else {
-            mLocalPaint
+            localPaint
         }
         drawingInfo.let {
-            paint.color = Color.parseColor(it.color)
-            setLocalPathSize(it.width)
-            val points = it.points
+            paint.color = it.color.toColorInt()
+            localPathSize = it.width
+            localPaint.strokeWidth = SizeUtils.dp2px(localPathSize).toFloat()
             lateinit var preBean: PointBean
-            for ((index, bean) in points.pointS.withIndex()) {
+            for ((index, bean) in it.pointList.withIndex()) {
                 if (index == 0) {
                     path.reset()
                     path.moveTo(bean.x, bean.y)
@@ -309,31 +276,17 @@ class SketchView : View {
     }
 
     fun clearCanvas(cleanPath: Boolean = false) {
-        mBufferCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        bufferCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         if (cleanPath) {
-            mSketchInfoList.clear()
-            mLocalPath.reset()
+            sketchInfoList.clear()
+            localPath.reset()
         }
-    }
-
-    private fun setLocalPathSize(size: Float) {
-        mLocalPathSize = size
-        mLocalPaint.strokeWidth = SizeUtils.dp2px(mLocalPathSize).toFloat()
     }
 
     private fun rollBackPreSketch() {
         clearCanvas()
-        mSketchInfoList.forEach { item ->
-            drawByDrawingInfo(item.drawingInfo, isFromMiniApp = false, isHistoryDrawing = true)
-        }
-    }
-
-    private fun getPaintColor(): Int {
-        LogUtils.debug(TAG, "getPaintColor, role: $role")
-        return if (role == ROLE_SHARE_SIDE) {
-            sharePaintColor
-        } else {
-            watchPaintColor
+        sketchInfoList.forEach { item ->
+            drawByDrawingInfo(item, isFromMiniApp = false, isHistoryDrawing = true)
         }
     }
 

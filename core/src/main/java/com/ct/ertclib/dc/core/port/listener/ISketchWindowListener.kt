@@ -16,7 +16,7 @@
 
 package com.ct.ertclib.dc.core.port.listener
 
-import com.ct.ertclib.dc.core.data.screenshare.xml.DrawingInfo
+import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
 
 interface ISketchWindowListener {
 

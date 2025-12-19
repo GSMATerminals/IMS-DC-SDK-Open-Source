@@ -183,7 +183,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     private var mMiniAppListCallback: IMiniAppListLoadedCallback? = null
     private var mDownloadMiniApp: IDownloadMiniApp? = null
     private val mStartAppCallback = ConcurrentHashMap<String, IStartAppCallback>()
-    private val mNativeAppMap = ConcurrentHashMap<String, MiniAppInfo>()
     private val mStartAppMap = ConcurrentHashMap<String, MiniAppInfo>()//本次通话中，打开过的应用
     private val mMiniAppConsultControlImplMap = ConcurrentHashMap<String, MiniAppConsultControlImpl>()
     private var didInCallAutoLoad = false
@@ -292,7 +291,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
             }
         }
         startAutoloadApp()
-        NativeAppManager.init(callInfo)
     }
 
     private fun handleDcClosed() {
@@ -300,7 +298,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         mMiniAppListCallback = null
         mPassivelyMiniAppMap.clear()
         mRejectPassivelyMiniAppCountMap.clear()
-        mNativeAppMap.clear()
         mStartAppMap.clear()
         mStartAppCallback.clear()
         mMiniAppConsultControlImplMap.clear()
@@ -373,9 +370,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     private fun isInstalledApp(miniAppInfo: MiniAppInfo): Boolean {
-        if (isNativeMiniApp(miniAppInfo.appId)) {
-            return true
-        }
         val path = miniAppInfo.path
         if (path.isNullOrEmpty()) {
             val miniAppPath = FileUtils.getMiniAppPath(
@@ -393,7 +387,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     private fun getStartedApp(appId: String): MiniAppInfo? {
-        return mNativeAppMap[appId] ?: mStartAppMap[appId]
+        return mStartAppMap[appId]
     }
 
     private fun handleReceiveMiniAppList(miniAppList: MiniAppList) {
@@ -439,10 +433,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
             miniAppInfo.myNumber = callInfo.myNumber
             miniAppInfo.isOutgoingCall = callInfo.isOutgoingCall
             miniAppInfo.path = getInstalledPath(miniAppInfo.appId)
-            val appId = miniAppInfo.appId
-            if (isNativeMiniApp(appId)) {
-                mNativeAppMap[appId] = miniAppInfo
-            } else if (miniAppInfo.autoLoad && isFirstPage){
+            if (miniAppInfo.autoLoad && isFirstPage){
                 if (miniAppInfo.isPhasePreCall() && mAutoloadPreCallMiniApp == null ) {
                     mAutoloadPreCallMiniApp = miniAppInfo
                 } else if (miniAppInfo.isPhaseInCall() && mAutoloadInCallMiniApp == null) {
@@ -683,10 +674,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     private fun startMiniAppInternal(miniAppInfo: MiniAppInfo) {
-        if (isNativeMiniApp(miniAppInfo.appId)) {
-            sLogger.info("$mTag startMiniAppInternal-The app is native, not start it")
-            return
-        }
         sLogger.debug("$mTag startMiniAppInternal miniAppManager:$miniAppStartManager")
 
         miniAppStartManager?.startMiniApp(Utils.getApp(), miniAppInfo, callInfo, mMiniAppListInfo, object : IMiniAppStartCallback{
@@ -699,22 +686,11 @@ class MiniAppManager(private val callInfo: CallInfo) :
         })
     }
 
-    private fun isNativeMiniApp(appId: String?): Boolean {
-        return false
-    }
-
-
     private fun stopMiniApps() {
         mMiniAppListInfo = null
-        NativeAppManager.release()
         mStartAppMap.forEach { (_, value) ->
             miniAppStartManager?.stopMiniApp(Utils.getApp(), value.callId,value.appId)
         }
-        mNativeAppMap.clear()
-    }
-
-    private fun holdingMiniApps() {
-        NativeAppManager.release()
     }
 
     fun setMiniAppStartManager(miniAppStartManager: IMiniAppStartManager) {
@@ -821,7 +797,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
         if (state == Call.STATE_DISCONNECTING || state == Call.STATE_DISCONNECTED) {
             stopMiniApps()
         } else if (state == Call.STATE_HOLDING && mCallState == Call.STATE_ACTIVE){
-            holdingMiniApps()
+            //在呼叫保持状态下，不做任何处理
         } else {
             startAutoLoadInCallApp()
         }

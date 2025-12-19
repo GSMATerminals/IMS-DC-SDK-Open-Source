@@ -62,8 +62,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#7F000000"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
-                android:text="相关通话被保持，待通话恢复后，小程序可继续使用"/>
+                android:text="@string/holder_call_state_tips"/>
         </FrameLayout>
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/ll_title_bar"

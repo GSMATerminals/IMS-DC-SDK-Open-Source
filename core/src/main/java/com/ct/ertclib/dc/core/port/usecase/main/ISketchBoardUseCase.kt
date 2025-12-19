@@ -18,11 +18,11 @@ package com.ct.ertclib.dc.core.port.usecase.main
 
 interface ISketchBoardUseCase {
 
-    fun openSketchBoard(telecomCallId: String, appId: String)
+    fun openSketchBoard(telecomCallId: String, appId: String, paintColor: String, paintWidth: Float)
 
     fun closeSketchBoard(needNotifyToMini: Boolean = true)
 
-    fun addDrawingInfo(drawingInfo: String, role: Int)
+    fun addDrawingInfo(drawingInfo: String)
 
     fun addRemoteSizeInfo(width: Int, height: Int)
 
