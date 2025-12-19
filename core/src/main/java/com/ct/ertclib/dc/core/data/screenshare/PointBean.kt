@@ -14,9 +14,9 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.core.common;
+package com.ct.ertclib.dc.core.data.screenshare
 
-public abstract class BaseEncoder {
-    public abstract byte[] encode(byte[] data);
-    public abstract byte[] decode(byte[] data);
-}
+data class PointBean(
+    var x: Float,
+    var y: Float
+)

@@ -27,7 +27,7 @@ interface IScreenShareMiniUseCase {
 
     fun requestScreenShareAbility(handler: CompletionHandler<String?>)
 
-    fun openSketchBoard(): String
+    fun openSketchBoard(params: Map<String, Any>): String
 
     fun closeSketchBoard(): String
 

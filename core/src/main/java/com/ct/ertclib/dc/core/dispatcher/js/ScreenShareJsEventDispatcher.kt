@@ -48,7 +48,7 @@ class ScreenShareJsEventDispatcher : IJsEventDispatcher, KoinComponent {
     override fun dispatchSyncMessage(context: Context, request: JSRequest): String {
         return when (request.function) {
             FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShare(context)
-            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoard()
+            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoard(request.params)
             FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoard()
             FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfo(request.params)
             FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfo(request.params)

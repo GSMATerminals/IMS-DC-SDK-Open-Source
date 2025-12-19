@@ -22,7 +22,7 @@ import com.ct.ertclib.dc.core.manager.context.ActivityManager
 import com.ct.ertclib.dc.core.manager.context.AppServiceManager
 import com.ct.ertclib.dc.core.manager.context.MiniToParentManager
 import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareManager
-import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareSketchManager
+import com.ct.ertclib.dc.core.manager.screenshare.SketchManager
 import com.ct.ertclib.dc.core.miniapp.db.PermissionDbRepo
 import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
@@ -31,7 +31,7 @@ import com.ct.ertclib.dc.core.port.manager.IFileDownloadManager
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.manager.IScreenShareManager
-import com.ct.ertclib.dc.core.port.manager.IScreenShareSketchManager
+import com.ct.ertclib.dc.core.port.manager.ISketchManager
 import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.port.usecase.main.ISketchBoardUseCase
@@ -72,7 +72,7 @@ val coreModule = module {
 
     factory<IParentToMiniNotify> { ParentToMiniNotifier() }
 
-    single<IScreenShareSketchManager> { ScreenShareSketchManager(androidContext()) }
+    single<ISketchManager> { SketchManager(androidContext(), get()) }
 
     single<IPermissionUseCase> { PermissionUseCase(androidContext(), get(), get(), get()) }
 
