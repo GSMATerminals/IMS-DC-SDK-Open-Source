@@ -96,8 +96,8 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         })
     }
 
-    override fun openSketchBoard(): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_OPEN_SKETCH_BOARD, mapOf()).toJson()
+    override fun openSketchBoard(params: Map<String, Any>): String {
+        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_OPEN_SKETCH_BOARD, params).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }

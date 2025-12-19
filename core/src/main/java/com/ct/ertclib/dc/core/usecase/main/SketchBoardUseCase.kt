@@ -32,22 +32,17 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_DRAWING_INFO_PAR
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_HEIGHT_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_STATUS_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_WIDTH_PARAM
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_SHARE_SIDE
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_WATCH_SIDE
 import com.ct.ertclib.dc.core.data.common.VideoInfo
 import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
 import com.ct.ertclib.dc.core.port.listener.ISketchWindowListener
-import com.ct.ertclib.dc.core.port.manager.IScreenShareSketchManager
+import com.ct.ertclib.dc.core.port.manager.ISketchManager
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.port.usecase.main.ISketchBoardUseCase
-import com.ct.ertclib.dc.core.data.screenshare.SketchXMLUtils
-import com.ct.ertclib.dc.core.data.screenshare.SketchXmlParser
-import com.ct.ertclib.dc.core.data.screenshare.xml.DrawingInfo
+import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
 import com.ct.ertclib.dc.core.port.common.IScreenChangedCallback
 import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
-import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
@@ -59,11 +54,10 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.abs
 
 class SketchBoardUseCase(
     private val context: Context,
-    private val screenShareSketchManager: IScreenShareSketchManager,
+    private val screenShareSketchManager: ISketchManager,
     private val parentToMiniNotifier: IParentToMiniNotify,
     private val screenShareUseCase: IScreenShareUseCase
     ): ISketchBoardUseCase, KoinComponent {
@@ -93,7 +87,7 @@ class SketchBoardUseCase(
         }
     }
 
-    override fun openSketchBoard(telecomCallId: String, appId: String) {
+    override fun openSketchBoard(telecomCallId: String, appId: String, paintColor: String, paintWidth: Float) {
         logger.info("openSketchBoard")
         this.appId = appId
         this.callId = telecomCallId
@@ -101,11 +95,6 @@ class SketchBoardUseCase(
         if (!Settings.canDrawOverlays(context)) {
             logger.info("openSketchBoard, return")
             return
-        }
-        val role = if (screenShareUseCase.isInSharing()) {
-            ROLE_SHARE_SIDE
-        } else {
-            ROLE_WATCH_SIDE
         }
         val screenSizeNotifyEvent = NotifyEvent(
             FUNCTION_SCREEN_SIZE_NOTIFY,
@@ -116,7 +105,7 @@ class SketchBoardUseCase(
         )
 
         parentToMiniNotifier.notifyEvent(callId, appId, screenSizeNotifyEvent)
-        screenShareSketchManager.showSketchControlWindow(role)
+        screenShareSketchManager.showSketchControlWindow(paintColor, paintWidth)
         ScreenUtils.addScreenChangedListener(screenChangedCallback)
     }
 
@@ -133,12 +122,14 @@ class SketchBoardUseCase(
         ScreenUtils.removeScreenChangedListener(screenChangedCallback)
     }
 
-    override fun addDrawingInfo(drawingInfo: String, role: Int) {
-        val decodedString = FileUtils.base64ToByteArray(drawingInfo)
-        val sketchXmlParse = SketchXmlParser(
-            decodedString
-        ).parse()
-        screenShareSketchManager.addSketchInfo(sketchXmlParse.actionDocument.drawingInfo)
+    override fun addDrawingInfo(drawingInfo: String) {
+        val drawData = JsonUtil.fromJson(drawingInfo, DrawingInfo::class.java)
+        LogUtils.debug(TAG, "addDrawingInfo, drawData: $drawData")
+        drawData?.let {
+            screenShareSketchManager.addSketchInfo(it)
+        } ?: run {
+            LogUtils.warn(TAG, "addDrawingInfo drawData is null")
+        }
     }
 
     override fun addRemoteSizeInfo(width: Int, height: Int) {
@@ -180,15 +171,12 @@ class SketchBoardUseCase(
 
         override fun onSketchEvent(drawingInfo: DrawingInfo) {
             logger.info("onSketchEvent")
-            val drawingData = SketchXMLUtils.wrapActionXml(
-                drawingInfo.toXMl()
-            )
-            val encodeString = FileUtils.byteArrayToBase64(drawingData.toByteArray())
             val drawingNotifyEvent = NotifyEvent(
                 FUNCTION_DRAWING_INO_NOTIFY,
-                mapOf(NOTIFY_DRAWING_INFO_PARAM to encodeString)
+                mapOf(NOTIFY_DRAWING_INFO_PARAM to JsonUtil.toJson(drawingInfo))
             )
             parentToMiniNotifier.notifyEvent(callId, appId, drawingNotifyEvent)
+            LogUtils.debug(TAG, "onSketchEvent param: ${JsonUtil.toJson(drawingInfo)}")
         }
 
         override fun onLocalWindowNotified(width: Float, height: Float) {

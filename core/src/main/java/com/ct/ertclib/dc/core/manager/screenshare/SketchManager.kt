@@ -25,23 +25,20 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.PopupWindow
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_SHARE_SIDE
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.ROLE_WATCH_SIDE
 import com.ct.ertclib.dc.core.port.listener.ISketchWindowListener
-import com.ct.ertclib.dc.core.port.manager.IScreenShareSketchManager
-import com.ct.ertclib.dc.core.data.screenshare.xml.PointBean
+import com.ct.ertclib.dc.core.port.manager.ISketchManager
+import com.ct.ertclib.dc.core.data.screenshare.PointBean
 import com.ct.ertclib.dc.core.ui.widget.ScreenShareCtrlPanel
 import com.ct.ertclib.dc.core.ui.widget.SketchView
-import com.ct.ertclib.dc.core.data.screenshare.xml.DrawingInfo
-import com.ct.ertclib.dc.core.data.screenshare.xml.PointsInfo
+import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
+import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import kotlinx.coroutines.CoroutineScope
@@ -49,9 +46,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-class ScreenShareSketchManager(
-    private val context: Context
-) : IScreenShareSketchManager {
+class SketchManager(
+    private val context: Context,
+    private val screenShareUseCase: IScreenShareUseCase
+) : ISketchManager {
 
     companion object {
         private const val TAG = "ScreenShareSketchManager"
@@ -66,7 +64,6 @@ class ScreenShareSketchManager(
     private var ctrlPanelLayoutParams: WindowManager.LayoutParams? = null
     private var sketchLayoutParams: WindowManager.LayoutParams? = null
     private var sketchViewVisible: Boolean = false
-    private var role = ROLE_SHARE_SIDE
 
     private var localWidth = ScreenUtils.getScreenWidth(context).toFloat()
     private var localHeight = ScreenUtils.getScreenHeight(context).toFloat()
@@ -88,11 +85,10 @@ class ScreenShareSketchManager(
         sketchWindowListener = listener
     }
 
-    override fun showSketchControlWindow(role: Int) {
+    override fun showSketchControlWindow(paintColor: String, paintWidth: Float) {
         logger.info("showSketchControlWindow")
-        this.role = role
         scope.launch(Dispatchers.Main) {
-            addSketchView(role)
+            addSketchView(paintColor, paintWidth)
         }
     }
 
@@ -106,7 +102,7 @@ class ScreenShareSketchManager(
     }
 
     override fun setLocalWindowInformation(rectF: RectF, rotation: Int) {
-        if (role == ROLE_WATCH_SIDE) {
+        if (!screenShareUseCase.isInSharing()) {
             localTranslationX = rectF.left
             localTranslationY = rectF.top
             localWidth = rectF.width()
@@ -151,7 +147,7 @@ class ScreenShareSketchManager(
         sketchWindowListener = null
     }
 
-    private fun addSketchView(role: Int) {
+    private fun addSketchView(paintColor: String, paintWidth: Float) {
         if (windowManager == null) {
             windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
         }
@@ -164,14 +160,15 @@ class ScreenShareSketchManager(
         windowManager?.addView(sketchLayout, sketchLayoutParams)
         sketchView = sketchLayout?.findViewById(R.id.sketch_view)
         sketchView?.let {
-            it.setRole(role)
-            it.mSketchCallback = object : SketchView.SketchCallback {
+            it.sketchCallback = object : SketchView.SketchCallback {
                 override fun onSketchEvent(drawingInfo: DrawingInfo) {
                     logger.info("onSketchEvent")
                     val drawInfo = calculateDrawInfo(drawingInfo)
                     sketchWindowListener?.onSketchEvent(drawInfo)
                 }
             }
+            it.paintColor = paintColor.toColorInt()
+            it.localPathSize = paintWidth
         }
         ctrlPanelLayoutParams = getWindowLayoutParams().apply {
             x = ScreenUtils.getScreenWidth(context)
@@ -268,11 +265,7 @@ class ScreenShareSketchManager(
     private fun getWindowLayoutParams(): WindowManager.LayoutParams {
         val layoutParams = WindowManager.LayoutParams()
         //设置类型
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
-        }
+        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         // 设置行为选项
         layoutParams.flags = (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
@@ -311,25 +304,22 @@ class ScreenShareSketchManager(
     }
 
     private fun calculateDrawInfo(it: DrawingInfo): DrawingInfo {
-        return if (role == ROLE_SHARE_SIDE || (remoteWindowWidth == 0f && remoteWindowHeight == 0f) || (it.color == SketchView.COLOR_PAINT_SHARE)) {
+        return if (screenShareUseCase.isInSharing() || (remoteWindowWidth == 0f && remoteWindowHeight == 0f) || (it.color == SketchView.COLOR_PAINT_DEFAULT)) {
             it
         } else {
             val widthRate = remoteWindowWidth / localWidth
             val heightRate = remoteWindowHeight / localHeight
             LogUtils.debug(TAG, "calculateDrawInfo widthRate: $widthRate, heightRate: $heightRate")
-            DrawingInfo().apply {
-                width = it.width
-                color = it.color
-                erase = it.erase
-                val originPoints = it.points
-                points = PointsInfo()
-                    .apply {
-                        pointS = originPoints.pointS.map { bean ->
-                            val pointPair = getRotationCoordination(rectF.centerX(), rectF.centerY(), bean.x, bean.y)
-                            PointBean((pointPair.first - localTranslationX) * widthRate, (pointPair.second - localTranslationY) * heightRate)
-                        }
-                    }
-            }
+            val originPoints = it.pointList
+            val pointList = originPoints.map { bean ->
+                val pointPair = getRotationCoordination(rectF.centerX(), rectF.centerY(), bean.x, bean.y)
+                PointBean((pointPair.first - localTranslationX) * widthRate, (pointPair.second - localTranslationY) * heightRate)
+            }.toMutableList()
+            DrawingInfo(
+                it.width,
+                it.color,
+                pointList
+            )
         }
     }
 
