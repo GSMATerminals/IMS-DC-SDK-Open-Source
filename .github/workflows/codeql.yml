@@ -41,7 +41,7 @@ jobs:
         languages: java
         build-mode: manual
         # 使用基础查询，减少下载
-        queries: security-extended
+        queries: security-and-quality
     
     # 🔥 关键：使用离线构建 + 重试机制
     - name: Build with Retry
