@@ -1,69 +1,69 @@
-name: CodeQL with US Runner
+name: CodeQL Analysis (Manual Build, Security & Quality)
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  # 您也可以添加定时任务，例如每周三中午运行
+  # schedule:
+  #   - cron: '37 12 * * 3'
 
 jobs:
   analyze:
+    name: Analyze (Java/Kotlin)
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
     
+    # 针对 Gradle 和网络优化的环境变量
     env:
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.internal.http.connectionTimeout=60000 -Dorg.gradle.internal.http.socketTimeout=60000"
-      MAVEN_OPTS: "-Dmaven.wagon.http.retryHandler.count=3"
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Java
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Java and Cache Gradle
       uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'zulu'
-    
-    - name: Network Pre-check
-      run: |
-        echo "test connect..."
-        
-        timeout 10 curl -s https://plugins.gradle.org/m2/ >/dev/null && echo "✓ Gradle Plugin Portal OK" || echo "✗ Gradle Plugin Portal Failed"
-        timeout 10 curl -s https://dl.google.com/dl/android/maven2/ >/dev/null && echo "✓ Google Maven OK" || echo "✗ Google Maven Failed"
-        timeout 10 curl -s https://repo.maven.apache.org/maven2/ >/dev/null && echo "✓ Maven Central OK" || echo "✗ Maven Central Failed"
-        
-        echo "实际IP地址：$(curl -s ifconfig.me)"
-        echo "IP地理位置：$(curl -s ipinfo.io/city), $(curl -s ipinfo.io/country)"
+        cache: 'gradle' # 缓存 Gradle 依赖，提高后续运行速度
     
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: java
-        build-mode: manual
+        languages: java # 覆盖 Java 和 Kotlin
+        build-mode: manual # <-- 关键：指定手动构建模式
+        # 启用安全扩展和所有代码质量查询
         queries: security-and-quality
-    
-    - name: Build with Retry
+
+    - name: Build Code with Retry (Manual Step)
       run: |
         MAX_RETRY=3
-        RETRY_DELAY=10
+        RETRY_DELAY=15 # 失败后等待 15 秒重试
         
         for i in $(seq 1 $MAX_RETRY); do
-          echo "构建尝试 $i/$MAX_RETRY"
+          echo "Building attempt $i/$MAX_RETRY..."
           
-          if [ $i -eq 1 ]; then
-            COMMAND="./gradlew compileJava --no-daemon --build-cache"
-          elif [ $i -eq 2 ]; then
-            COMMAND="./gradlew compileJava --no-daemon --offline || true"
-          else
-            COMMAND="find . -name '*.java' | head -20 | xargs javac -cp . -d /tmp/classes 2>/dev/null || true"
-          fi
-          
-          if eval $COMMAND; then
-            echo "构建成功"
+          # 运行 Gradle 编译命令，这是 CodeQL 捕获代码的关键步骤
+          if ./gradlew compileJava --no-daemon --build-cache; then
+            echo "Build successful on attempt $i."
             exit 0
+          else
+            echo "Build failed on attempt $i, retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
           fi
-          
-          echo "构建失败，${RETRY_DELAY}秒后重试..."
-          sleep $RETRY_DELAY
         done
         
-        echo "所有尝试失败，继续执行CodeQL分析..."
-    
+        echo "ERROR: All build attempts failed. CodeQL analysis will likely be incomplete."
+        # 这里让脚本自然结束（非零退出码），以便 CodeQL analyze 步骤可以继续，
+        # 但如果构建严重失败，最终的 Analyze 结果可能会是空的或失败。
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      continue-on-error: true
+      # continue-on-error: true # 建议移除此项，如果分析失败，应该提醒您注意。
