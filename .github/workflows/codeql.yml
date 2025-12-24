@@ -35,7 +35,7 @@ jobs:
       with:
         languages: java
         build-mode: manual
-        queries: security-extended
+        queries: security-and-quality
     
     - name: Build with Retry
       run: |
