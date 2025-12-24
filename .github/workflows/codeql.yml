@@ -51,7 +51,7 @@ jobs:
           echo "Building attempt $i/$MAX_RETRY..."
           
           # 👇 关键修改：使用具体的 Gradle 任务 assembleDebug
-          COMMAND="./gradlew assembleDebug --no-daemon --build-cache"
+          COMMAND="./gradlew compileNormalDebugJavaWithJavac --no-daemon --build-cache"
           
           if eval "$COMMAND"; then
             echo "Build successful on attempt $i."
