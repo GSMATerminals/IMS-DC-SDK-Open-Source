@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  # 您也可以添加定时任务，例如每周三中午运行
+  # schedule:
+  #   - cron: '37 12 * * 3'
 
 jobs:
   analyze:
@@ -36,7 +39,8 @@ jobs:
       with:
         languages: java # 覆盖 Java 和 Kotlin
         build-mode: manual # <-- 关键：指定手动构建模式
-        queries: security-and-quality # <-- 启用安全和质量查询
+        # 启用安全扩展和所有代码质量查询
+        queries: security-and-quality
 
     - name: Build Code with Retry (Manual Step)
       run: |
@@ -46,17 +50,21 @@ jobs:
         for i in $(seq 1 $MAX_RETRY); do
           echo "Building attempt $i/$MAX_RETRY..."
           
-          # 运行 Gradle 编译命令，这是 CodeQL 捕获代码的关键步骤
-          if ./gradlew compileJava --no-daemon --build-cache; then
+          # 👇 关键修改：使用具体的 Gradle 任务 assembleDebug
+          COMMAND="./gradlew assembleDebug --no-daemon --build-cache"
+          
+          if eval "$COMMAND"; then
             echo "Build successful on attempt $i."
             exit 0
-          else
-            echo "Build failed on attempt $i, retrying in ${RETRY_DELAY}s..."
-            sleep $RETRY_DELAY
           fi
+          
+          echo "Build failed on attempt $i, retrying in ${RETRY_DELAY}s..."
+          sleep $RETRY_DELAY
         done
         
         echo "ERROR: All build attempts failed. CodeQL analysis will likely be incomplete."
+        # 如果构建最终失败，工作流将在此步骤标记失败状态。
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      # continue-on-error 默认是 false，这是最好的做法。
