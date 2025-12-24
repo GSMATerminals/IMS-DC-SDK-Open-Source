@@ -5,9 +5,6 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  # 您也可以添加定时任务，例如每周三中午运行
-  # schedule:
-  #   - cron: '37 12 * * 3'
 
 jobs:
   analyze:
@@ -39,8 +36,7 @@ jobs:
       with:
         languages: java # 覆盖 Java 和 Kotlin
         build-mode: manual # <-- 关键：指定手动构建模式
-        # 启用安全扩展和所有代码质量查询
-        queries: security-and-quality
+        queries: security-and-quality # <-- 启用安全和质量查询
 
     - name: Build Code with Retry (Manual Step)
       run: |
@@ -61,9 +57,6 @@ jobs:
         done
         
         echo "ERROR: All build attempts failed. CodeQL analysis will likely be incomplete."
-        # 这里让脚本自然结束（非零退出码），以便 CodeQL analyze 步骤可以继续，
-        # 但如果构建严重失败，最终的 Analyze 结果可能会是空的或失败。
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      # continue-on-error: true # 建议移除此项，如果分析失败，应该提醒您注意。
