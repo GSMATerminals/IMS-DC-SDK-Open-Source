@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.utils.common
 
+import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -136,10 +137,6 @@ object PkgUtils {
 
     }
 
-    fun isDebug():Boolean{
-        return BuildConfig.DEBUG
-    }
-
     fun checkAndCreatePinnedShortcuts(context:Context) {
 //        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
 //            return
@@ -179,5 +176,15 @@ object PkgUtils {
         }catch (e: Exception){
             ""
         }
+    }
+
+    fun getProcessName(context: Context): String {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (processInfo in manager.runningAppProcesses) {
+            if (processInfo.pid == android.os.Process.myPid()) {
+                return processInfo.processName
+            }
+        }
+        return ""
     }
 }

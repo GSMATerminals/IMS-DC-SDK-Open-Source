@@ -20,7 +20,6 @@ package com.ct.ertclib.dc.core.usecase.main
 import android.content.Context
 import com.ct.ertclib.dc.core.constants.OEMECConstants
 import com.ct.ertclib.dc.core.constants.OEMECConstants.MODULE_SCREEN_SHARE
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.common.LicenseManager
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_RESPONSE_CODE_SUCCESS
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_RESPONSE_MESSAGE_SUCCESS
@@ -58,7 +57,6 @@ class ScreenShareUseCase(
         private const val STATUS_OPEN = "open"
     }
 
-    private val logger = Logger.getLogger(TAG)
     private val applicationContext: Context by inject()
     private var callId = ""
     private var appId = ""
@@ -83,12 +81,12 @@ class ScreenShareUseCase(
             APP_RESPONSE_MESSAGE_SUCCESS,
             mapOf(START_SHARE_PARAMS to responseCode )
         ).toJson()
-        logger.info("startScreenShare, appId: $appId, responseCode: $responseCode")
+        LogUtils.info(TAG, "startScreenShare, appId: $appId, responseCode: $responseCode")
         iMessageCallback?.reply(message)
     }
 
     override fun stopScreenShare(needNotifyToMini: Boolean) {
-        logger.info("stopScreenShare, needNotifyToMini: $needNotifyToMini")
+        LogUtils.info(TAG, "stopScreenShare, needNotifyToMini: $needNotifyToMini")
         screenShareManager.stopShareScreen()
         if (needNotifyToMini) {
             val stopScreenNotifyEvent = NotifyEvent(
@@ -102,7 +100,7 @@ class ScreenShareUseCase(
     }
 
     override fun requestScreenShareAbility(iMessageCallback: IMessageCallback?) {
-        logger.info("requestScreenShareAbility")
+        LogUtils.info(TAG, "requestScreenShareAbility")
         val result = screenShareManager.requestScreenShareAbility()
         val responseCode = if (result) { REQUEST_ABILITY_SUCCESS } else { REQUEST_ABILITY_FAILED }
         val message = AppResponse(

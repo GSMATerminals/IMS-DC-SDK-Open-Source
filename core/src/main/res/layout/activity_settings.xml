@@ -55,7 +55,8 @@
                 <TextView
                     android:layout_marginStart="10dp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="24dp"
+                    android:gravity="bottom"
                     android:includeFontPadding="false"
                     android:textSize="14sp"
                     android:text="@string/open_switch_title" />
@@ -63,7 +64,8 @@
                     android:id="@+id/close_tips"
                     android:layout_marginStart="10dp"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
+                    android:layout_height="24dp"
+                    android:gravity="center_vertical"
                     android:includeFontPadding="false"
                     android:singleLine="false"
                     android:textSize="10sp"/>

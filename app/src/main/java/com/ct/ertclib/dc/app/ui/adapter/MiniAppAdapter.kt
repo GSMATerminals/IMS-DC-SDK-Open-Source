@@ -129,7 +129,6 @@ class MiniAppAdapter(
         } else {
             bindContent(holder, position - stableItemList.size)
         }
-
     }
 
     fun refreshTextColor(color: Int) {

@@ -22,7 +22,9 @@ import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_VERSION_CODE
+import com.ct.ertclib.dc.core.databinding.LayoutSettingBinding
 import com.ct.ertclib.dc.core.ui.fragment.SettingPreferenceFragment
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 
 class SettingActivity: BaseToolBarActivity() {
 
@@ -30,14 +32,15 @@ class SettingActivity: BaseToolBarActivity() {
         private const val TAG = "SettingActivity"
     }
 
-    private val logger = Logger.getLogger(TAG)
     var appId = ""
     var callId = ""
     var version = ""
+    private lateinit var binding: LayoutSettingBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.layout_setting)
+        binding = LayoutSettingBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportFragmentManager.beginTransaction().replace(R.id.settings_layout, SettingPreferenceFragment()).commit()
         intent.getStringExtra(PARAMS_APP_ID)?.let {
             appId = it
@@ -48,10 +51,10 @@ class SettingActivity: BaseToolBarActivity() {
         intent.getStringExtra(PARAMS_VERSION_CODE)?.let {
             version = it
         }
-        logger.info("onCreate, appId: $appId, callId: $callId, version: $version")
+        LogUtils.info(TAG, "onCreate, appId: $appId, callId: $callId, version: $version")
     }
 
     override fun getTooBarTitle(): String {
-        return getString(R.string.setting_preference_title)
+        return resources.getString(R.string.setting_preference_title)
     }
 }

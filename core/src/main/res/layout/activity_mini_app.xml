@@ -20,6 +20,7 @@
             layout="@layout/layout_progress_bar"
             android:layout_width="@dimen/progress_bar_layout_width_height"
             android:layout_height="@dimen/progress_bar_layout_width_height"
+            android:visibility="gone"
             app:layout_constrainedHeight="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -132,7 +133,7 @@
                     android:layout_height="32dp"
                     android:padding="6dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/icon_mini_setting" />
+                    android:src="@drawable/icon_setting_black" />
 
                 <View
                     android:layout_width="1dp"

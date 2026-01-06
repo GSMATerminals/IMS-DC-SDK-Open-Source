@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 /**
  * Android appender
  *
- * @author jexa7410
  */
 public class AndroidAppender extends Appender {
 

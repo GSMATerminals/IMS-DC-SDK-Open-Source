@@ -22,7 +22,6 @@ import android.os.Bundle
 import android.text.TextUtils
 import com.ct.ertclib.dc.core.databinding.ActivityWebBinding
 import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
-import com.ct.ertclib.dc.core.ui.activity.BaseToolBarActivity
 
 class WebActivity: BaseAppCompatActivity() {
     companion object{

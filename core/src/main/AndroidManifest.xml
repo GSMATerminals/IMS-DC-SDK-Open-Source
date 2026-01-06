@@ -206,6 +206,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.activity.PermissionUsageActivity"
+            android:theme="@style/SettingPreference"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.activity.SDKPermissionActivity"
             android:launchMode="singleTask"
             android:theme="@style/Theme.TranslucentTheme"

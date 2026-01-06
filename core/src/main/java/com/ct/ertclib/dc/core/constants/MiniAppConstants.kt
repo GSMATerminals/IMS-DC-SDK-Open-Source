@@ -119,6 +119,7 @@ object MiniAppConstants {
     const val FUNCTION_START_ADVERSE_APP_RESPONSE_NOTIFY = "startAdverseAppResponseNotify"
     const val FUNCTION_AUDIO_DEVICE_NOTIFY = "audioDeviceChangeNotify"
     const val FUNCTION_VIDEO_WINDOW_NOTIFY = "videoWindowNotify"
+    const val FUNCTION_IME_HEIGHT_NOTIFY = "imeHeightNotify"
 
     //response status
     const val RESPONSE_SUCCESS_CODE = "0"

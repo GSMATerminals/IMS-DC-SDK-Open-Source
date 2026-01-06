@@ -19,7 +19,6 @@ package com.ct.ertclib.dc.core.utils.logger;
 /**
  * Appender
  *
- * @author jexa7410
  */
 public abstract class Appender {
 

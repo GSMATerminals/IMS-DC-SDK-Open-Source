@@ -55,7 +55,6 @@ class SketchManager(
         private const val TAG = "ScreenShareSketchManager"
     }
 
-    private val logger = Logger.getLogger(TAG)
     private var sketchWindowListener: ISketchWindowListener? = null
     private var windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
     private var sketchLayout: View? = null
@@ -86,14 +85,14 @@ class SketchManager(
     }
 
     override fun showSketchControlWindow(paintColor: String, paintWidth: Float) {
-        logger.info("showSketchControlWindow")
+        LogUtils.info(TAG, "showSketchControlWindow")
         scope.launch(Dispatchers.Main) {
             addSketchView(paintColor, paintWidth)
         }
     }
 
     override fun exitSketchControlWindow() {
-        logger.info("exitSketchControlWindow")
+        LogUtils.info(TAG, "exitSketchControlWindow")
         scope.launch(Dispatchers.Main) {
             sketchView?.clearCanvas(true)
             removeSketchLayout()
@@ -120,13 +119,13 @@ class SketchManager(
     }
 
     override fun setRemoteWindowSize(width: Float, height: Float) {
-        logger.info("setRemoteWindowSize, width: $width, height: $height")
+        LogUtils.info(TAG, "setRemoteWindowSize, width: $width, height: $height")
         remoteWindowWidth = width
         remoteWindowHeight = height
     }
 
     override fun addSketchInfo(sketchInfo: DrawingInfo) {
-        logger.info("addSketchInfo")
+        LogUtils.info(TAG, "addSketchInfo")
         scope.launch(Dispatchers.Main) {
             windowManager?.let {
                 if (sketchLayout?.isVisible != true) {
@@ -142,7 +141,7 @@ class SketchManager(
     }
 
     override fun release() {
-        logger.info("release")
+        LogUtils.info(TAG, "release")
         exitSketchControlWindow()
         sketchWindowListener = null
     }
@@ -162,7 +161,7 @@ class SketchManager(
         sketchView?.let {
             it.sketchCallback = object : SketchView.SketchCallback {
                 override fun onSketchEvent(drawingInfo: DrawingInfo) {
-                    logger.info("onSketchEvent")
+                    LogUtils.info(TAG, "onSketchEvent")
                     val drawInfo = calculateDrawInfo(drawingInfo)
                     sketchWindowListener?.onSketchEvent(drawInfo)
                 }

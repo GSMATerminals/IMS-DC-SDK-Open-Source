@@ -40,6 +40,17 @@
     <string name="wifi">Wi-Fi</string>
     <string name="bluetooth">Nearby devices</string>
 
+    <string name="camera_usage">Camera permission</string>
+    <string name="vibrate_usage">Motor permission</string>
+    <string name="read_contact_usage">Contact information</string>
+    <string name="record_audio_usage">MicroPhone permission</string>
+    <string name="external_storage_usage">外置存储信息</string>
+    <string name="location_usage">External storage information</string>
+    <string name="call_state_usage">Call status information</string>
+    <string name="contacts_usage">Contact information</string>
+    <string name="wifi_usage">Wi-Fi information</string>
+    <string name="blue_tooth_usage">BlueTooth permission</string>
+
     <string name="camera_description">For taking photos or videos</string>
     <string name="vibrate_description">For reminding</string>
     <string name="read_contact_description">For reading and saving contacts</string>
@@ -52,6 +63,7 @@
     <string name="bluetooth_description">For bluetooth connection(including scanning for devices, being discovered by devices, and connecting to devices)</string>
 
     <string name="permission_preference_title">Permission settings</string>
+    <string name="permission_usage_title">Personal Information and Permission Usage Records</string>
     <string name="version_preference_title">Version</string>
     <string name="setting_preference_title">Settings</string>
     <string name="setting_permission_tips">This applet does not use system permissions and cannot be set.</string>
@@ -64,7 +76,8 @@
 
     <string name="setting">setting</string>
     <string name="back_text">back</string>
-    <string name="style_text">style</string>
+    <string name="style_text">Style</string>
+    <string name="style_text_title">Style Setting</string>
 
     <string name="style_black">Classic style</string>
     <string name="style_white">White style</string>
@@ -102,4 +115,7 @@
     <string name="download_file_description">Downloading model</string>
     <string name="screen_share_tips">Screen sharing has been enabled. You can turn the drawing board on or off via the control buttons on the right side.</string>
     <string name="fellow_dialer">Floating Ball Follow System Call APP.</string>
+
+    <string name="permission_usage_tips_recently">Only display usage records from the past 7 days</string>
+    <string name="permission_usage_tips_none">No personal information or permission usage records available</string>
 </resources>

@@ -128,7 +128,7 @@ class PermissionListAdapter(
             )
             val location = IntArray(2)
             parentView.getLocationOnScreen(location)
-            showAsDropDown(parentView, calculateXOff(xOff), calculateYOff(location[1] + parentView.height, parentView.height - yOff))
+            showAsDropDown(parentView, calculateXOff(parentView.width, xOff), calculateYOff(location[1] + parentView.height, parentView.height - yOff))
         }
 
         allowedText.setOnClickListener {
@@ -141,8 +141,17 @@ class PermissionListAdapter(
         }
     }
 
-    private fun calculateXOff(xOff: Int): Int {
-        return xOff - context.resources.getDimensionPixelSize(R.dimen.pop_up_window_width) / 2
+    private fun calculateXOff(parentViewWidth: Int, xOff: Int): Int {
+        val popupWindowWidth = context.resources.getDimensionPixelSize(R.dimen.pop_up_window_width)
+        val originX = xOff - context.resources.getDimensionPixelSize(R.dimen.pop_up_window_width) / 2
+        val xEndEdge = parentViewWidth - popupWindowWidth
+        return if (originX < 0) {
+            0
+        } else if (originX > xEndEdge) {
+            xEndEdge
+        } else {
+            originX
+        }
     }
 
     private fun calculateYOff(viewBottomY: Int, topOff: Int): Int {

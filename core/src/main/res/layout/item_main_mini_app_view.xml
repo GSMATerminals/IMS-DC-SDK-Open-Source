@@ -30,15 +30,6 @@
                 android:background="@drawable/icon_disabled_grey"
                 android:scaleType="fitCenter"/>
         </FrameLayout>
-
-        <com.ct.ertclib.dc.core.ui.widget.CircleProgressBar
-            android:layout_gravity="center"
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="2dp"
-            android:visibility="gone"
-            app:radius="15dp" />
     </FrameLayout>
 
     <TextView

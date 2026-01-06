@@ -16,15 +16,21 @@
 
 package com.ct.ertclib.dc.core.port.usecase.mini
 
+import com.ct.ertclib.dc.core.data.miniapp.PermissionUsageData
+
 interface IPermissionUseCase {
 
     suspend fun getPermission(appId: String): MutableMap<String, Boolean>
 
     suspend fun savePermission(appId: String,  map: MutableMap<String, Boolean>, isMainProcess: Boolean, callId: String = "")
 
-    fun isPermissionGranted(appId: String, permissions: List<String>): Boolean
+    fun checkPermissionAndRecord(appId: String, permissions: List<String>, needRecord: Boolean = true): Boolean
 
     fun isSystemPermissionGranted(permission: String): Boolean
 
     suspend fun refreshPermissionMapFromRepo(appId: String)
+
+    fun getPermissionUsage(appId: String, timeStamp: Long): MutableList<PermissionUsageData>
+
+    fun insertPermissionUsages(appId: String, miniPermissionNames: List<String>)
 }

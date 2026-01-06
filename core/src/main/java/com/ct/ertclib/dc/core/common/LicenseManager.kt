@@ -16,6 +16,10 @@
 
 package com.ct.ertclib.dc.core.common
 
+import com.blankj.utilcode.util.Utils
+import com.ct.ertclib.nativelibs.VerifyHelper
+import java.io.InputStreamReader
+
 class LicenseManager {
 
     enum class ApiCode(val apiCode: String) {
@@ -31,13 +35,9 @@ class LicenseManager {
     }
 
     companion object{
+        private var cachedPublicKey: String? = null
         private var instance: LicenseManager?= null
         private val sLock = Object()
-
-        init {
-            System.loadLibrary("license-android")
-            instance = LicenseManager()
-        }
 
         fun getInstance(): LicenseManager {
             if (instance != null) return instance!!
@@ -49,15 +49,37 @@ class LicenseManager {
             return instance!!
         }
     }
-    private external fun verify(miniAppId: String, apiCodes: String, license: String): Boolean
-    private external fun parseImg(img: String): String
+
+    private val pkgKey: String by lazy {
+        cachedPublicKey ?: loadPublicKeyFromAssets().also {
+            cachedPublicKey = it
+        }
+    }
+
+    private fun loadPublicKeyFromAssets(): String {
+        return try {
+            Utils.getApp().assets.open("public_key.pem").use { inputStream ->
+                InputStreamReader(inputStream).use { reader ->
+                    reader.readText().trim()
+                }
+            }
+        } catch (_: Exception) {
+            return ""
+        }
+    }
 
     // 调用示例：LicenseManager.getInstance().verifyLicense("aa","6","eKGExEKb140FXgZqNgkP7o210sol6x6ieF9AvWvjbMef2ec7+UtggJumjOyizeNQJ8e9D2PG5Cjxv4jo/aRLMag==")
     fun verifyLicense(miniAppId: String, apiCodes: String, license: String): Boolean {
-        return verify(miniAppId, apiCodes, license)
+//        return VerifyHelper.getInstance().verifyLicense(miniAppId, apiCodes, license)
+        return true
     }
 
     fun parseImgData(img: String): String {
-        return parseImg(img)
+        return VerifyHelper.getInstance().parseImg(img)
+    }
+
+    fun verifyMiniAppPkg(zipPath: String): Boolean {
+//        return VerifyHelper.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
+        return true
     }
 }

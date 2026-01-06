@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.port.miniapp
 
 import com.ct.ertclib.dc.core.data.model.PermissionModel
+import com.ct.ertclib.dc.core.data.model.PermissionUsageEntity
 import kotlinx.coroutines.flow.Flow
 
 interface IPermissionDbRepo {
@@ -26,4 +27,10 @@ interface IPermissionDbRepo {
     fun getAll(): Flow<List<PermissionModel>>
 
     fun getPermissionModelById(appId: String): PermissionModel?
+
+    fun insertPermissionUsage(permissionUsage: PermissionUsageEntity)
+
+    fun getPermissionUsageById(appId: String): MutableList<PermissionUsageEntity>
+
+    fun getPermissionUsageByIdWithInTime(appId: String, timeStamp: Long): MutableList<PermissionUsageEntity>
 }

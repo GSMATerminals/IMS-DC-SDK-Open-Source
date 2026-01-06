@@ -20,6 +20,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.ct.ertclib.dc.core.data.model.FileEntity
 
 @Dao
@@ -33,4 +35,7 @@ interface FileDao {
 
     @Query("SELECT COUNT(*) FROM files")
     fun queryFileCount(): Long
+
+    @RawQuery
+    fun queryFilesByKeywords(query: SupportSQLiteQuery): List<FileEntity>
 }

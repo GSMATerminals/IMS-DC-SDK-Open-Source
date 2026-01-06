@@ -22,14 +22,14 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
-import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_VERSION_CODE
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
+import com.ct.ertclib.dc.core.databinding.PermissionSettingLayoutBinding
 import com.ct.ertclib.dc.core.miniapp.ui.adapter.PermissionListAdapter
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PermissionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,19 +43,18 @@ class PermissionSettingActivity: BaseToolBarActivity(), KoinComponent {
         private const val TAG = "PermissionSettingActivity"
     }
 
-    private val logger = Logger.getLogger(TAG)
     private val permissionMap = mutableMapOf<String, Boolean>()
     private val permissionUseCase: IPermissionUseCase by inject()
-    private var recyclerView: RecyclerView? = null
-    private var titleTips: TextView? = null
     private var adapter: PermissionListAdapter? = null
+    private lateinit var binding: PermissionSettingLayoutBinding
     private val permissionDataList: MutableList<PermissionData> = mutableListOf()
     private var appId = ""
     private var callId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.permission_setting_layout)
+        binding = PermissionSettingLayoutBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         initView()
         intent.getStringExtra(PARAMS_APP_ID)?.let {
             appId = it
@@ -68,11 +67,11 @@ class PermissionSettingActivity: BaseToolBarActivity(), KoinComponent {
             permissionMap.putAll(permissionUseCase.getPermission(appId))
             withContext(Dispatchers.Main) {
                 val permissionDataList = PermissionUtils.convertMapToPermissionData(permissionMap)
-                logger.info("onCreate, permissionDataList: $permissionDataList")
+                LogUtils.info(TAG, "onCreate, permissionDataList: $permissionDataList")
                 if (permissionDataList.isEmpty()) {
-                    titleTips?.isVisible = true
+                    binding.permissionSettingTips.isVisible = true
                 } else {
-                    titleTips?.isVisible = false
+                    binding.permissionSettingTips.isVisible = false
                     adapter?.submitList(permissionDataList)
                 }
             }
@@ -84,17 +83,15 @@ class PermissionSettingActivity: BaseToolBarActivity(), KoinComponent {
     }
 
     private fun initView() {
-        recyclerView = findViewById(R.id.permission_setting_recycler_view)
-        titleTips = findViewById(R.id.permission_setting_tips)
         adapter = PermissionListAdapter(this, permissionDataList, ::onPermissionSelectedClick)
-        recyclerView?.let {
+        binding.permissionSettingRecyclerView.let {
             it.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             it.adapter = adapter
         }
     }
 
     private fun onPermissionSelectedClick(position: Int, isAllowed: Boolean) {
-        logger.info("onPermissionSelectedClick, position: $position, isAllowed: $isAllowed")
+        LogUtils.info(TAG, "onPermissionSelectedClick, position: $position, isAllowed: $isAllowed")
         permissionDataList[position].willBeGranted = isAllowed
         adapter?.submitItem(permissionDataList[position], position)
         lifecycleScope.launch(Dispatchers.IO) {

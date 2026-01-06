@@ -19,7 +19,6 @@ package com.ct.oemec.utils.logger;
 /**
  * Appender
  *
- * @author jexa7410
  */
 public abstract class Appender {
 

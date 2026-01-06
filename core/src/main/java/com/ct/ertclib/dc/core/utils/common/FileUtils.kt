@@ -262,7 +262,6 @@ object FileUtils {
      * @param selection     (Optional) Filter used in the query.
      * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
-     * @author paulburke
      */
     fun getDataColumn(
         context: Context, uri: Uri?, selection: String?,

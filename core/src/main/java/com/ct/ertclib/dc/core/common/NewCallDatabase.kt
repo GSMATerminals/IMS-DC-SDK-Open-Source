@@ -37,13 +37,14 @@ import com.ct.ertclib.dc.core.data.model.MessageEntity
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.data.model.ModelEntity
 import com.ct.ertclib.dc.core.data.model.PermissionModel
+import com.ct.ertclib.dc.core.data.model.PermissionUsageEntity
 import com.ct.ertclib.dc.core.port.dao.FileDao
 import com.ct.ertclib.dc.core.port.dao.ModelDao
 import com.ct.ertclib.dc.core.port.dao.PermissionDao
 
 @Database(
-    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class, FileEntity::class, ModelEntity::class],
-    version = 12,
+    entities = [MiniAppInfo::class, MessageEntity::class, ContactEntity::class, ConversationEntity::class, DataChannelPropertyEntity::class, PermissionModel::class, FileEntity::class, ModelEntity::class, PermissionUsageEntity::class],
+    version = 13,
     exportSchema = false
 )
 abstract class NewCallDatabase : RoomDatabase() {
@@ -233,6 +234,18 @@ abstract class NewCallDatabase : RoomDatabase() {
                                     "modelVersion TEXT NOT NULL," +
                                     "modelType TEXT NOT NULL," +
                                     "icon TEXT NOT NULL)"
+                        )
+                    }
+                })
+                .addMigrations(object : Migration(12, 13) {
+                    override fun migrate(database: SupportSQLiteDatabase) {
+                        LogUtils.i("NewCallDatabase update 12-13")
+                        database.execSQL(
+                            "CREATE TABLE IF NOT EXISTS permission_usage_table (" +
+                                    "appId TEXT  NOT NULL," +
+                                    "permissionName TEXT NOT NULL," +
+                                    "permissionUsageTimeStamp INTEGER NOT NULL," +
+                                    "PRIMARY KEY(appId, permissionUsageTimeStamp))"
                         )
                     }
                 })

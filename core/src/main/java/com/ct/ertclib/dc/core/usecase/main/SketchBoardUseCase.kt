@@ -71,7 +71,6 @@ class SketchBoardUseCase(
     private var callId = ""
     private var appId = ""
     private val logger = Logger.getLogger(TAG)
-    private val applicationContext: Context by inject()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     //传递给终端，方便终端计算视频流信息的坐标点
     private var remoteScreenWidth: Int = 0
@@ -156,7 +155,7 @@ class SketchBoardUseCase(
     private fun requestVideoInfo() {
         LogUtils.debug(TAG, "requestVideoInfo")
         ExpandingCapacityManager.instance.request(
-            applicationContext,
+            context,
             TAG,
             TAG,
             "{\"provider\":\"${ExpandingCapacityManager.OEM}\",\"module\":\"${MODULE_NEW_CALL_SDK}\",\"func\":\"${OEMECConstants.FUNCTION_GET_VIDEO_SHOW_INFO}\",\"data\":{\"shareDeviceWidth\":$remoteScreenWidth,\"shareDeviceHeight\":$remoteScreenHeight}}"
@@ -239,7 +238,7 @@ class SketchBoardUseCase(
 
     private fun unRegisterETEC() {
         LogUtils.debug(TAG, "unRegisterETEC")
-        ExpandingCapacityManager.instance.unregisterECListener(applicationContext,
+        ExpandingCapacityManager.instance.unregisterECListener(context,
             TAG,
             TAG
         )

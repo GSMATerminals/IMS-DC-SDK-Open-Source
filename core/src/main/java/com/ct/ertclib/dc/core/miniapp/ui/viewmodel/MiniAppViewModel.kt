@@ -135,6 +135,7 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun showPermissionGuidedDialog(context: Context, miniAppInfo: MiniAppInfo, permissionList: MutableList<String>, onPermissionDenied: () -> Unit) {
         val builder = AlertDialog.Builder(context)
         val layout = LayoutInflater.from(context).inflate(R.layout.permission_denied_tips_layout, null)

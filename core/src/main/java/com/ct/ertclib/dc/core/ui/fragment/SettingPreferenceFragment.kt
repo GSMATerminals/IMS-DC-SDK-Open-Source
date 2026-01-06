@@ -22,14 +22,15 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
 import com.ct.ertclib.dc.core.ui.activity.PermissionSettingActivity
+import com.ct.ertclib.dc.core.ui.activity.PermissionUsageActivity
 import com.ct.ertclib.dc.core.ui.activity.SettingActivity
 import com.ct.ertclib.dc.core.ui.widget.SettingPreference
 import com.ct.ertclib.dc.core.ui.widget.VersionPreference
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 
 class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
 
@@ -37,17 +38,22 @@ class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPrefe
         private const val TAG = "SettingPreferenceFragment"
         private const val KEY_PERMISSION = "permission_setting"
         private const val KEY_VERSION = "permission_version"
+        private const val KEY_PERMISSION_USAGE = "permission_usage"
     }
 
-    private val logger = Logger.getLogger(TAG)
     private var permissionPreference: SettingPreference? = null
     private var versionPreference: VersionPreference? = null
+    private var permissionUsagePreference: SettingPreference? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.setting_preference, rootKey)
         permissionPreference = findPreference(KEY_PERMISSION)
         versionPreference = findPreference(KEY_VERSION)
+        permissionUsagePreference = findPreference(KEY_PERMISSION_USAGE)
         permissionPreference?.let {
+            it.onPreferenceClickListener = this
+        }
+        permissionUsagePreference?.let {
             it.onPreferenceClickListener = this
         }
         activity?.let { activity ->
@@ -61,9 +67,24 @@ class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPrefe
     override fun onPreferenceClick(preference: Preference): Boolean {
         when (preference.key) {
             KEY_PERMISSION -> {
-                logger.info("onPreferenceClick KEY_PERMISSION")
+                LogUtils.info(TAG, "onPreferenceClick KEY_PERMISSION")
                 activity?.let {
                     val intent = Intent(it, PermissionSettingActivity::class.java).apply {
+                        (activity as? SettingActivity)?.appId?.let { appId ->
+                            putExtra(PARAMS_APP_ID, appId)
+                        }
+                        (activity as? SettingActivity)?.callId?.let { callId ->
+                            putExtra(PARAMS_CALL_ID, callId)
+                        }
+                    }
+                    it.startActivity(intent)
+                }
+                return true
+            }
+            KEY_PERMISSION_USAGE -> {
+                LogUtils.info(TAG, "onPreferenceClick KEY_PERMISSION_USAGE")
+                activity?.let {
+                    val intent = Intent(it, PermissionUsageActivity::class.java).apply {
                         (activity as? SettingActivity)?.appId?.let { appId ->
                             putExtra(PARAMS_APP_ID, appId)
                         }
