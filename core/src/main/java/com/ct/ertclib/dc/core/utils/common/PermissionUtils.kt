@@ -41,15 +41,15 @@ object PermissionUtils : KoinComponent {
     private val applicationContext: Context by inject()
 
     private val permissionDataList = listOf(
-        PermissionData(applicationContext.resources.getString(R.string.camera_title), applicationContext.resources.getString(R.string.camera_description)),
-        PermissionData(applicationContext.resources.getString(R.string.vibrate_title), applicationContext.resources.getString(R.string.vibrate_description)),
-        PermissionData(applicationContext.resources.getString(R.string.record_audio_title), applicationContext.resources.getString(R.string.record_audio_description)),
-        PermissionData(applicationContext.resources.getString(R.string.external_storage_title), applicationContext.resources.getString(R.string.external_storage_description)),
-        PermissionData(applicationContext.resources.getString(R.string.location_title), applicationContext.resources.getString(R.string.location_description)),
-        PermissionData(applicationContext.resources.getString(R.string.call_state_title), applicationContext.resources.getString(R.string.call_state_description)),
-        PermissionData(applicationContext.resources.getString(R.string.contacts), applicationContext.resources.getString(R.string.contact_description)),
-        PermissionData(applicationContext.resources.getString(R.string.wifi), applicationContext.resources.getString(R.string.wifi_description)),
-        PermissionData(applicationContext.resources.getString(R.string.bluetooth), applicationContext.resources.getString(R.string.bluetooth_description))
+        PermissionData(applicationContext.resources.getString(R.string.camera_title), applicationContext.resources.getString(R.string.camera_description), applicationContext.resources.getString(R.string.camera_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.vibrate_title), applicationContext.resources.getString(R.string.vibrate_description), applicationContext.resources.getString(R.string.vibrate_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.record_audio_title), applicationContext.resources.getString(R.string.record_audio_description), applicationContext.resources.getString(R.string.record_audio_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.external_storage_title), applicationContext.resources.getString(R.string.external_storage_description), applicationContext.resources.getString(R.string.external_storage_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.location_title), applicationContext.resources.getString(R.string.location_description), applicationContext.resources.getString(R.string.location_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.call_state_title), applicationContext.resources.getString(R.string.call_state_description), applicationContext.resources.getString(R.string.call_state_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.contacts), applicationContext.resources.getString(R.string.contact_description), applicationContext.resources.getString(R.string.contacts_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.wifi), applicationContext.resources.getString(R.string.wifi_description), applicationContext.resources.getString(R.string.wifi_usage)),
+        PermissionData(applicationContext.resources.getString(R.string.bluetooth), applicationContext.resources.getString(R.string.bluetooth_description), applicationContext.resources.getString(R.string.blue_tooth_usage))
     )
 
     private val permissionDataMap = mutableMapOf(
@@ -64,7 +64,7 @@ object PermissionUtils : KoinComponent {
         MiniAppPermissions.MINIAPP_BLUETOOTH to permissionDataList[BLUETOOTH_INDEX]
     )
 
-    @RequiresApi(Build.VERSION_CODES.S)
+
     private val systemPermissionDataMap = mutableMapOf(
         Manifest.permission.CAMERA to permissionDataList[CAMERA_INDEX],
         Manifest.permission.VIBRATE to permissionDataList[VIBRATE_INDEX],
@@ -140,7 +140,28 @@ object PermissionUtils : KoinComponent {
         }
     }
 
+    //将单个小程序权限转换成对应的系统权限
+    fun convertToSingleSystemPermissions(permission: String): String {
+        return when (permission) {
+            MiniAppPermissions.MINIAPP_CAMERA -> Manifest.permission.CAMERA
+            MiniAppPermissions.MINIAPP_VIBRATE -> Manifest.permission.VIBRATE
+            MiniAppPermissions.MINIAPP_RECORD_AUDIO -> Manifest.permission.RECORD_AUDIO
+            MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> Manifest.permission.MANAGE_EXTERNAL_STORAGE
+            MiniAppPermissions.MINIAPP_LOCATION -> Manifest.permission.ACCESS_FINE_LOCATION
+            MiniAppPermissions.MINIAPP_GET_CALL_STATE -> Manifest.permission.READ_PHONE_STATE
+            MiniAppPermissions.MINIAPP_READ_CONTACTS -> Manifest.permission.READ_CONTACTS
+            MiniAppPermissions.MINIAPP_ACCESS_WIFI -> Manifest.permission.ACCESS_WIFI_STATE
+            MiniAppPermissions.MINIAPP_BLUETOOTH -> Manifest.permission.BLUETOOTH_SCAN
+            else -> ""
+        }
+    }
+
+    fun getPermissionData(permissionName: String): PermissionData? {
+        return systemPermissionDataMap[permissionName]
+    }
+
     //根据系统权限获取对应的权限名称
+    @RequiresApi(Build.VERSION_CODES.S)
     fun convertToSystemPermissionData(permissions: List<String>): MutableList<PermissionData> {
         val permissionDataList = mutableListOf<PermissionData>()
         permissions.forEach {
@@ -185,7 +206,7 @@ object PermissionUtils : KoinComponent {
     @JvmStatic
     fun convertMapToPermissionData(permissionMap: MutableMap<String, Boolean>): MutableList<PermissionData> {
         val permissionDataList = mutableListOf<PermissionData>()
-        permissionMap.forEach { entry, value ->
+        permissionMap.forEach { (entry, value) ->
             permissionDataMap[entry]?.let { permissionDataList.add(it).apply { it.willBeGranted = value } }
         }
         return permissionDataList

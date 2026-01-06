@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.core.miniapp.db
 
 import com.ct.ertclib.dc.core.common.NewCallDatabase
 import com.ct.ertclib.dc.core.data.model.PermissionModel
+import com.ct.ertclib.dc.core.data.model.PermissionUsageEntity
 import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
 import kotlinx.coroutines.flow.Flow
 
@@ -35,5 +36,20 @@ class PermissionDbRepo: IPermissionDbRepo {
 
     override fun getPermissionModelById(appId: String): PermissionModel? {
         return permissionInfoDao.getOne(appId)
+    }
+
+    override fun insertPermissionUsage(permissionUsage: PermissionUsageEntity) {
+        permissionInfoDao.insertPermissionUsage(permissionUsage)
+    }
+
+    override fun getPermissionUsageById(appId: String): MutableList<PermissionUsageEntity> {
+        return permissionInfoDao.getPermissionUsageByAppId(appId)
+    }
+
+    override fun getPermissionUsageByIdWithInTime(
+        appId: String,
+        timeStamp: Long
+    ): MutableList<PermissionUsageEntity> {
+        return permissionInfoDao.getPermissionUsageByAppIdWithTime(appId, timeStamp)
     }
 }

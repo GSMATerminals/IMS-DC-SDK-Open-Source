@@ -69,6 +69,7 @@ android {
 dependencies {
     compileOnly(files("${rootProject.projectDir}\\libs\\ctec-release-1.0.0.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
+    implementation(project(":nativelibs"))
     implementation(project(":oemec"))
     api(libs.appcompat)
     implementation(files("${rootProject.projectDir}\\libs\\xstream-1.4.9.jar"))

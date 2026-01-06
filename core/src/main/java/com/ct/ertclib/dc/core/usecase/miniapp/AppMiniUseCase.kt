@@ -44,10 +44,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_MODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_NAME_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_NUMBER_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.API
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.AVAILABLE_MEMORY
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.BATTERY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.CONTACT_EDIT_MODE
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.CPU_CORE_NUM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.DIGIT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.GET_CONTACT_LIST_LIMIT_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.GET_CONTACT_LIST_OFFSET_PARAM
@@ -69,7 +66,6 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAGE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.TITLE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.URL
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.WIFI_RSSI
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStartParam
@@ -85,7 +81,6 @@ import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
-import com.ct.ertclib.dc.core.utils.common.SystemUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.extension.startAddContactActivity
 import com.ct.ertclib.dc.core.utils.extension.startEditContactActivity
@@ -105,6 +100,7 @@ import wendu.dsbridge.CompletionHandler
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import kotlin.collections.get
 
 class AppMiniUseCase(
@@ -122,7 +118,7 @@ class AppMiniUseCase(
     override fun hangup(context: Context): String {
         //挂断电话
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("hangup, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
@@ -146,7 +142,7 @@ class AppMiniUseCase(
     override fun answer(context: Context): String {
         //接听电话
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("answer, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
@@ -175,7 +171,7 @@ class AppMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing digit or license")))
         }
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("playDtmfTone, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
             }
@@ -207,7 +203,7 @@ class AppMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing on")))
         }
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setSpeakerphone, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
             }
@@ -236,7 +232,7 @@ class AppMiniUseCase(
     ) {
         logger.debug("isSpeakerphoneOn")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted"))))
                 return
@@ -282,7 +278,7 @@ class AppMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing on")))
         }
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
             }
@@ -311,7 +307,7 @@ class AppMiniUseCase(
     ) {
         logger.debug("isMuted")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted"))))
                 return
@@ -353,7 +349,7 @@ class AppMiniUseCase(
     override fun getCallState(context: Context): String {
         logger.debug("getCallState")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("getCallState, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
             }
@@ -438,7 +434,7 @@ class AppMiniUseCase(
 
                     MiniAppStartParam.MINIAPP_APPTYPE_FILE -> {
                         miniToParentManager.getMiniAppInfo()?.let {
-                            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(
+                            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(
                                     MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                                 logger.warn("startApp, MINIAPP_APPTYPE_FILE, permission not granted, return")
                                 val jsResponse = JSResponse("1", "fail to open file", null)
@@ -516,7 +512,7 @@ class AppMiniUseCase(
 
                     MiniAppStartParam.MINIAPP_APPTYPE_CAMERA -> {
                         miniToParentManager.getMiniAppInfo()?.let {
-                            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(
+                            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(
                                     MiniAppPermissions.MINIAPP_CAMERA))) {
                                 logger.warn("startApp, MINIAPP_APPTYPE_CAMERA, permission not granted, return")
                                 val jsResponse = JSResponse("1", "fail to open cemara", null)
@@ -675,12 +671,26 @@ class AppMiniUseCase(
                     logger.error("set isFullScreen, param wrong")
                 }
             }
-            params["statusBarColor"]?.let {
+            params["statusBarColor"]?.let { colorValue ->
                 kotlin.runCatching {
-                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarColor = it.toString()
-                    logger.debug("setWindowStyle statusBarColor:${it}")
-                }.onFailure {
-                    logger.error("set statusBarColor, param wrong")
+                    val colorString = colorValue.toString()
+
+                    // 使用正则表达式进行校验
+                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString)) {
+                        // 格式正确，执行赋值操作
+                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarColor = colorString
+                        logger.debug("setWindowStyle statusBarColor:$colorString")
+                    } else {
+                        // 格式不正确，抛出异常或记录错误
+                        val errorMsg = "Invalid statusBarColor format: $colorString. Must be #RRGGBB."
+                        logger.error(errorMsg)
+                        // 如果希望 onFailure 捕获此错误，可以抛出 IllegalArgumentException
+                        throw IllegalArgumentException(errorMsg)
+                    }
+
+                }.onFailure { e ->
+                    // 捕获 runCatching 内部抛出的异常（包括上面的 IllegalArgumentException）
+                    logger.error("set statusBarColor failed: ${e.message}", e)
                 }
             }
             params["statusBarTitleColor"]?.let {
@@ -691,10 +701,22 @@ class AppMiniUseCase(
                     logger.error("set statusBarTitleColor, param wrong,${it.toString()}")
                 }
             }
-            params["navigationBarColor"]?.let {
+            params["navigationBarColor"]?.let {colorValue ->
                 kotlin.runCatching {
-                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.navigationBarColor = it.toString()
-                    logger.debug("setWindowStyle navigationBarColor:${it}")
+                    val colorString = colorValue.toString()
+                    // 使用正则表达式进行校验
+                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString)) {
+                        // 格式正确，执行赋值操作
+                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.navigationBarColor = colorString
+                        logger.debug("setWindowStyle navigationBarColor:${colorString}")
+                    } else {
+                        // 格式不正确，抛出异常或记录错误
+                        val errorMsg = "Invalid navigationBarColor format: $colorString. Must be #RRGGBB."
+                        logger.error(errorMsg)
+                        // 如果希望 onFailure 捕获此错误，可以抛出 IllegalArgumentException
+                        throw IllegalArgumentException(errorMsg)
+                    }
+
                 }.onFailure {
                     logger.error("set navigationBarColor, param wrong")
                 }
@@ -779,7 +801,7 @@ class AppMiniUseCase(
     override fun getContactName(context: Context, params: Map<String, Any>): String {
         logger.info("getContactName")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
                 logger.warn("getContactName, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
@@ -807,7 +829,7 @@ class AppMiniUseCase(
     override fun getContactList(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>) {
         logger.info("getContactList")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
                 logger.warn("getContactList, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
                 return

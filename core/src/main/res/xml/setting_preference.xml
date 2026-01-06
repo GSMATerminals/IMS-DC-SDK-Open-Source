@@ -17,5 +17,12 @@
         app:allowDividerAbove="false"
         app:allowDividerBelow="false"/>
 
+    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
+        app:key="permission_usage"
+        app:layout="@layout/setting_preference_layout"
+        app:title="@string/permission_usage_title"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
 
 </androidx.preference.PreferenceScreen>

@@ -50,6 +50,6 @@ class StyleSettingActivity: BaseToolBarActivity() {
     }
 
     override fun getTooBarTitle(): String {
-        return getString(R.string.style_text)
+        return getString(R.string.style_text_title)
     }
 }

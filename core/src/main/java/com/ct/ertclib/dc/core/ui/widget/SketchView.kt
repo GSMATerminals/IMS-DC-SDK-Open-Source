@@ -271,10 +271,6 @@ class SketchView : View {
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
-        super.onConfigurationChanged(newConfig)
-    }
-
     fun clearCanvas(cleanPath: Boolean = false) {
         bufferCanvas?.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         if (cleanPath) {

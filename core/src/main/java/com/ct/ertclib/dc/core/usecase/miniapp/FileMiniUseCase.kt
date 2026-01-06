@@ -37,7 +37,6 @@ import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT_KEY
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_KEYS_KEY
-import com.ct.ertclib.dc.core.constants.MiniAppConstants
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.KEY_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_EVENT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_URL
@@ -102,9 +101,6 @@ class FileMiniUseCase(
     private var mFileInputStream: InputStream? = null
     private var mFileOutputStream: OutputStream? = null
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var startTime: Long = 0
-    private var fileSize: Long = 0
-    private var saveFilePath: String = ""
 
 
     override fun getLocation(
@@ -113,7 +109,7 @@ class FileMiniUseCase(
     ) {
         logger.info("getLocation")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_LOCATION))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_LOCATION))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("getLocation, permission not granted, return")
@@ -135,7 +131,7 @@ class FileMiniUseCase(
     override fun selectFile(context: Context, handler: CompletionHandler<String?>) {
         logger.info("selectFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("selectFile, permission not granted, return")
@@ -180,7 +176,7 @@ class FileMiniUseCase(
     ) {
         logger.info("saveFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("saveFile, permission not granted, return")
@@ -207,7 +203,7 @@ class FileMiniUseCase(
         }
         scope.launch {
             withContext(Dispatchers.IO) {
-                val dataByteArray = com.ct.ertclib.dc.core.utils.common.FileUtils.base64ToByteArray(data as String)
+                val dataByteArray = FileUtils.base64ToByteArray(data as String)
                 mFileOutputStream?.write(dataByteArray)
                 val response = JSResponse("0", "success", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -222,7 +218,7 @@ class FileMiniUseCase(
     ) {
         logger.info("readFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("readFile, permission not granted, return")
@@ -270,7 +266,7 @@ class FileMiniUseCase(
                 } else {
                     readBuffer = buffer
                 }
-                val base64 = com.ct.ertclib.dc.core.utils.common.FileUtils.byteArrayToBase64(readBuffer)
+                val base64 = FileUtils.byteArrayToBase64(readBuffer)
                 scope.launch {
                     withContext(Dispatchers.Main) {
                         val response = JSResponse("0", "success", hashMapOf("isEnd" to false,"base64Data" to base64))
@@ -288,7 +284,7 @@ class FileMiniUseCase(
     ) {
         logger.info("decompressFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("decompressFile, permission not granted, return")
@@ -325,7 +321,7 @@ class FileMiniUseCase(
             handler.complete(JsonUtil.toJson(response))
             return
         }
-        if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(srcPathStr)){
+        if (FileUtils.isUri(srcPathStr)){
             val filePath = com.blankj.utilcode.util.UriUtils.uri2File(Uri.parse(srcPathStr)).absolutePath
             if (!TextUtils.isEmpty(filePath)){
                 srcPathStr = filePath
@@ -340,7 +336,7 @@ class FileMiniUseCase(
                         ZipUtils.unzipFile(srcPathStr, desPath)
                         ok = true
                     } else if (compressTypeStr == "tar" || compressTypeStr == "gz") {
-                        ok = com.ct.ertclib.dc.core.utils.common.FileUtils.untarFile(srcPathStr, desPathStr)
+                        ok = FileUtils.untarFile(srcPathStr, desPathStr)
                     }
 
                     scope.launch {
@@ -366,13 +362,13 @@ class FileMiniUseCase(
     override fun getFileList(context: Context, params: Map<String, Any>): String? {
         logger.info("getFileList")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileList, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("getFileList, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["folderPath"]//必填
         val offset = params["offset"]//必填
@@ -529,13 +525,13 @@ class FileMiniUseCase(
     ): String? {
         logger.info("getPrivateFolder")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getPrivateFolder, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("getPrivateFolder, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val type = params["type"]//必填
         val response = JSResponse("0", "getPrivateFolder", mutableMapOf<String,Any>())
@@ -558,13 +554,13 @@ class FileMiniUseCase(
     ): String? {
         logger.debug("startSaveFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("startSaveFile, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("startSaveFile, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["path"]
         val append = params["append"]
@@ -609,8 +605,6 @@ class FileMiniUseCase(
             if (!dir.exists()){
                 dir.mkdirs()
             }
-            saveFilePath = pathStr
-            startTime = System.currentTimeMillis()
 
             mFileOutputStream = FileOutputStream(File(pathStr),appendBoolean)
         } catch (e:Exception){
@@ -626,23 +620,14 @@ class FileMiniUseCase(
 
     override fun stopSaveFile(context: Context): String? {
         logger.debug("stopSaveFile")
-        val endTime = System.currentTimeMillis()
-        val time = endTime - startTime
-        val fileSize = File(saveFilePath).length()
-        val rate: Long = fileSize / time
-
-        logger.debug("file share statistics receive onComplete time: $time ms")
-        logger.debug("file share statistics receive onComplete size: $fileSize byte")
-        logger.debug("file share statistics receive onComplete 接收平均速率为: $rate kb/s")
-        startTime = 0
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("stopSaveFile, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("stopSaveFile, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val response = JSResponse("0", "stopSaveFile", "")
         try {
@@ -662,13 +647,13 @@ class FileMiniUseCase(
     ): String? {
         logger.debug("startReadFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("startReadFile, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("startReadFile, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["path"]
 
@@ -690,15 +675,12 @@ class FileMiniUseCase(
         }
         try {
             // 路径有可能是uri也可能是path
-            mFileInputStream = if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(pathStr)){
-                fileSize = com.ct.ertclib.dc.core.utils.common.FileUtils.getFileSizeFromUri(context,Uri.parse(pathStr))
+            mFileInputStream = if (FileUtils.isUri(pathStr)){
                 context.contentResolver.openInputStream(Uri.parse(pathStr))
             } else {
                 val file = File(pathStr)
-                fileSize = file.length()
                 FileInputStream(file)
             }
-            startTime = System.currentTimeMillis()
         } catch (e:Exception){
             response.code = "1"
             response.message = "startReadFile err $e"
@@ -712,15 +694,7 @@ class FileMiniUseCase(
 
     override fun stopReadFile(context: Context): String? {
         logger.debug("stopReadFile")
-        val endTime = System.currentTimeMillis()
-        val time = endTime - startTime
-        val rate: Long = fileSize / time
 
-        logger.debug("file share statistics send onComplete time: $time ms")
-        logger.debug("file share statistics send onComplete size: $fileSize byte")
-        logger.debug("file share statistics send onComplete 发送平均速率为: $rate kb/s")
-        startTime = 0
-        fileSize = 0
         val response = JSResponse("0", "stopReadFile", "")
         try {
             mFileInputStream?.close()
@@ -739,13 +713,13 @@ class FileMiniUseCase(
     ): String? {
         logger.debug("checkFileOrFolderExists")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("checkFileOrFolderExists, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("checkFileOrFolderExists, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["path"]
         //检测文件或文件夹是否存在
@@ -761,7 +735,7 @@ class FileMiniUseCase(
         val dataList = mutableListOf<HashMap<String,Any>>()
         for (pathItem in pathArray){
             val pathStr = pathItem as String
-            val exists = com.ct.ertclib.dc.core.utils.common.FileUtils.isFileExists(pathStr)
+            val exists = FileUtils.isFileExists(pathStr)
             dataList.add(hashMapOf("path" to pathStr,"exist" to exists))
         }
         response.code = "0"
@@ -778,13 +752,13 @@ class FileMiniUseCase(
     override fun getFileInfo(context: Context, params: Map<String, Any>): String? {
         logger.debug("getFileInfo")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileInfo, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("getFileInfo, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["path"]
         //检测文件或文件夹是否存在
@@ -798,11 +772,11 @@ class FileMiniUseCase(
             return JsonUtil.toJson(response)
         }
         val pathStr = path as String
-        if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(pathStr)){
+        if (FileUtils.isUri(pathStr)){
             val uri = Uri.parse(pathStr)
             response.code = "0"
             response.message = "success"
-            val name = com.ct.ertclib.dc.core.utils.common.FileUtils.getFileNameFromUri(context,uri)
+            val name = FileUtils.getFileNameFromUri(context,uri)
             if (TextUtils.isEmpty(name)){
                 response.code = "1"
                 response.message = "fail"
@@ -811,8 +785,8 @@ class FileMiniUseCase(
                 val isDirectory = !name!!.contains(".")//这个判断不够严谨
                 response.data = hashMapOf(
                     "path" to pathStr,
-                    "size" to com.ct.ertclib.dc.core.utils.common.FileUtils.getFileSizeFromUri(context,uri),
-                    "lastModified" to com.ct.ertclib.dc.core.utils.common.FileUtils.getFileLastModifiedFromUri(context,uri),
+                    "size" to FileUtils.getFileSizeFromUri(context,uri),
+                    "lastModified" to FileUtils.getFileLastModifiedFromUri(context,uri),
                     "isDirectory" to isDirectory,
                     "name" to name)
             }
@@ -839,14 +813,14 @@ class FileMiniUseCase(
     override fun getFileInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>) {
         logger.debug("getFileInfo")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileInfo, permission not granted, return")
-                handler.complete(JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null)))
+                handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
                 return
             }
         } ?: run {
             logger.warn("getFileInfo, appInfo is null, return")
-            handler.complete(JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null)))
+            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
             return
         }
         val path = params["path"]
@@ -863,26 +837,26 @@ class FileMiniUseCase(
         }
         val pathStr = path as String
         scope.launch(Dispatchers.IO) {
-            if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(pathStr)){
+            if (FileUtils.isUri(pathStr)){
                 val uri = Uri.parse(pathStr)
                 response.code = "0"
                 response.message = "success"
-                val name = com.ct.ertclib.dc.core.utils.common.FileUtils.getFileNameFromUri(context,uri)
+                val name = FileUtils.getFileNameFromUri(context,uri)
                 if (TextUtils.isEmpty(name)){
                     response.code = "1"
                     response.message = "fail"
                     response.data = hashMapOf()
                 } else {
                     val isDirectory = !name!!.contains(".")//这个判断不够严谨
-                    val md5 = if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUriFolder(context,uri)){
+                    val md5 = if (FileUtils.isUriFolder(context,uri)){
                         ""
                     } else {
-                        com.ct.ertclib.dc.core.utils.common.FileUtils.getFileMD5FromUri(context,uri)
+                        FileUtils.getFileMD5FromUri(context,uri)
                     }
                     response.data = hashMapOf(
                         "path" to pathStr,
-                        "size" to com.ct.ertclib.dc.core.utils.common.FileUtils.getFileSizeFromUri(context,uri),
-                        "lastModified" to com.ct.ertclib.dc.core.utils.common.FileUtils.getFileLastModifiedFromUri(context,uri),
+                        "size" to FileUtils.getFileSizeFromUri(context,uri),
+                        "lastModified" to FileUtils.getFileLastModifiedFromUri(context,uri),
                         "isDirectory" to isDirectory,
                         "name" to name,
                         "md5" to (md5 ?: "")
@@ -922,13 +896,13 @@ class FileMiniUseCase(
     override fun deleteFile(context: Context, params: Map<String, Any>): String? {
         logger.debug("deleteFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("deleteFile, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("deleteFile, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val path = params["path"]
         val response = JSResponse("0", "deleteFile", listOf<String>())
@@ -951,10 +925,10 @@ class FileMiniUseCase(
             response.data = emptyList()
             return JsonUtil.toJson(response)
         }
-        if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(pathStr)){
-            com.ct.ertclib.dc.core.utils.common.FileUtils.deleteFileFromUri(context, Uri.parse(pathStr))
+        if (FileUtils.isUri(pathStr)){
+            FileUtils.deleteFileFromUri(context, Uri.parse(pathStr))
         } else {
-            com.ct.ertclib.dc.core.utils.common.FileUtils.deletePath(pathStr)
+            FileUtils.deletePath(pathStr)
         }
         response.code = "0"
         response.message = "success"
@@ -1056,7 +1030,7 @@ class FileMiniUseCase(
     ): String? {
         logger.info("playVoice")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("playVoice, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
@@ -1083,7 +1057,7 @@ class FileMiniUseCase(
     ): String? {
         logger.info("stopPlayVoice")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("playVoice, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
@@ -1120,7 +1094,7 @@ class FileMiniUseCase(
     ) {
         logger.info("searchFile")
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("searchFile, permission not granted, return")
@@ -1171,7 +1145,7 @@ class FileMiniUseCase(
         handler: CompletionHandler<String?>
     ) {
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("quickSearchFileWithKeyWords, permission not granted, return")
@@ -1184,35 +1158,16 @@ class FileMiniUseCase(
             return
         }
         val keyWords = params["keywords"].toString()
-        val keyWordsList = JsonUtil.fromJson(keyWords, Array<String>::class.java)?.toList()
-        keyWordsList ?: run {
+        val keyWordsArray = JsonUtil.fromJson(keyWords, Array<String>::class.java)
+        keyWordsArray ?: run {
             LogUtils.debug(TAG, "quickSearchFileWithKeyWords keywords is null")
             return
         }
         if (!FileManager.instance.hasFileIndex()) {// 没有扫描过，第一次扫描
             FileManager.instance.updateFiles(context)
         }
-        val resultList = mutableListOf<FileEntity>()
-        if (keyWordsList.size == 1) {
-            resultList.addAll(FileManager.instance.searchFilesByName(keyWordsList[0]))
-        } else {
-            val resultHashMap = mutableMapOf<String, FileEntity>()
-            keyWordsList.forEach { keyWord ->
-                val fileList = FileManager.instance.searchFilesByName(keyWord)
-                if (fileList.isEmpty()) {
-                    return@forEach
-                }
-                val fileMap = fileList.associateBy { it.path }
-                if (resultHashMap.isEmpty()) {
-                    resultHashMap.putAll(fileMap)
-                } else {
-                    val intersectMap = fileMap.filter { resultHashMap.contains(it.key) }
-                    resultHashMap.clear()
-                    resultHashMap.putAll(intersectMap)
-                }
-            }
-            resultList.addAll(resultHashMap.values)
-        }
+        val resultList = FileManager.instance.searchFilesByKeyWords(*keyWordsArray)
+
         scope.launch {
             withContext(Dispatchers.Main) {
                 val response = JSResponse("0", "success", JsonUtil.toJson(resultList))
@@ -1227,7 +1182,7 @@ class FileMiniUseCase(
         handler: CompletionHandler<String?>
     ) {
         miniToParentManager.getMiniAppInfo()?.let {
-            if (!permissionMiniUseCase.isPermissionGranted(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.warn("fileDownload, permission not granted, return")
@@ -1417,7 +1372,7 @@ class FileMiniUseCase(
         if (TextUtils.isEmpty(path)){
             return false
         }
-        if (com.ct.ertclib.dc.core.utils.common.FileUtils.isUri(path)){//因为用户无法选择到inner中的文件，这种uri只可能来自用户选择的sdcard中的文件，所以只用判断outer。
+        if (FileUtils.isUri(path)){//因为用户无法选择到inner中的文件，这种uri只可能来自用户选择的sdcard中的文件，所以只用判断outer。
             return path.contains(miniAppFilePath(context, "outer").replace("/sdcard",""))
         }
         return path.startsWith(miniAppFilePath(context, "inner")) || path.startsWith(miniAppFilePath(context,"outer"))

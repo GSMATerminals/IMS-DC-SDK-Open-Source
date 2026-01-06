@@ -28,7 +28,7 @@ import com.newcalllib.datachannel.V1_0.ImsDCStatus
 
 /**
  * 用于SDK与对端（SDK或AS）协商。目前用于同步小程序信息、拉起对端小程序等业务逻辑。借用小程序id
- * 由业务发起方打开小程序时发起协商ADC的建立（AS是a2p或SDK是p2p），SDK接收拦截这个协商ADC。SDK发起local_xxx_0_miniappcontrollll，拦截xxx_xxx_x_miniappcontrollll
+ * 由业务发起方打开小程序时发起协商ADC的建立（AS是a2p或SDK是p2p），SDK接收拦截这个协商ADC。SDK发起local_xxx_1_miniappcontrollll，拦截xxx_xxx_x_miniappcontrollll
  * 定义控制信令
  * 接口回调动作
  */

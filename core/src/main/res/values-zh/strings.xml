@@ -25,6 +25,17 @@
     <string name="contacts">联系人</string>
     <string name="wifi">Wi-Fi</string>
 
+    <string name="camera_usage">摄像头权限</string>
+    <string name="vibrate_usage">马达权限</string>
+    <string name="read_contact_usage">联系人信息</string>
+    <string name="record_audio_usage">麦克风权限</string>
+    <string name="external_storage_usage">外置存储信息</string>
+    <string name="location_usage">位置信息</string>
+    <string name="call_state_usage">通话状态信息</string>
+    <string name="contacts_usage">联系人信息</string>
+    <string name="wifi_usage">Wi-Fi信息</string>
+    <string name="blue_tooth_usage">蓝牙权限</string>
+
     <string name="bluetooth">附近的设备</string>
     <string name="camera_description">用于拍照或录像</string>
     <string name="vibrate_description">用于提醒用户实时消息与实时状态</string>
@@ -40,6 +51,7 @@
     <string name="permission_preference_title">权限设置</string>
     <string name="version_preference_title">版本号</string>
     <string name="setting_preference_title">设置</string>
+    <string name="permission_usage_title">个人信息与权限使用记录</string>
     <string name="setting_permission_tips">该小程序未使用系统权限，无法进行权限设置</string>
 
     <string name="open_permission_title">开启权限</string>
@@ -51,6 +63,8 @@
     <string name="setting">设置</string>
     <string name="back_text">返回</string>
     <string name="style_text">皮肤</string>
+
+    <string name="style_text_title">皮肤设置</string>
 
     <string name="style_black">经典风格</string>
     <string name="style_white">白色风格</string>
@@ -88,4 +102,7 @@
     <string name="download_file_description">正在下载文件</string>
     <string name="screen_share_tips">已开启屏幕共享，可通过右侧的控制按钮开启或关闭涂鸦画板</string>
     <string name="fellow_dialer">悬浮球跟随系统通话APP</string>
+
+    <string name="permission_usage_tips_recently">仅展示过去7天的使用记录</string>
+    <string name="permission_usage_tips_none">暂无个人信息与权限使用记录</string>
 </resources>

@@ -20,7 +20,6 @@ package com.ct.ertclib.dc.core.utils.logger;
 /**
  * Logger
  *
- * @author jexa7410
  */
 public class Logger {
 

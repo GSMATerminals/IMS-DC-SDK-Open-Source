@@ -80,26 +80,43 @@ class InCallServiceImpl : InCallService(), KoinComponent {
         SDKPermissionUtils.updatePrivacyVersion()
         // 清除小程序SP过期数据
         scope.launch(Dispatchers.IO) {
-            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
-            val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
-            var builder = StringBuilder()
-            keys.forEach {
-                try {
-                    val key = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[0]
-                    val expiryTime = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[1].toLong()
-                    if (System.currentTimeMillis() < expiryTime){
-                        if (builder.isNotEmpty()){
-                            builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY, "")
+            if (keysStr.isNotEmpty()) {
+                val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                val builder = StringBuilder()
+
+                keys.forEach { item ->
+                    try {
+                        val parts = item.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)
+                        // 检查分割后的数组是否有足够的元素
+                        if (parts.size >= 2) {
+                            val key = parts[0]
+                            val expiryTime = parts[1].toLong()
+
+                            if (System.currentTimeMillis() < expiryTime) {
+                                if (builder.isNotEmpty()) {
+                                    builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                                }
+                                builder.append(item)
+                            } else {
+                                SPUtils.getInstance().remove(key)
+                            }
+                        } else {
+                            // 如果格式不正确，可以选择移除该项或记录错误
+                            sLogger.warn("Invalid SP expiry item format: $item")
+                            // 移除格式错误的数据
+                            if (parts.isNotEmpty()) {
+                                SPUtils.getInstance().remove(parts[0])
+                            }
                         }
-                        builder.append(it)
-                    } else {
-                        SPUtils.getInstance().remove(key)
+                    } catch (e: Exception) {
+                        sLogger.error("Error processing SP expiry item: $item", e)
+                        e.printStackTrace()
                     }
-                } catch (e: Exception){
-                    e.printStackTrace()
                 }
+
+                SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
             }
-            SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
         }
         scope.launch(Dispatchers.IO) {
             if (ContextCompat.checkSelfPermission(
@@ -161,7 +178,7 @@ class InCallServiceImpl : InCallService(), KoinComponent {
             }
 
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
-            sLogger.info("version: ${packageInfo.versionName}")
+            sLogger.info("version: ${packageInfo.versionName},${packageInfo.versionCode}")
             sLogger.info("InCallServiceImpl onCallAdded")
 
             val callInfo = mCallsManager?.onCallAdded(call)

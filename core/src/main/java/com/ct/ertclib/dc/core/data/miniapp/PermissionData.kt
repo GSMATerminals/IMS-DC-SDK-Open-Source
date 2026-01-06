@@ -19,5 +19,6 @@ package com.ct.ertclib.dc.core.data.miniapp
 data class PermissionData(
     val permissionName: String,
     val permissionDescription: String,
+    val permissionUsageName: String,
     var willBeGranted: Boolean = true
 )

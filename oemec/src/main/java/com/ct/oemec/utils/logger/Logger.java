@@ -24,7 +24,6 @@ import com.ct.oemec.utils.logger.ExceptionUtil;
 /**
  * Logger
  *
- * @author jexa7410
  */
 public class Logger {
 

@@ -35,6 +35,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams
 import android.webkit.DownloadListener
+import android.webkit.URLUtil
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.annotation.RequiresApi
@@ -89,6 +90,10 @@ import wendu.dsbridge.DWebView
 import androidx.core.graphics.toColorInt
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_AUDIO_DEVICE_NOTIFY
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.utils.common.PkgUtils
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_IME_HEIGHT_NOTIFY
 
 open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
@@ -96,15 +101,16 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         private const val TAG = "MiniAppActivity"
     }
 
+    val miniToParentManager: IMiniToParentManager by inject()
+
     private val sLogger: Logger = Logger.getLogger(TAG)
 
     override var miniApp: MiniAppInfo? = null
     override var callInfo: CallInfo? = null
     override var miniAppListInfo: MiniAppList? = null
-    private lateinit var mBinding: ActivityMiniAppBinding
-    var mOnPickMediaCallbackListener: OnPickMediaCallbackListener? = null
-    val miniToParentManager: IMiniToParentManager by inject()
-    var mCallState = Call.STATE_DISCONNECTED
+    private lateinit var binding: ActivityMiniAppBinding
+    private var onPickMediaCallbackListener: OnPickMediaCallbackListener? = null
+    private var callState = Call.STATE_DISCONNECTED
     private var miniAppDbRepo:MiniAppDbRepo? = null
     private var hasAllPermission = false
     private var hasDataInit = false
@@ -117,33 +123,33 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         super.onCreate(savedInstanceState)
         window.addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON)
         LogConfig.upDateLogEnabled()
-        val processName = getProcessName(this)
-        val packageName = this.getPackageName()
+        val processName = PkgUtils.getProcessName(this)
+        val packageName = this.packageName
         if (sLogger.isDebugActivated) {
             sLogger.debug(
                 "onCreate miniApp started, processName:${processName}," +
                         " packageName:${packageName}," +
-                        " sp: ${SPUtils.getInstance().getBoolean(processName!!, false)}"
+                        " sp: ${SPUtils.getInstance().getBoolean(processName, false)}"
             )
         }
         if (!packageName.equals(processName) && !SPUtils.getInstance()
-                .getBoolean(processName!!, false)
+                .getBoolean(processName, false)
         ) {
             SPUtils.getInstance().put(processName, true)
             WebView.setDataDirectorySuffix(processName)
         }
         viewModel = ViewModelProvider(this)[MiniAppViewModel::class.java]
         miniAppDbRepo = MiniAppDbRepo()
-        mBinding = ActivityMiniAppBinding.inflate(layoutInflater)
-        setContentView(mBinding.root)
+        binding = ActivityMiniAppBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportActionBar?.hide()
         miniToParentManager.miniAppInterface = this
         handleIntent(intent)
         initView()
 
-        if (miniApp != null) {
-            val appName = miniApp?.appName
-            val appIcon = miniApp?.appIcon
+        miniApp?.let {
+            val appName = it.appName
+            val appIcon = it.appIcon
             val icon = if (appIcon?.isEmpty() != false) {
                 BitmapUtils.getBitmap(
                     AppCompatResources.getDrawable(
@@ -192,7 +198,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         val callInfoParcelable: Parcelable? = intent.getParcelableExtra("callInfo")
         if (callInfoParcelable != null) {
             callInfo = callInfoParcelable as CallInfo
-            mCallState = callInfo?.state!!
+            callState = callInfo?.state!!
         }
         miniAppListInfo = intent.getParcelableExtra("miniAppListInfo") as? MiniAppList
 
@@ -238,25 +244,15 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         finishAndKillMiniAppActivity()
     }
 
-    fun getProcessName(context: Context): String? {
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (processInfo in manager.runningAppProcesses) {
-            if (processInfo.pid == android.os.Process.myPid()) {
-                return processInfo.processName
-            }
-        }
-        return null
-    }
-
     private fun initView() {
         sLogger.info("initView")
-        mBinding.ivBackground.setOnClickListener {
+        binding.ivBackground.setOnClickListener {
             this.moveTaskToBack(true)
         }
-        mBinding.ivBack.setOnClickListener {
+        binding.ivBack.setOnClickListener {
             onBackPressed()
         }
-        mBinding.ivSetting.setOnClickListener {
+        binding.ivSetting.setOnClickListener {
             val intent = Intent(this, SettingActivity::class.java).apply {
                 putExtra(PARAMS_APP_ID, miniApp?.appId)
                 putExtra(PARAMS_CALL_ID, miniApp?.callId)
@@ -266,12 +262,12 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             }
             startActivity(intent)
         }
-        mBinding.ivClose.setOnClickListener {
+        binding.ivClose.setOnClickListener {
             finishAndKillMiniAppActivity()
         }
 
 
-        mBinding.webView.let {
+        binding.webView.let {
             setWebViewSettings(it)
             it.setBackgroundColor(Color.TRANSPARENT)
             it.webViewClient = CTWebViewClient(this)
@@ -281,6 +277,15 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             it.setLayerType(View.LAYER_TYPE_HARDWARE,null)
         }
         WebView.setWebContentsDebuggingEnabled(false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            // 获取键盘的高度
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            notifyIMEHeight(imeHeight)
+
+            // 继续分发 insets，保证其他 UI 逻辑不受影响
+            insets
+        }
     }
 
     private fun initData(){
@@ -315,12 +320,16 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         settings.loadsImagesAutomatically = true
         settings.mediaPlaybackRequiresUserGesture = false// video预览需要
         settings.userAgentString = settings.userAgentString + ";MiniAppContainer"
+    }
 
+    private fun notifyIMEHeight(height: Int){
+        val map = mapOf("imeHeight" to height)
+        callHandler(FUNCTION_IME_HEIGHT_NOTIFY, arrayOf(JsonUtil.toJson(map)))
     }
 
     private fun notifyMiniAppState(state:String){
         val map = mapOf("miniAppState" to state)
-       callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
+        callHandler(FUNCTION_MINI_APP_NOTIFY, arrayOf(JsonUtil.toJson(map)))
         sLogger.debug("notifyMiniAppState state:$state")
     }
 
@@ -335,54 +344,54 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         window.navigationBarColor = Color.TRANSPARENT
 
         //胶囊要下移一下，否则会被状态栏遮挡
-        val llTitleBarParams = mBinding.llTitleBar.layoutParams as ViewGroup.MarginLayoutParams
+        val llTitleBarParams = binding.llTitleBar.layoutParams as ViewGroup.MarginLayoutParams
         llTitleBarParams.topMargin = ScreenUtils.getStatusBarHeight(this)
-        mBinding.llTitleBar.layoutParams = llTitleBarParams
+        binding.llTitleBar.layoutParams = llTitleBarParams
 
-        val topViewParams = mBinding.topView.layoutParams as ViewGroup.MarginLayoutParams
+        val topViewParams = binding.topView.layoutParams as ViewGroup.MarginLayoutParams
         topViewParams.height = ScreenUtils.getStatusBarHeight(this) + SizeUtils.dp2px(50.0f)
-        mBinding.topView.layoutParams = topViewParams
+        binding.topView.layoutParams = topViewParams
 
-        val bottomViewParams = mBinding.bottomView.layoutParams as ViewGroup.MarginLayoutParams
+        val bottomViewParams = binding.bottomView.layoutParams as ViewGroup.MarginLayoutParams
         bottomViewParams.height = ScreenUtils.getNavigationBarHeight(this)
-        mBinding.bottomView.layoutParams = bottomViewParams
+        binding.bottomView.layoutParams = bottomViewParams
 
         if (windowStyle == null) {
             return
         }
         //全屏
         if (windowStyle.isFullScreen) {
-            mBinding.topView.visibility = View.GONE
-            mBinding.bottomView.visibility = View.GONE
+            binding.topView.visibility = View.GONE
+            binding.bottomView.visibility = View.GONE
         } else {
-            mBinding.topView.visibility = View.VISIBLE
-            mBinding.bottomView.visibility = View.VISIBLE
+            binding.topView.visibility = View.VISIBLE
+            binding.bottomView.visibility = View.VISIBLE
             //非全屏时才需要配置状态栏、标题栏、导航栏背景颜色
             windowStyle.statusBarColor?.let {
                 val statusBarColor = it.toColorInt()
-                mBinding.topView.setBackgroundColor(statusBarColor)
+                binding.topView.setBackgroundColor(statusBarColor)
                 setStatusBarColor(statusBarColor)
             }
             windowStyle.navigationBarColor?.let {
                 val navigationBarColor = it.toColorInt()
-                mBinding.bottomView.setBackgroundColor(navigationBarColor)
+                binding.bottomView.setBackgroundColor(navigationBarColor)
                 setNavBarColor(navigationBarColor)
             }
         }
         // 设置标题栏文字和图标颜色，只能黑白
         windowStyle.statusBarTitleColor.let {
             if (it == 1) {
-                mBinding.tvPageName.setTextColor(Color.WHITE)
-                mBinding.ivBack.setImageResource(R.drawable.icon_mini_back_white)
-                mBinding.ivBackground.setImageResource(R.drawable.icon_mini_to_background_white)
-                mBinding.ivSetting.setImageResource(R.drawable.icon_mini_setting_white)
-                mBinding.ivClose.setImageResource(R.drawable.icon_mini_close_white)
+                binding.tvPageName.setTextColor(Color.WHITE)
+                binding.ivBack.setImageResource(R.drawable.icon_mini_back_white)
+                binding.ivBackground.setImageResource(R.drawable.icon_mini_to_background_white)
+                binding.ivSetting.setImageResource(R.drawable.icon_mini_setting_white)
+                binding.ivClose.setImageResource(R.drawable.icon_mini_close_white)
             } else {
-                mBinding.tvPageName.setTextColor(Color.BLACK)
-                mBinding.ivBack.setImageResource(R.drawable.icon_mini_back)
-                mBinding.ivBackground.setImageResource(R.drawable.icon_mini_to_background)
-                mBinding.ivSetting.setImageResource(R.drawable.icon_mini_setting)
-                mBinding.ivClose.setImageResource(R.drawable.icon_mini_close)
+                binding.tvPageName.setTextColor(Color.BLACK)
+                binding.ivBack.setImageResource(R.drawable.icon_mini_back)
+                binding.ivBackground.setImageResource(R.drawable.icon_mini_to_background)
+                binding.ivSetting.setImageResource(R.drawable.icon_setting_black)
+                binding.ivClose.setImageResource(R.drawable.icon_mini_close)
             }
         }
 
@@ -390,19 +399,19 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     }
 
     fun updateBack(){
-        if (mBinding.webView.canGoBack()) {
-            mBinding.ivBack.visibility = View.VISIBLE
+        if (binding.webView.canGoBack()) {
+            binding.ivBack.visibility = View.VISIBLE
         } else {
-            mBinding.ivBack.visibility = View.GONE
+            binding.ivBack.visibility = View.GONE
         }
     }
 
     override fun setPageName(pageName: String) {
         // 防止尴尬的事情发生
         if (pageName == "null" || pageName =="NULL"){
-            mBinding.tvPageName.text = ""
+            binding.tvPageName.text = ""
         } else {
-            mBinding.tvPageName.text = pageName
+            binding.tvPageName.text = pageName
         }
     }
 
@@ -457,8 +466,8 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
     override fun onBackPressed() {
         setPageName("")
-        if (mBinding.webView.canGoBack()) {
-            mBinding.webView.goBack()
+        if (binding.webView.canGoBack()) {
+            binding.webView.goBack()
         } else {
             finishAndKillMiniAppActivity()
         }
@@ -473,7 +482,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
 
     fun onMiniAppLoaded() {
-//        mBinding.loadingProgressBar.progressLayout.isVisible = false
+        sLogger.info("onMiniAppLoaded")
     }
 
     private fun setStatusBarColor(statusBarColor: Int) {
@@ -511,7 +520,19 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                             " minetype:$mimetype, contentLength:$contentLength"
                 )
             }
-            val fileName = url?.substring(url.lastIndexOf("/") + 1) ?: "unknown"
+            if (url.isNullOrEmpty()){
+                if (sLogger.isDebugActivated){
+                    sLogger.debug("Url is null.")
+                }
+                return
+            }
+            if (!URLUtil.isNetworkUrl(url)){
+                if (sLogger.isDebugActivated){
+                    sLogger.debug("Illegal url: $url")
+                }
+                return
+            }
+            val fileName = url.substring(url.lastIndexOf("/") + 1)
             val request = DownloadManager.Request(Uri.parse(url))
                 .setTitle(fileName)
                 .setMimeType(mimetype)
@@ -523,8 +544,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                 )
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
-            val downloadManager =
-                context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             downloadManager.enqueue(request)
         }
     }
@@ -538,15 +558,15 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             try {
                 data?.data?.let { uri ->
                     val size = FileUtils.getFileSizeFromUri(this,uri) // 使用自定义的方法获取文件路径
-                    sLogger.debug("onActivityResult uri ${uri.toString()}, size $size")
-                    if (mOnPickMediaCallbackListener!=null){
+                    sLogger.debug("onActivityResult uri ${uri}, size $size")
+                    if (onPickMediaCallbackListener!=null){
                         val mediaInfo = MediaInfo()
                         mediaInfo.path = uri.toString()
                         mediaInfo.displayName = FileUtils.getFileNameFromUri(this,uri)
                         mediaInfo.size = FileUtils.getFileSizeFromUri(this,uri)
                         mediaInfo.lastModified = FileUtils.getFileLastModifiedFromUri(this,uri)
                         mediaInfo.isDirectory = false
-                        mOnPickMediaCallbackListener!!.onResult(listOf(mediaInfo))
+                        onPickMediaCallbackListener!!.onResult(listOf(mediaInfo))
                     }
                 }
             }catch (e :Exception){
@@ -571,7 +591,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
     override fun callHandler(method: String, args: Array<Any>) {
         sLogger.info("callHandler, method: $method")
-        mBinding.webView.callHandler(method, args)
+        binding.webView.callHandler(method, args)
     }
 
     override fun invokeOnServiceConnected() {
@@ -584,27 +604,26 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         val path = miniApp?.path
         sLogger.debug("loadUrl path:$path, param:${miniApp?.startByOthersParams}")
         val params = if (!miniApp?.startByOthersParams.isNullOrEmpty()){"?${miniApp?.startByOthersParams}"}else{""}
-        mBinding.webView.loadUrl("file://$path/index.html${params}")
+        binding.webView.loadUrl("file://$path/index.html${params}")
     }
 
     override fun invokeOnCallStateChange(params: Map<String, Any?>) {
         val callState = params["callState"].toString().toFloatOrNull()?.toInt()
-        LogUtils.debug(TAG, "invokeOnCallStateChange params: $params, callState: $callState, mCallState: $mCallState")
-        if (callState!= null && mCallState != callState){
-            mCallState = callState
+        LogUtils.debug(TAG, "invokeOnCallStateChange params: $params, callState: $callState, mCallState: ${this.callState}")
+        if (callState!= null && this.callState != callState){
+            this.callState = callState
             callInfo?.state = callState
             lifecycleScope.launch(Dispatchers.Main) {
                 if (sLogger.isDebugActivated) {
-                    sLogger.debug("IParentToMini.Stub sendMessageToMini mCallState:${mCallState}")
+                    sLogger.debug("IParentToMini.Stub sendMessageToMini mCallState:${this@MiniAppActivity.callState}")
                 }
-                val map = mapOf("callState" to mCallState)
+                val map = mapOf("callState" to this@MiniAppActivity.callState)
                 callHandler(FUNCTION_CALL_STATE_NOTIFY, arrayOf(JsonUtil.toJson(map)))
                 // 呼叫保持的时候显示遮罩，webView内容不可点
-                if (mCallState == Call.STATE_HOLDING){
-                    mBinding.coverView.visibility = View.VISIBLE
-
+                if (this@MiniAppActivity.callState == Call.STATE_HOLDING) {
+                    binding.coverView.visibility = View.VISIBLE
                 } else {
-                    mBinding.coverView.visibility = View.GONE
+                    binding.coverView.visibility = View.GONE
                 }
             }
         }
@@ -616,7 +635,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     }
 
     override fun selectFile(callback: OnPickMediaCallbackListener){
-        mOnPickMediaCallbackListener = callback
+        onPickMediaCallbackListener = callback
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "*/*" // 选择所有类型的文件
         intent.addCategory(Intent.CATEGORY_OPENABLE)

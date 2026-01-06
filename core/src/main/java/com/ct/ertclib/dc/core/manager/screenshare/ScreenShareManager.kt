@@ -21,9 +21,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.port.manager.IScreenShareManager
+import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.newcalllib.sharescreen.IScreenShareHandler
 import com.newcalllib.sharescreen.IScreenShareStatusListener
@@ -36,35 +36,34 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
         private const val TAG = "ScreenShareManager"
     }
 
-    private val logger: Logger = Logger.getLogger(TAG)
     private var screenShareService: IScreenShareHandler? = null
     private var isSharing = false
 
     override fun startShareScreen(): Boolean {
         if (isSharing) {
-            logger.warn("startShareScreen isSharing, return")
+            LogUtils.warn(TAG, "startShareScreen isSharing, return")
             return false
         }
-        logger.info("startShareScreen")
+        LogUtils.info(TAG, "startShareScreen")
         isSharing = true
         screenShareService?.startNativeScreenShare(screenShareStatusListener)
         return true
     }
 
     override fun stopShareScreen() {
-        logger.info("stopShareScreen")
+        LogUtils.info(TAG, "stopShareScreen")
         if (screenShareService == null) {
-            logger.warn("stopShareScreen failed, screenShareService is null")
+            LogUtils.warn(TAG, "stopShareScreen failed, screenShareService is null")
             return
         }
         if (!isSharing) {
-            logger.info("stopShareScreen failed, isSharing is false, return")
+            LogUtils.info(TAG, "stopShareScreen failed, isSharing is false, return")
             return
         }
         kotlin.runCatching {
             screenShareService?.stopNativeScreenShare()
         }.onFailure {
-            logger.error("stopScreenShare failure: $it")
+            LogUtils.error(TAG, "stopScreenShare failure: $it")
         }
         isSharing = false
     }
@@ -73,10 +72,10 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
         val result = try {
             screenShareService?.requestNativeScreenShareAbility() ?: false
         } catch (e: Exception) {
-            logger.error("requestScreenShareAbility exception", e)
+            LogUtils.error(TAG, "requestScreenShareAbility exception", e)
             false
         }
-        logger.info("requestScreenShareAbility, result: $result")
+        LogUtils.info(TAG, "requestScreenShareAbility, result: $result")
         return result
     }
 
@@ -114,31 +113,31 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
             action = actionName
         }
         kotlin.runCatching {
-            logger.info("bindScreenShareService:${packageName} $serviceName $actionName")
+            LogUtils.info(TAG, "bindScreenShareService:${packageName} $serviceName $actionName")
             context.bindService(intent, conn, Context.BIND_AUTO_CREATE)
         }.onFailure {
-            logger.error("bind screen share service failure: $it")
+            LogUtils.error(TAG, "bind screen share service failure: $it")
         }
     }
 
     private fun unbindScreenShareService(context: Context) {
-        logger.info("unbindScreenShareService")
+        LogUtils.info(TAG, "unbindScreenShareService")
         kotlin.runCatching {
             context.unbindService(conn)
         }.onFailure {
-            logger.error("unbindScreenShareService failure: $it")
+            LogUtils.error(TAG, "unbindScreenShareService failure: $it")
         }
     }
 
     private val conn = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            logger.info("onServiceConnected")
+            LogUtils.info(TAG, "onServiceConnected")
             screenShareService = IScreenShareHandler.Stub.asInterface(service)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             screenShareService = null
-            logger.info("onServiceDisconnected")
+            LogUtils.info(TAG, "onServiceDisconnected")
         }
     }
 
@@ -146,15 +145,15 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
         override fun onScreenShareStatus(status: ScreenShareStatus?) {
             when (status) {
                 ScreenShareStatus.SUCCESS -> {
-                    logger.info("start screen share success")
+                    LogUtils.info(TAG, "start screen share success")
                 }
 
                 ScreenShareStatus.FAILURE -> {
-                    logger.info("start screen share failed")
+                    LogUtils.info(TAG, "start screen share failed")
                 }
 
                 else -> {
-                    logger.info("start screen share status unknown")
+                    LogUtils.info(TAG, "start screen share status unknown")
                 }
             }
         }

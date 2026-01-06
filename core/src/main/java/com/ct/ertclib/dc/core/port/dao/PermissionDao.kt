@@ -22,13 +22,14 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ct.ertclib.dc.core.data.model.PermissionModel
+import com.ct.ertclib.dc.core.data.model.PermissionUsageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PermissionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertOrUpdate(vararg permissionDao: PermissionModel)
+    fun insertOrUpdate(vararg permissionModel: PermissionModel)
 
     @Delete
     fun delete(permissionDao: PermissionModel)
@@ -38,4 +39,13 @@ interface PermissionDao {
 
     @Query("SELECT * FROM permission_table")
     fun getAll(): Flow<List<PermissionModel>>
+
+    @Insert
+    fun insertPermissionUsage(vararg permissionUsageEntity: PermissionUsageEntity)
+
+    @Query("SELECT * FROM permission_usage_table WHERE appId = :appId ORDER BY permissionUsageTimeStamp DESC")
+    fun getPermissionUsageByAppId(appId: String): MutableList<PermissionUsageEntity>
+
+    @Query("SELECT * FROM permission_usage_table WHERE appId = :appId AND permissionUsageTimeStamp > :timeStamp ORDER BY permissionUsageTimeStamp DESC")
+    fun getPermissionUsageByAppIdWithTime(appId: String, timeStamp: Long): MutableList<PermissionUsageEntity>
 }

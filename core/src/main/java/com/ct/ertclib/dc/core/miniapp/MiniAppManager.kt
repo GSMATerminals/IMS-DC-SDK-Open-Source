@@ -56,6 +56,7 @@ import com.ct.ertclib.dc.core.data.miniapp.MiniAppDownloadResult
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
 import com.ct.ertclib.dc.core.common.ConfirmActivity
+import com.ct.ertclib.dc.core.common.LicenseManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.Model
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnADCListener
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnSendCallback
@@ -566,6 +567,11 @@ class MiniAppManager(private val callInfo: CallInfo) :
                 val fileOutputStream = FileOutputStream(cacheFile)
                 fileOutputStream.write(data)
                 fileOutputStream.close()
+                //校验小程序签名
+                if(!LicenseManager.getInstance().verifyMiniAppPkg(cacheFile!!.absolutePath)){
+                    sLogger.debug("$mTag handleStartMiniAppFailed verifyMiniAppPkg false")
+                    return false
+                }
                 //解压小程序
                 ZipUtils.unzipFile(cacheFile!!.absolutePath, filePath)
                 //删除cache

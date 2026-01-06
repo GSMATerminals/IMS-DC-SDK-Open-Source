@@ -111,10 +111,10 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
     override fun onPermissionRequest(request: PermissionRequest?) {
         // 目前只有获取视频流的接口getUserMedia会在这里申请权限
         (miniAppActivity as? IMiniApp)?.miniApp?.appId?.let {
-            if (permissionMiniUseCase.isPermissionGranted(it, listOf(MiniAppPermissions.MINIAPP_CAMERA, MiniAppPermissions.MINIAPP_RECORD_AUDIO))
+            if (permissionMiniUseCase.checkPermissionAndRecord(it, listOf(MiniAppPermissions.MINIAPP_CAMERA, MiniAppPermissions.MINIAPP_RECORD_AUDIO))
                 && miniAppActivity.miniApp!=null
                 && miniAppActivity.miniToParentManager.systemApiLicenseMap["getUserMedia"]!=null
-                && LicenseManager.getInstance().verifyLicense(miniAppActivity.miniApp!!.appId, LicenseManager.ApiCode.GET_USER_MEDIA.apiCode, miniAppActivity.miniToParentManager.systemApiLicenseMap["getUserMedia"].toString()
+                && LicenseManager.getInstance().verifyLicense(it, LicenseManager.ApiCode.GET_USER_MEDIA.apiCode, miniAppActivity.miniToParentManager.systemApiLicenseMap["getUserMedia"].toString()
                 )) {
                 sLogger.info("onPermissionRequest, request:${ArrayUtils.toString(request?.resources)}")
                 request?.grant(request.resources)
