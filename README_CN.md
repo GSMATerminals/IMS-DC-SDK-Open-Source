@@ -4,7 +4,7 @@
 
 - 5G增强通话终端SDK（下文称SDK）由中国电信研究院开发。通话建立后，芯片与网络会协商IMS Data Channel的建立，终端对IMS Data Channel的调用逻辑进行封装并通过AIDL接口（即Android接口定义语言[Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl?hl=zh-cn)）提供给SDK，SDK作为5G增强通话小程序（下文称小程序）的运行载体，将操作IMS Data Channel和终端其他能力接口通过统一的接口提供给小程序调用。
 
-<img src="images/屏幕共享（发起方）.gif" alt="描述文字" width="200" /> <img src="images/屏幕共享（接收方）.gif" alt="描述文字" width="200" />  
+<img src="images/ScreenShare(Initiator).gif" alt="Description" width="150" /> <img src="images/ScreenShare(Receiver).gif" alt="Description" width="150" />       <img src="images/Yi Share(Initiator).gif" alt="Description" width="150" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="150" />          <img src="images/10000_EN.gif" alt="Description" width="185" /> 
 
 ## 一、功能特性
 SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性：

@@ -5,7 +5,7 @@ Note: This document aims to help developers understand the architectural design 
 
 - The 5G New Calling Terminal SDK (hereinafter referred to as the SDK) is developed by the China Telecom Research Institute. After a call is established, the chip and the network negotiate the establishment of the IMS Data Channel. The terminal encapsulates the call logic for the IMS Data Channel and provides it to the SDK via AIDL interfaces ([Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl)). The SDK serves as the runtime environment for the 5G New Calling Application (hereinafter referred to as IMS Data Channel Application) and provides a unified interface for IMS Data Channel Application to call, enabling them to operate the IMS Data Channel and other terminal capability interfaces.
 
-<img src="images/ScreenShare(Initiator).gif" alt="Description" width="200" /> <img src="images/ScreenShare(Receiver).gif" alt="Description" width="200" />  
+<img src="images/屏幕共享（发起方）.gif" alt="Description" width="150" /> <img src="images/屏幕共享（接收方）.gif" alt="Description" width="150" />       <img src="images/翼分享（发起方）.gif" alt="Description" width="150" /> <img src="images/翼分享（接收方）.gif" alt="Description" width="150" />          <img src="images/10000_CN.gif" alt="Description" width="185" /> 
 
 ## I. Features
 While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
