@@ -6,6 +6,8 @@
 
 <img src="images/屏幕共享（发起方）.gif" alt="Description" width="150" /> <img src="images/屏幕共享（接收方）.gif" alt="Description" width="150" />       <img src="images/翼分享（发起方）.gif" alt="Description" width="150" /> <img src="images/翼分享（接收方）.gif" alt="Description" width="150" />          <img src="images/10000_CN.gif" alt="Description" width="185" /> 
 
+   屏幕共享（左：发起方 右：接收方）              翼分享（左：发起方 右：接收方）               10000号客服小程序
+
 ## 一、功能特性
 SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性：
 - 与通话状态紧关联，负责小程序的生命周期管理，为小程序提供稳定的运行环境；  
