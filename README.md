@@ -7,7 +7,7 @@ Note: This document aims to help developers understand the architectural design 
 
 <img src="images/ScreenShare(Initiator).gif" alt="Description" width="150" /> <img src="images/ScreenShare(Receiver).gif" alt="Description" width="150" />  <img src="images/Yi Share(Initiator).gif" alt="Description" width="150" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="150" /> <img src="images/10000_EN.gif" alt="Description" width="185" /> 
 
-&emsp;&emsp;&emsp;ScreenShare(Initiator/Receiver)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Yi Share(Initiator/Receiver)&emsp;&emsp;&emsp;&emsp;&emsp;10000 Customer Service
+&nbsp;ScreenShare(Left: Initiator/Right: Receiver)&emsp;&emsp;&nbsp;Yi Share(Left: Initiator/Right: Receiver)&emsp;&emsp;10000 Customer Service
 
 ## I. Features
 While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
