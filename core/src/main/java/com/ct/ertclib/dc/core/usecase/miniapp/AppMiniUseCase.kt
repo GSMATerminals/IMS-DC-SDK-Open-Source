@@ -115,6 +115,10 @@ class AppMiniUseCase(
     private val logger = Logger.getLogger(TAG)
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
+    override fun hangupAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(hangup(context))
+    }
+
     override fun hangup(context: Context): String {
         //挂断电话
         miniToParentManager.getMiniAppInfo()?.let {
@@ -139,6 +143,10 @@ class AppMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun answerAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(answer(context))
+    }
+
     override fun answer(context: Context): String {
         //接听电话
         miniToParentManager.getMiniAppInfo()?.let {
@@ -161,6 +169,14 @@ class AppMiniUseCase(
         }
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
+    }
+
+    override fun playDtmfToneAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(playDtmfTone(context,params))
     }
 
     override fun playDtmfTone(context: Context,params: Map<String, Any>): String {
@@ -196,6 +212,15 @@ class AppMiniUseCase(
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
+
+    override fun setSpeakerphoneAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(setSpeakerphone(context,params))
+    }
+
     override fun setSpeakerphone(context: Context,params: Map<String, Any>): String {
         logger.debug("setSpeakerphone")
         val on = params[SPEAKERPHONE_ON]
@@ -271,6 +296,14 @@ class AppMiniUseCase(
         }
     }
 
+    override fun setMutedAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(setMuted(context,params))
+    }
+
     override fun setMuted(context: Context,params: Map<String, Any>): String {
         logger.debug("setMuted")
         val muted = params[MUTED]
@@ -344,6 +377,10 @@ class AppMiniUseCase(
                 }
             })
         }
+    }
+
+    override fun getCallStateAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(getCallState(context))
     }
 
     override fun getCallState(context: Context): String {
@@ -657,18 +694,26 @@ class AppMiniUseCase(
         logger.info("setWindow params:${params}")
         val activity = context as? Activity
         activity?.let { activity ->
-            params["hidden"]?.let {
-                if (it as Boolean) {
-                    logger.debug("setWindow hidden true")
-                    activity.moveTaskToBack(true)
+            params["hidden"]?.let { hidden ->
+                when (hidden) {
+                    is Boolean -> {
+                        logger.debug("setWindow hidden $hidden")
+                        if (hidden) {
+                            activity.moveTaskToBack(true)
+                        } else {
+                            moveToFront()
+                        }
+                    }
+                    else -> logger.error("setWindow hidden param wrong")
                 }
             }
-            params["isFullScreen"]?.let {
-                kotlin.runCatching {
-                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.isFullScreen = it as Boolean
-                    logger.debug("setWindowStyle isFullScreen:${it}")
-                }.onFailure {
-                    logger.error("set isFullScreen, param wrong")
+            params["isFullScreen"]?.let { value ->
+                when (value) {
+                    is Boolean -> {
+                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.isFullScreen = value
+                        logger.debug("setWindow isFullScreen: $value")
+                    }
+                    else -> logger.error("setWindow isFullScreen param wrong: expected Boolean, got ${value::class.simpleName}")
                 }
             }
             params["statusBarColor"]?.let { colorValue ->
@@ -693,12 +738,20 @@ class AppMiniUseCase(
                     logger.error("set statusBarColor failed: ${e.message}", e)
                 }
             }
-            params["statusBarTitleColor"]?.let {
-                kotlin.runCatching {
-                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarTitleColor = (it as Double).toInt()
-                    logger.debug("setWindowStyle statusBarTitleColor:${it}")
-                }.onFailure {
-                    logger.error("set statusBarTitleColor, param wrong,${it.toString()}")
+            params["statusBarTitleColor"]?.let { value ->
+                val color = when (value) {
+                    is Int -> value
+                    is Double -> value.toInt()
+                    is Float -> value.toInt()
+                    is String -> value.toIntOrNull()
+                    else -> null
+                }
+
+                if (color != null) {
+                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarTitleColor = color
+                    logger.debug("setWindowStyle statusBarTitleColor: $color")
+                } else {
+                    logger.error("set statusBarTitleColor failed: invalid param type or value, got: $value (${value::class.simpleName})")
                 }
             }
             params["navigationBarColor"]?.let {colorValue ->
@@ -773,11 +826,26 @@ class AppMiniUseCase(
         handler.complete(JsonUtil.toJson(jsResponse))
     }
 
+    override fun requestStartAdverseAppAsync(
+        context: Context,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(requestStartAdverseApp(context))
+    }
+
     override fun requestStartAdverseApp(context: Context): String {
         val appRequestJson = AppRequest(COMMON_APP_EVENT, ACTION_REQUEST_START_ADVERSE_APP, mapOf()).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
+    }
+
+    override fun addOrEditContactAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(addOrEditContact(context, params))
     }
 
     override fun addOrEditContact(context: Context, params: Map<String, Any>): String {
@@ -796,6 +864,14 @@ class AppMiniUseCase(
             }
         }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
+    }
+
+    override fun getContactNameAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getContactName(context, params))
     }
 
     override fun getContactName(context: Context, params: Map<String, Any>): String {
@@ -858,12 +934,27 @@ class AppMiniUseCase(
         return
     }
 
+    override fun setSystemApiLicenseAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(setSystemApiLicense(context, params))
+    }
 
     override fun setSystemApiLicense(context: Context, params: Map<String, Any>): String {
         val license = params[LICENSE]?.toString() ?: ""
         val api = params[API]?.toString() ?: ""
         miniToParentManager.systemApiLicenseMap[api] = license
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
+    }
+
+    override fun openWebAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(openWeb(context, params))
     }
 
     override fun openWeb(context: Context, params: Map<String, Any>): String {
@@ -992,6 +1083,10 @@ class AppMiniUseCase(
         }
     }
 
+    override fun moveToFrontAsync(handler: CompletionHandler<String?>) {
+        handler.complete(moveToFront())
+    }
+
     override fun moveToFront(): String {
         val appRequestJson = AppRequest(COMMON_APP_EVENT, ACTION_MOVE_TO_FRONT, mapOf()).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
@@ -999,10 +1094,22 @@ class AppMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun stopAppAsync(handler: CompletionHandler<String?>) {
+        handler.complete(stopApp())
+    }
+
     override fun stopApp(): String {
         miniToParentManager.stopApp()
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
+    }
+
+    override fun getSDKInfoAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getSDKInfo(context, params))
     }
 
     // 获取SDK版本号等信息
@@ -1015,6 +1122,13 @@ class AppMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun getScreenInfoAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getScreenInfo(context, params))
+    }
     // 获取屏幕宽高px
     override fun getScreenInfo(
         context: Context,
@@ -1023,6 +1137,14 @@ class AppMiniUseCase(
         logger.debug("getScreenInfo")
         val response = JSResponse("0", "success", hashMapOf("width" to ScreenUtils.getScreenWidth(context),"height" to ScreenUtils.getScreenHeight(context)))
         return JsonUtil.toJson(response)
+    }
+
+    override fun getShareTypeNameAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getShareTypeName(context, params))
     }
 
     // 获取用户点击的翼分享类型名称

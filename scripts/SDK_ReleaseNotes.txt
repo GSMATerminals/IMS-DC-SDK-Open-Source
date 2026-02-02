@@ -7,7 +7,11 @@
 Auditor: CT
 Publisher: yesh1
 publish Description:
-CtCallSDK_v1.1.0_202501017_FC
+CtCallSDK_v1.1.4_20260122_FC
+	1.修复hide
+CtCallSDK_v1.1.2_20260115_FC
+	1.js api改为异步接口
+CtCallSDK_v1.1.0_20251017_FC
 	1.支持CTEC支持mnn框架
 	2.修复接通电话时界面抢占问题
 	3.sdk携带mccMncList作为支持的运营商标识

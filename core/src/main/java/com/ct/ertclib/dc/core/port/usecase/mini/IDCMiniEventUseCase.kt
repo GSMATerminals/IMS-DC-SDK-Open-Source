@@ -35,4 +35,6 @@ interface IDCMiniEventUseCase {
     fun isPeerSupportDC(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
     fun getBufferedAmount(context: Context, params: Map<String, Any>) : String?
+
+    fun getBufferedAmountAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

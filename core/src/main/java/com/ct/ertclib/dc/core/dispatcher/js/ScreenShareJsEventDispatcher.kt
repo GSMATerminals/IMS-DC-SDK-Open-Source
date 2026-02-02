@@ -42,6 +42,13 @@ class ScreenShareJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_START_SCREEN_SHARE -> screenShareUseCase.startScreenShare(context, request.params,handler)
             FUNCTION_REQUEST_SCREEN_SHARE_ABILITY -> screenShareUseCase.requestScreenShareAbility(handler)
 
+            FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShareAsync(context,handler)
+            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoardAsync(request.params,handler)
+            FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoardAsync(handler)
+            FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfoAsync(request.params,handler)
+            FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfoAsync(request.params,handler)
+            FUNCTION_SET_PRIVACY_MODE -> screenShareUseCase.setPrivacyModeAsync(request.params,handler)
+            FUNCTION_REMOTE_WINDOW_SIZE_INFO -> screenShareUseCase.addRemoteWindowSizeInfoAsync(request.params,handler)
         }
     }
 

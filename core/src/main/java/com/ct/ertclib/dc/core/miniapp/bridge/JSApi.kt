@@ -35,15 +35,7 @@ class JSApi(private val context: Context) {
     }
 
     private val sLogger: Logger = Logger.getLogger(TAG)
-    private var mFileInputStream: InputStream? = null
-    private var mFileOutputStream: OutputStream? = null
 
-    //    JsApi: [asyn],args:{"pluginName":"dcPlugin","actionName":"createDC","params":{"dcLabels":["local_10000005_0_dc1","local_10000005_0_dc2"],
-//        "description":"<DataChannelAppInfo>\n<DataChannelApp appId=\"10000005\">\n    <DataChannel dcId=\"dc1\">\n        <StreamId><\/StreamId>\n
-//        <DcLabel>local_10000005_0_dc1<\/DcLabel>\n        <UseCase>0<\/UseCase>\n        <Subprotocol><\/Subprotocol>\n        <Ordered>1<\/Ordered>\n        <MaxRetr><\/MaxRetr>\n        <MaxTime><\/MaxTime>\n
-//        <Priority><\/Priority>\n        <Bandwidth><\/Bandwidth>\n        <QosHint><\/QosHint>\n    <\/DataChannel>\n    <DataChannel dcId=\"dc2\">\n        <StreamId><\/StreamId>\n
-//        <DcLabel>local_10000005_0_dc2<\/DcLabel>\n        <UseCase>0<\/UseCase>\n        <Subprotocol><\/Subprotocol>\n        <Ordered>1<\/Ordered>\n        <MaxRetr><\/MaxRetr>\n
-//        <MaxTime><\/MaxTime>\n        <Priority><\/Priority>\n        <Bandwidth><\/Bandwidth>\n        <QosHint><\/QosHint>\n    <\/DataChannel>\n<\/DataChannelApp>\n<\/DataChannelAppInfo>"}}
     @JavascriptInterface
     fun async(msg: Any, handler: CompletionHandler<String?>) {
         try {
@@ -57,6 +49,12 @@ class JSApi(private val context: Context) {
         }
     }
 
+
+    @Deprecated(
+        message = "This function is deprecated. Use async instead.",
+        replaceWith = ReplaceWith("async"),
+        level = DeprecationLevel.WARNING
+    )
     @RequiresApi(Build.VERSION_CODES.Q)
     @JavascriptInterface
     fun sync(msg: Any): String? {

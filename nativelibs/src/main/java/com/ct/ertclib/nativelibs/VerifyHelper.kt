@@ -40,4 +40,5 @@ class VerifyHelper {
     external fun verifyLicense(miniAppId: String, apiCodes: String, license: String): Boolean
     external fun parseImg(img: String): String
     external fun verifyMiniAppPkg(zipPath: String, publicKeyPem: String): Boolean
+    external fun verifyMiniAppFolder(folderPath: String, publicKeyPem: String): Boolean
 }

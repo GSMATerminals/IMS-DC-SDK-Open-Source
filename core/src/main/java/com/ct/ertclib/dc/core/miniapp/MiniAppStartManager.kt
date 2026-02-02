@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.RemoteException
+import com.ct.ertclib.dc.core.common.LicenseManager
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.logger.Logger
@@ -71,6 +72,11 @@ object MiniAppStartManager : IMiniAppStartManager {
     private fun startMiniAppInfo(miniAppInfo: MiniAppInfo, context: Context, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?) {
         val coroutineScope = CoroutineScope(EmptyCoroutineContext)
         coroutineScope.launch(Dispatchers.IO) {
+            if (miniAppInfo.path == null || !File(miniAppInfo.path).exists()){
+                sLogger.warn("startMiniAppActivity path is null or not exist")
+                callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                return@launch
+            }
             val deferred = async {
                 val file = File(miniAppInfo.path + "/properties.json")
                 if (file.exists()) {
@@ -94,6 +100,11 @@ object MiniAppStartManager : IMiniAppStartManager {
                 return@launch
             }
             miniAppInfo.appProperties = properties
+            if (!LicenseManager.getInstance().verifyMiniAppFolder(miniAppInfo.path!!)){
+                sLogger.info("startMiniAppActivity verify failed")
+                callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                return@launch
+            }
             coroutineScope.launch(Dispatchers.Main){
                 startMiniAppActivity(context, miniAppInfo, callInfo, miniAppListInfo)
                 // 回调启动成功
@@ -280,9 +291,16 @@ object MiniAppStartManager : IMiniAppStartManager {
 
     fun sendMessageToMiniApp(callId: String,appId: String, message: String, callback: IMessageCallback?) {
         LogUtils.debug(TAG, "sendMessageToMiniApp, callId: $callId, appId: $appId, message: $message")
-        appService?.let {
-            it.mParentToMiniCallbackMap[it.getKey(callId,appId)]?.sendMessageToMini(appId, message, callback)
+        try {
+            appService?.let {
+                it.mParentToMiniCallbackMap[it.getKey(callId,appId)]?.sendMessageToMini(appId, message, callback)
+            }
+        } catch (e: RemoteException) {
+            if (sLogger.isDebugActivated) {
+                sLogger.error("sendMessageToMiniApp err:", e)
+            }
         }
+
     }
 
     override fun clearBackgroundTaskList() {

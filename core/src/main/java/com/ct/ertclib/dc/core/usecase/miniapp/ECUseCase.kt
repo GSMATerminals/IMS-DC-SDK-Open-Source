@@ -80,6 +80,14 @@ class ECUseCase(private val miniToParentManager: IMiniToParentManager) :
         }
     }
 
+    override fun registerAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(register(context, params))
+    }
+
     override fun register(
         context: Context,
         params: Map<String, Any>
@@ -96,6 +104,14 @@ class ECUseCase(private val miniToParentManager: IMiniToParentManager) :
         }
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
+    }
+
+    override fun requestAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(request(context, params))
     }
 
     override fun request(

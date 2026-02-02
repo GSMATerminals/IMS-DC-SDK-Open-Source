@@ -39,6 +39,7 @@ class DCJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_CLOSE_DATA_CHANNEL -> { dcEventUseCase.closeAppDataChannel(context, request.params, handler) }
             FUNCTION_SEND_DATA -> { dcEventUseCase.sendData(context, request.params, handler) }
             FUNCTION_IS_PEER_SUPPORT_DC -> { dcEventUseCase.isPeerSupportDC(context, request.params, handler) }
+            FUNCTION_GET_BUFFER_AMOUNT -> { dcEventUseCase.getBufferedAmountAsync(context, request.params,handler) }
         }
     }
 

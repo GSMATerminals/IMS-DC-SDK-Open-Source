@@ -68,4 +68,37 @@ interface IAppMiniUseCase {
     fun isMuted(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
     fun answer(context: Context): String?
+
+    fun hangupAsync(context: Context,handler: CompletionHandler<String?>)
+
+    fun getCallStateAsync(context: Context,handler: CompletionHandler<String?>)
+
+    fun getSDKInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun getScreenInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun requestStartAdverseAppAsync(context: Context,handler: CompletionHandler<String?>)
+
+    fun addOrEditContactAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun getContactNameAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun setSystemApiLicenseAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun openWebAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+
+    fun moveToFrontAsync(handler: CompletionHandler<String?>)
+
+    fun stopAppAsync(handler: CompletionHandler<String?>)
+
+    fun getShareTypeNameAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun playDtmfToneAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun setSpeakerphoneAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun setMutedAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+
+    fun answerAsync(context: Context,handler: CompletionHandler<String?>)
 }

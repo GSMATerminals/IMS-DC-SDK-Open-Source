@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.miniapp
 
+import android.os.RemoteException
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.constants.CommonConstants
@@ -47,8 +48,13 @@ class MiniAppConsultControlImpl(private val appId: String,private val onOnContro
 
     fun onDCCreated(imsDataChannel: IImsDataChannel) {
         sLogger.info("miniAppConsultControlImpl onDCCreated dcLabel:${imsDataChannel.dcLabel}")
+        onOnControlListener.onControlDCStateChange(imsDataChannel.state,0)
+
+        if (mDC?.dcLabel == imsDataChannel.dcLabel && (mDC?.state == ImsDCStatus.DC_STATE_CONNECTING || mDC?.state == ImsDCStatus.DC_STATE_OPEN)){
+            sLogger.info("miniAppConsultControlImpl onDCCreated dcLabel:${imsDataChannel.dcLabel} is exist")
+            return
+        }
         mDC = imsDataChannel
-        onOnControlListener.onControlDCStateChange(mDC!!.state,0)
         imsDataChannel.registerObserver(object : IImsDCObserver.Stub() {
             override fun onDataChannelStateChange(status: ImsDCStatus?, errCode: Int) {
                 sLogger.info("miniAppConsultControlImpl onDataChannelStateChange:${status},dcLabel:${imsDataChannel.dcLabel}")
@@ -102,10 +108,6 @@ class MiniAppConsultControlImpl(private val appId: String,private val onOnContro
             description
         )
         sLogger.info("MiniAppConsultControlImpl createDC appId:$appId ,result:$result,label:$label ,description:$description")
-    }
-
-    fun release(){
-        mDC?.unregisterObserver()
     }
 
     fun requestStartAdverseApp(appInfo: MiniAppInfo) {

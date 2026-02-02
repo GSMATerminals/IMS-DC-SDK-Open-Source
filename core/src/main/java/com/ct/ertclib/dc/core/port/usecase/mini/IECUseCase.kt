@@ -25,4 +25,8 @@ interface IECUseCase {
     fun register(context: Context, params: Map<String, Any>): String?
 
     fun request(context: Context,params: Map<String, Any>): String?
+
+    fun registerAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun requestAsync(context: Context,params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

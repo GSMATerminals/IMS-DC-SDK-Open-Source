@@ -178,6 +178,14 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
         }
     }
 
+    override fun getBufferedAmountAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getBufferedAmount(context, params))
+    }
+
     override fun getBufferedAmount(
         context: Context,
         params: Map<String, Any>
