@@ -359,6 +359,14 @@ class FileMiniUseCase(
         }
     }
 
+    override fun getFileListAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getFileList(context,params))
+    }
+
     override fun getFileList(context: Context, params: Map<String, Any>): String? {
         logger.info("getFileList")
         miniToParentManager.getMiniAppInfo()?.let {
@@ -519,6 +527,14 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun getPrivateFolderAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getPrivateFolder(context,params))
+    }
+
     override fun getPrivateFolder(
         context: Context,
         params: Map<String, Any>
@@ -546,6 +562,14 @@ class FileMiniUseCase(
         response.message = "success"
         response.data = mutableMapOf("privateFolder" to miniAppFilePath(context, typeStr))
         return JsonUtil.toJson(response)
+    }
+
+    override fun startSaveFileAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(startSaveFile(context,params))
     }
 
     override fun startSaveFile(
@@ -618,6 +642,10 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun stopSaveFileAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(stopSaveFile(context))
+    }
+
     override fun stopSaveFile(context: Context): String? {
         logger.debug("stopSaveFile")
         miniToParentManager.getMiniAppInfo()?.let {
@@ -639,6 +667,14 @@ class FileMiniUseCase(
         response.code = "0"
         response.message = "success"
         return JsonUtil.toJson(response)
+    }
+
+    override fun startReadFileAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(startReadFile(context,params))
     }
 
     override fun startReadFile(
@@ -692,6 +728,10 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun stopReadFileAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(stopReadFile(context))
+    }
+
     override fun stopReadFile(context: Context): String? {
         logger.debug("stopReadFile")
 
@@ -705,6 +745,14 @@ class FileMiniUseCase(
         response.code = "0"
         response.message = "success"
         return JsonUtil.toJson(response)
+    }
+
+    override fun checkFileOrFolderExistsAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(checkFileOrFolderExists(context,params))
     }
 
     override fun checkFileOrFolderExists(
@@ -892,6 +940,13 @@ class FileMiniUseCase(
         }
     }
 
+    override fun deleteFileAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(deleteFile(context,params))
+    }
 
     override fun deleteFile(context: Context, params: Map<String, Any>): String? {
         logger.debug("deleteFile")
@@ -935,6 +990,14 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun saveUpdateKeyValueAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(saveUpdateKeyValue(context,params))
+    }
+
     @Deprecated(
         message = "This function is deprecated. Use saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? instead.",
         replaceWith = ReplaceWith("saveUpdateKeyValueWithExpiry"),
@@ -956,6 +1019,14 @@ class FileMiniUseCase(
         }
         val response = JSResponse("0", "success", null)
         return JsonUtil.toJson(response)
+    }
+
+    override fun saveUpdateKeyValueWithExpiryAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(saveUpdateKeyValueWithExpiry(context,params))
     }
 
     override fun saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? {
@@ -988,6 +1059,14 @@ class FileMiniUseCase(
         }
         val response = JSResponse("0", "success", null)
         return JsonUtil.toJson(response)
+    }
+
+    override fun deleteKeyValueAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(deleteKeyValue(context,params))
     }
 
     override fun deleteKeyValue(context: Context, params: Map<String, Any>): String? {
@@ -1024,6 +1103,14 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
+    override fun playVoiceAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(playVoice(context,params))
+    }
+
     override fun playVoice(
         context: Context,
         params: Map<String, Any>
@@ -1047,8 +1134,23 @@ class FileMiniUseCase(
             return JsonUtil.toJson(response)
         }
         val pathStr = path as String
+
+        if (!FileUtils.isFileExists(pathStr)){
+            logger.debug("JSApi sync playVoice file not exists")
+            response.code = RESPONSE_FAILED_CODE
+            response.message = "file not exists"
+            return JsonUtil.toJson(response)
+        }
         miniToParentManager.miniAppInterface?.playVoice(pathStr)
         return JsonUtil.toJson(response)
+    }
+
+    override fun stopPlayVoiceAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(stopPlayVoice(context,params))
     }
 
     override fun stopPlayVoice(
@@ -1068,6 +1170,14 @@ class FileMiniUseCase(
         miniToParentManager.miniAppInterface?.stopPlayVoice()
         val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
         return JsonUtil.toJson(response)
+    }
+
+    override fun getKeyValueAsync(
+        context: Context,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(getKeyValue(context,params))
     }
 
     override fun getKeyValue(context: Context, params: Map<String, Any>): String? {

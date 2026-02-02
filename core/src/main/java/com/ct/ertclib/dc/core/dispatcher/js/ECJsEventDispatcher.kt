@@ -34,6 +34,8 @@ class ECJsEventDispatcher : IJsEventDispatcher, KoinComponent {
     override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
             FUNCTION_EC_QUERY -> ecUseCase.queryEC(context, handler)
+            FUNCTION_EC_REGISTER -> ecUseCase.registerAsync(context, request.params, handler)
+            FUNCTION_EC_REQUEST -> ecUseCase.requestAsync(context, request.params, handler)
         }
     }
 

@@ -152,8 +152,10 @@ object DCSocketManager {
 
     private fun dealSocketData(byteArray: ByteArray) {
         try {
-            val jsonString = String(byteArray)
-            sLogger.info("Received data: $jsonString")
+            val jsonStringOrg = String(byteArray)
+            sLogger.info("Received data: $jsonStringOrg")
+            val jsonString = if (jsonStringOrg.contains("remote_")) jsonStringOrg.replace("remote_","local_") else jsonStringOrg.replace("local_","remote_")
+            sLogger.info("Received data change label: $jsonString")
             val socketData = parseSocketData(jsonString)
 
             when (socketData?.type) {

@@ -29,12 +29,13 @@ class RTCDataChannel {
             }
         )
     }
-    getBufferedAmount() {
+    getBufferedAmount(f) {
         // 查询bufferedAmount
-        const s = mDsBridge.call("sync", `{"event":"DcEvent","function":"getBufferedAmount","params":{"dcLabel":"${this.label}"}}`);
-        const response = JSON.parse(s)
-        this.bufferedAmount = response.data.bufferedAmount
-        return this.bufferedAmount;
+        mDsBridge.call("async", `{"event":"DcEvent","function":"getBufferedAmount","params":{"dcLabel":"${this.label}"}}`, (v) => {
+            const response = JSON.parse(v);
+            this.bufferedAmount = response.data.bufferedAmount;
+            f(this.bufferedAmount);
+        });
     }
     channelDataChannelNotify(imsDCStatus) {
         // DC状态信息

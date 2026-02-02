@@ -38,4 +38,18 @@ interface IScreenShareMiniUseCase {
     fun setPrivacyMode(params: Map<String, Any>): String
 
     fun addRemoteWindowSizeInfo(params: Map<String, Any>): String
+
+    fun stopScreenShareAsync(context: Context, handler: CompletionHandler<String?>)
+
+    fun openSketchBoardAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun closeSketchBoardAsync(handler: CompletionHandler<String?>)
+
+    fun addDrawingInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun addRemoteSizeInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun setPrivacyModeAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun addRemoteWindowSizeInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

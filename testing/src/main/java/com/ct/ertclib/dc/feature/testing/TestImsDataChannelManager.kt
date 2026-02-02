@@ -36,34 +36,41 @@ object TestImsDataChannelManager {
 
     @SuppressLint("StaticFieldLeak")
     private fun openBdc(soltId: Int, callId: String) {
-        if (mDCMaps["bdc"] != null) {
+        if (mDCMaps["bdc0"] != null) {
             sLogger.info("bdc is already open, need close first")
             return
         }
         mSoltId = soltId
         mCallId = callId
 
-        var imsDataChannelImpl =
+        val imsDataChannelImpl0 =
             TestImsDataChannelImpl()
-        imsDataChannelImpl.setDcTyp(TestImsDataChannelImpl.DC_TYPE_BDC)
-        imsDataChannelImpl.setSlotId(soltId)
-        imsDataChannelImpl.setTelecomCallId(callId)
-        imsDataChannelImpl.telephonyNumber = ""
-        imsDataChannelImpl.setDcLabel("bdc")
-        imsDataChannelImpl.setStreamId("0")
-        imsDataChannelImpl.setDcStatus(ImsDCStatus.DC_STATE_OPEN)
-        mDCMaps["bdc"] = imsDataChannelImpl
-        notifyBDCResponse(mCallback)
+        imsDataChannelImpl0.setDcTyp(TestImsDataChannelImpl.DC_TYPE_BDC)
+        imsDataChannelImpl0.slotId = soltId
+        imsDataChannelImpl0.telecomCallId = callId
+        imsDataChannelImpl0.telephonyNumber = ""
+        imsDataChannelImpl0.dcLabel = "bdc0"
+        imsDataChannelImpl0.streamId = "0"
+        imsDataChannelImpl0.setDcStatus(ImsDCStatus.DC_STATE_OPEN)
+        mDCMaps["bdc0"] = imsDataChannelImpl0
+        notifyBDCResponse(imsDataChannelImpl0,mCallback)
+
+        val imsDataChannelImpl100 =
+            TestImsDataChannelImpl()
+        imsDataChannelImpl100.setDcTyp(TestImsDataChannelImpl.DC_TYPE_BDC)
+        imsDataChannelImpl100.slotId = soltId
+        imsDataChannelImpl100.telecomCallId = callId
+        imsDataChannelImpl100.telephonyNumber = ""
+        imsDataChannelImpl100.dcLabel = "bdc100"
+        imsDataChannelImpl100.streamId = "100"
+        imsDataChannelImpl100.setDcStatus(ImsDCStatus.DC_STATE_OPEN)
+        mDCMaps["bdc100"] = imsDataChannelImpl100
+        notifyBDCResponse(imsDataChannelImpl100,mCallback)
     }
 
-    private fun notifyBDCResponse(callback: IImsDataChannelCallback?) {
-        if (mDCMaps["bdc"] == null) {
-            sLogger.info("notifyBDCResponse BDC IS null")
-            return
-        }
-        sLogger.info("callback:$callback")
+    private fun notifyBDCResponse(bdc: TestImsDataChannelImpl,callback: IImsDataChannelCallback?) {
         try {
-            callback?.onBootstrapDataChannelResponse(mDCMaps["bdc"])
+            callback?.onBootstrapDataChannelResponse(bdc)
         } catch (e: Exception) {
             sLogger.error("notifyBDCResponse error", e)
         }
@@ -73,7 +80,7 @@ object TestImsDataChannelManager {
         val imsDataChannelImpl = mDCMaps["bdc"]
         if (imsDataChannelImpl == null) {
             sLogger.info("close bdc is null")
-        } else if (imsDataChannelImpl.isClosed()) {
+        } else if (imsDataChannelImpl.isClosed) {
             sLogger.info("close bdc is already closed")
         } else {
             if (soltId == imsDataChannelImpl.slotId && callId == imsDataChannelImpl.telecomCallId) {
@@ -147,9 +154,6 @@ object TestImsDataChannelManager {
         dcState: ImsDCStatus
     ) {
         sLogger.info("notifyADCResponse labels:$labels")
-        if (labels == null) {
-            return
-        }
         labels.forEach {
             var imsDataChannelImpl = mDCMaps[it]
             if (imsDataChannelImpl == null) {
@@ -157,10 +161,10 @@ object TestImsDataChannelManager {
                 imsDataChannelImpl =
                     TestImsDataChannelImpl()
                 imsDataChannelImpl.setDcTyp(TestImsDataChannelImpl.DC_TYPE_ADC)
-                imsDataChannelImpl.setSlotId(mSoltId!!)
-                imsDataChannelImpl.setTelecomCallId(mCallId!!)
-                imsDataChannelImpl.setDcLabel(it)
-                imsDataChannelImpl.setStreamId((1000+(mDCMaps.size)*2).toString())
+                imsDataChannelImpl.slotId = mSoltId!!
+                imsDataChannelImpl.telecomCallId = mCallId!!
+                imsDataChannelImpl.dcLabel = it
+                imsDataChannelImpl.streamId = (1000+(mDCMaps.size)*2).toString()
                 imsDataChannelImpl.setDcStatus(dcState)
                 mDCMaps[it] = imsDataChannelImpl
             } else if (ImsDCStatus.DC_STATE_CONNECTING != dcState) {

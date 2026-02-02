@@ -178,8 +178,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
 
     @Volatile
     private var mMiniAppListInfo: MiniAppList? = null
-    // 本次通话中被动拉起的小程序,目前设计成只可能来自remote
-    private val mPassivelyMiniAppMap = ConcurrentHashMap<String, MiniAppInfo>()
     private val mRejectPassivelyMiniAppCountMap = ConcurrentHashMap<String, Int>()
     private var mMiniAppListCallback: IMiniAppListLoadedCallback? = null
     private var mDownloadMiniApp: IDownloadMiniApp? = null
@@ -219,9 +217,8 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     fun getMiniAppInfo(appId: String?): MiniAppInfo? {
-        // todo 如果本端小程序拉起，不一定能找到
-        if (mPassivelyMiniAppMap[appId]!=null){
-            return mPassivelyMiniAppMap[appId]
+        if (mStartAppMap[appId]!=null){
+            return mStartAppMap[appId]
         }
         if (mMiniAppListInfo == null) {
             if (sLogger.isDebugActivated) {
@@ -297,7 +294,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     private fun handleDcClosed() {
         mDownloadMiniApp = null
         mMiniAppListCallback = null
-        mPassivelyMiniAppMap.clear()
         mRejectPassivelyMiniAppCountMap.clear()
         mStartAppMap.clear()
         mStartAppCallback.clear()
@@ -624,8 +620,10 @@ class MiniAppManager(private val callInfo: CallInfo) :
 
         appId?.let {
             mStartAppMap[it] = miniAppInfo
-            historyStartAppList.removeIf { miniAppInfo -> miniAppInfo.appId == it }
-            historyStartAppList.add(0, miniAppInfo)
+            if (miniAppInfo.isActiveStart){
+                historyStartAppList.removeIf { miniAppInfo -> miniAppInfo.appId == it }
+                historyStartAppList.add(0, miniAppInfo)
+            }
         }
 
         mStartAppCallback[appId] ?: return
@@ -633,48 +631,9 @@ class MiniAppManager(private val callInfo: CallInfo) :
         sLogger.debug("$mTag handleStartMiniAppSuccess notify app start result,miniAppInfo.appProperties: ${miniAppInfo.appProperties}")
         mStartAppCallback[appId]!!.onStartResult(appId!!, true, null)
         mStartAppCallback.remove(appId)
-        // 业务发起方发起建立SDK协商机制
-        if (!mPassivelyMiniAppMap.containsKey(appId) && miniAppInfo.appProperties?.shouldCreateControlADC == true && mMiniAppListInfo?.ifPeerSupport == true){//小程序不是被动打开的，是业务发起方
-            mMiniAppConsultControlImplMap[appId] = MiniAppConsultControlImpl(appId,object : MiniAppConsultControlImpl.OnControlListener{
-                override fun onCreateADCParams(
-                    appId: String,
-                    toTypedArray: Array<String>,
-                    description: String
-                ): Int {
-                    return createApplicationDataChannelsInternal(appId, toTypedArray, description)
-                }
-
-                override fun onControlDCStateChange(status: ImsDCStatus?, errCode: Int) {
-                    // 根据小程序的配置
-                    sLogger.debug("$mTag miniAppInfo.appProperties: ${miniAppInfo.appProperties}")
-                    if (status == ImsDCStatus.DC_STATE_OPEN && miniAppInfo.appProperties?.shouldStartRemoteApp == true){
-                        // 延时1s
-                        scope.launch {
-                            delay(1000)
-                            requestStartAdverseApp(appId)
-                        }
-                    }
-                }
-
-                override fun onRequestStartApp(appInfo:MiniAppInfo) {
-
-                }
-
-                override fun onResponseStartApp(option:String) {
-                    val event = NotifyEvent(
-                        ACTION_START_APP_RESPONSE,
-                        mutableMapOf("option" to option)
-                    )
-                    MiniAppStartManager.sendMessageToMiniApp(telecomCallId,appId,JsonUtil.toJson(event),object : IMessageCallback.Stub() {
-                        override fun reply(message: String?) {
-                            if (sLogger.isDebugActivated) {
-                                sLogger.debug("onResponseStartApp sendMessageToMiniApp:$message")
-                            }
-                        }
-                    })
-                }
-
-            })
+        // 业务发起方建立协商机制
+        if (miniAppInfo.isActiveStart && miniAppInfo.appProperties?.shouldCreateControlADC == true && mMiniAppListInfo?.ifPeerSupport == true){
+            initMiniAppConsultControlImpl(telecomCallId,appId)
             mMiniAppConsultControlImplMap[appId]?.createDC(miniAppInfo)
         }
     }
@@ -790,7 +749,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         mMiniAppPMMap.remove(callInfo.telecomCallId)
         mNetworkManager?.unregisterAdverseAppDataChannelCallback(callInfo.telecomCallId)
         mNetworkManager?.unregisterControlAppDataChannelCallback(callInfo.telecomCallId)
-        mMiniAppConsultControlImplMap.clear()
     }
 
     override fun onCallStateChanged(callInfo: CallInfo, state: Int) {
@@ -944,10 +902,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
     }
 
     fun requestStartAdverseApp(appId: String){
-        // 只允许业务发起方调用
-        if (!mPassivelyMiniAppMap.containsKey(appId)){
-            mStartAppMap[appId]?.let { mMiniAppConsultControlImplMap[appId]?.requestStartAdverseApp(it) }
-        }
+        mStartAppMap[appId]?.let { mMiniAppConsultControlImplMap[appId]?.requestStartAdverseApp(it) }
     }
 
     fun registerAppDataChannelCallbackInternal(appId: String, createListener: IDcCreateListener) {
@@ -1004,8 +959,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
         mNetworkManager?.unregisterAppDataChannelCallback(startedApp.callId, appId)
         startedApp.appStatus = MiniAppStatus.STOPPED
-        mMiniAppConsultControlImplMap[appId]?.release()
-        mMiniAppConsultControlImplMap.remove(appId)
     }
 
     fun unregisterCallStateListenerInternal(
@@ -1037,34 +990,57 @@ class MiniAppManager(private val callInfo: CallInfo) :
         streamId: String,
         imsDataChannel: IImsDataChannel
     ) {
-        //业务接收方协商控制adc,因为发起方不为null
-        if (mMiniAppConsultControlImplMap[appId] == null){
-            mMiniAppConsultControlImplMap[appId] = MiniAppConsultControlImpl(appId,object : MiniAppConsultControlImpl.OnControlListener{
-                override fun onCreateADCParams(
-                    appId: String,
-                    toTypedArray: Array<String>,
-                    description: String
-                ): Int {
-                    return 0
-                }
-
-                override fun onControlDCStateChange(status: ImsDCStatus?, errCode: Int) {
-                    sLogger.info("onControlDataChannelCreated new MiniAppConsultControlImpl")
-                }
-
-                override fun onRequestStartApp(appInfo: MiniAppInfo) {
-                    startMiniAppByAdverse(telecomCallId,appInfo,imsDataChannel.dcLabel.startsWith("remote"))
-                }
-
-                override fun onResponseStartApp(option:String) {
-
-                }
-
-            })
-            sLogger.info("onControlDataChannelCreated new MiniAppConsultControlImpl")
-        }
+        // 这里也初始化一下协商机制
+        initMiniAppConsultControlImpl(telecomCallId,appId)
+        sLogger.info("onControlDataChannelCreated new MiniAppConsultControlImpl")
         // 发起方和接收方都要处理
         mMiniAppConsultControlImplMap[appId]?.onDCCreated(imsDataChannel)
+    }
+
+    private fun initMiniAppConsultControlImpl(telecomCallId: String,appId: String){
+        if (mMiniAppConsultControlImplMap[appId] != null){
+            return
+        }
+        mMiniAppConsultControlImplMap[appId] = MiniAppConsultControlImpl(appId,object : MiniAppConsultControlImpl.OnControlListener{
+            override fun onCreateADCParams(
+                appId: String,
+                toTypedArray: Array<String>,
+                description: String
+            ): Int {
+                return createApplicationDataChannelsInternal(appId, toTypedArray, description)
+            }
+
+            override fun onControlDCStateChange(status: ImsDCStatus?, errCode: Int) {
+                // 根据小程序的配置
+                val miniAppInfo = mStartAppMap[appId]
+                sLogger.debug("$mTag miniAppInfo.appProperties: ${miniAppInfo?.appProperties}")
+                if (miniAppInfo?.isActiveStart == true && status == ImsDCStatus.DC_STATE_OPEN && miniAppInfo.appProperties?.shouldStartRemoteApp == true){
+                    // 延时1s
+                    scope.launch {
+                        delay(1000)
+                        requestStartAdverseApp(appId)
+                    }
+                }
+            }
+
+            override fun onRequestStartApp(appInfo:MiniAppInfo) {
+                startMiniAppByAdverse(telecomCallId,appInfo,false)
+            }
+
+            override fun onResponseStartApp(option:String) {
+                val event = NotifyEvent(
+                    ACTION_START_APP_RESPONSE,
+                    mutableMapOf("option" to option)
+                )
+                MiniAppStartManager.sendMessageToMiniApp(telecomCallId,appId,JsonUtil.toJson(event),object : IMessageCallback.Stub() {
+                    override fun reply(message: String?) {
+                        if (sLogger.isDebugActivated) {
+                            sLogger.debug("onResponseStartApp sendMessageToMiniApp:$message")
+                        }
+                    }
+                })
+            }
+        })
     }
 
     private fun startMiniAppByAdverse(telecomCallId: String, appInfo: MiniAppInfo, isFromBDC100: Boolean){
@@ -1074,7 +1050,8 @@ class MiniAppManager(private val callInfo: CallInfo) :
             sLogger.info("onRemoteDataChannelCreated reject start miniApp")
             return
         }
-        var miniApp = mPassivelyMiniAppMap[appInfo.appId]
+        var miniApp = mStartAppMap[appInfo.appId]
+
         sLogger.info("onRemoteDataChannelCreated miniApp:${miniApp}")
         if (miniApp == null || miniApp.appStatus == MiniAppStatus.UNINSTALLED || miniApp.appStatus == MiniAppStatus.STOPPED){
             // 振动
@@ -1120,7 +1097,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
                 Utils.getApp(), Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
                 object : ConfirmActivity.ConfirmCallback {
                     override fun onAccept() {
-                        mPassivelyMiniAppMap[appInfo.appId] = miniApp
                         sLogger.debug("onAccept miniapp path: $miniApp")
                         startMiniApp(appInfo.appId, object : IStartAppCallback() {
                             override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {

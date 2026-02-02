@@ -71,6 +71,10 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         })
     }
 
+    override fun stopScreenShareAsync(context: Context, handler: CompletionHandler<String?>) {
+        handler.complete(stopScreenShare(context))
+    }
+
     override fun stopScreenShare(context: Context): String {
         val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_STOP_SCREEN_SHARE, mapOf()).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
@@ -96,10 +100,18 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         })
     }
 
+    override fun openSketchBoardAsync(params: Map<String, Any>, handler: CompletionHandler<String?>) {
+        handler.complete(openSketchBoard(params))
+    }
+
     override fun openSketchBoard(params: Map<String, Any>): String {
         val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_OPEN_SKETCH_BOARD, params).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
+    }
+
+    override fun closeSketchBoardAsync(handler: CompletionHandler<String?>) {
+        handler.complete(closeSketchBoard())
     }
 
     override fun closeSketchBoard(): String {
@@ -108,10 +120,23 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
+    override fun addDrawingInfoAsync(
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(addDrawingInfo(params))
+    }
     override fun addDrawingInfo(params: Map<String, Any>): String {
         val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_ADD_DRAWING_INFO, params).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
+    }
+
+    override fun addRemoteSizeInfoAsync(
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(addRemoteSizeInfo(params))
     }
 
     override fun addRemoteSizeInfo(params: Map<String, Any>): String {
@@ -120,10 +145,24 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
+    override fun setPrivacyModeAsync(
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(setPrivacyMode(params))
+    }
+
     override fun setPrivacyMode(params: Map<String, Any>): String {
         val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_SET_SCREEN_SHARE_PRIVACY_MODE, params).toJson()
         miniToParentManager.sendMessageToParent(appRequestJson, null)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
+    }
+
+    override fun addRemoteWindowSizeInfoAsync(
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        handler.complete(addRemoteWindowSizeInfo(params))
     }
 
     override fun addRemoteWindowSizeInfo(params: Map<String, Any>): String {

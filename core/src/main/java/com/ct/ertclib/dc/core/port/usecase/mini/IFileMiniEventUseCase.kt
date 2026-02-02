@@ -68,4 +68,33 @@ interface IFileMiniEventUseCase {
     fun quickSearchFileWithKeyWords(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
     fun fileDownload(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun getFileListAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun getPrivateFolderAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun startSaveFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun stopSaveFileAsync(context: Context, handler: CompletionHandler<String?>)
+
+    fun startReadFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun stopReadFileAsync(context: Context, handler: CompletionHandler<String?>)
+
+    fun checkFileOrFolderExistsAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun deleteFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun saveUpdateKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun saveUpdateKeyValueWithExpiryAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun getKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun deleteKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun playVoiceAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun stopPlayVoiceAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
 }

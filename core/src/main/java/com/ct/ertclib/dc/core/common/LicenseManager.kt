@@ -86,4 +86,8 @@ class LicenseManager {
     fun verifyMiniAppPkg(zipPath: String): Boolean {
         return VerifyHelper.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
     }
+
+    fun verifyMiniAppFolder(folderPath: String): Boolean {
+        return VerifyHelper.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
+    }
 }

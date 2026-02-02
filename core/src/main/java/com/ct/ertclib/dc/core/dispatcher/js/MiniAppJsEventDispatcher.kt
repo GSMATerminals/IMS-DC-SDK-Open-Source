@@ -62,6 +62,23 @@ class MiniAppJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_GET_CONTACT_LIST -> miniAppEventUseCase.getContactList(context, request.params,handler)
             FUNCTION_IS_SPEAKERPHONE_ON -> miniAppEventUseCase.isSpeakerphoneOn(context, request.params,handler)
             FUNCTION_IS_MUTED -> miniAppEventUseCase.isMuted(context, request.params,handler)
+
+            FUNCTION_ADD_CONTACT -> miniAppEventUseCase.addOrEditContactAsync(context, request.params,handler)
+            FUNCTION_GET_CONTACT_NAME -> miniAppEventUseCase.getContactNameAsync(context, request.params,handler)
+            FUNCTION_GET_SDK_INFO -> miniAppEventUseCase.getSDKInfoAsync(context, request.params,handler)
+            FUNCTION_GET_SCREEN_INFO -> miniAppEventUseCase.getScreenInfoAsync(context, request.params,handler)
+            FUNCTION_HANG_UP -> miniAppEventUseCase.hangupAsync(context,handler)
+            FUNCTION_GET_CALL_STATE -> miniAppEventUseCase.getCallStateAsync(context,handler)
+            FUNCTION_REQUEST_START_ADVERSE_APP -> miniAppEventUseCase.requestStartAdverseAppAsync(context,handler)
+            FUNCTION_SET_SYSTEM_API_LICENSE -> miniAppEventUseCase.setSystemApiLicenseAsync(context, request.params,handler)
+            FUNCTION_OPEN_WEB ->  miniAppEventUseCase.openWebAsync(context, request.params,handler)
+            FUNCTION_MOVE_TO_FRONT -> miniAppEventUseCase.moveToFrontAsync(handler)
+            FUNCTION_STOP_APP -> miniAppEventUseCase.stopAppAsync(handler)
+            FUNCTION_GET_SHARE_TYPE_NAME -> miniAppEventUseCase.getShareTypeNameAsync(context, request.params,handler)
+            FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfToneAsync(context, request.params,handler)
+            FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphoneAsync(context, request.params,handler)
+            FUNCTION_SET_MUTED -> miniAppEventUseCase.setMutedAsync(context, request.params,handler)
+            FUNCTION_ANSWER ->  miniAppEventUseCase.answerAsync(context,handler)
         }
     }
 

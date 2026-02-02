@@ -63,6 +63,22 @@ class FileJsEventDispatcher : IJsEventDispatcher, KoinComponent {
             FUNCTION_QUICK_SEARCH_FILE -> { fileEventUseCase.quickSearchFile(context,request.params,  handler) }
             FUNCTION_QUICK_SEARCH_KEY_WORDS -> { fileEventUseCase.quickSearchFileWithKeyWords(context, request.params, handler) }
             FUNCTION_FILE_DOWNLOAD -> { fileEventUseCase.fileDownload(context, request.params, handler) }
+
+            FUNCTION_GET_FILE_LIST -> { fileEventUseCase.getFileListAsync(context, request.params, handler) }
+            FUNCTION_GET_PRIVATE_FOLDER -> { fileEventUseCase.getPrivateFolderAsync(context, request.params, handler) }
+            FUNCTION_START_SAVE_FILE -> { fileEventUseCase.startSaveFileAsync(context, request.params, handler) }
+            FUNCTION_STOP_SAVE_FILE -> { fileEventUseCase.stopSaveFileAsync(context, handler) }
+            FUNCTION_DELETE_FILE -> { fileEventUseCase.deleteFileAsync(context, request.params, handler) }
+            FUNCTION_START_READ_FILE -> { fileEventUseCase.startReadFileAsync(context, request.params, handler) }
+            FUNCTION_STOP_READ_FILE -> { fileEventUseCase.stopReadFileAsync(context, handler) }
+            FUNCTION_CHECK_FILE_EXISTS -> { fileEventUseCase.checkFileOrFolderExistsAsync(context, request.params, handler) }
+            FUNCTION_GET_FILE_INFO -> { fileEventUseCase.getFileInfoAsync(context, request.params, handler) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE -> { fileEventUseCase.saveUpdateKeyValueAsync(context, request.params, handler) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { fileEventUseCase.saveUpdateKeyValueWithExpiryAsync(context, request.params, handler) }
+            FUNCTION_GET_KEY_VALUE -> { fileEventUseCase.getKeyValueAsync(context, request.params, handler) }
+            FUNCTION_DELETE_KEY_VALUE -> { fileEventUseCase.deleteKeyValueAsync(context, request.params, handler) }
+            FUNCTION_PLAY_VOICE -> { fileEventUseCase.playVoiceAsync(context, request.params, handler) }
+            FUNCTION_STOP_PLAY_VOICE -> { fileEventUseCase.stopPlayVoiceAsync(context, request.params, handler) }
         }
     }
 
