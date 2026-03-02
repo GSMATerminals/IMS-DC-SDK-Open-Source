@@ -9,19 +9,19 @@ Note: This document aims to help developers understand the architectural design 
   
   - **Doodle Together**
   
-    <center><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></center> 
+    <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
   
     **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
   
   - **File Sharing**
   
-    <center><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></center> 
+    <div align="center"><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></div> 
   
     **File Sharing** enables two parties in 5G New Calling to share real-time information such as locations and files without switching applications, streamlining both conversation and information exchange in one seamless experience.
   
   - **Customer Service Line**
   
-     <center><img src="images/10000_EN.gif" alt="Description" width="250" /> 
+     <div align="center"><img src="images/10000_EN.gif" alt="Description" width="250" /></div> 
   
     **Custom Service Line** is a toB application exclusively designed for the 5G New Calling DC service. Compared with the traditional 10000 service, which only supports voice prompts and keypad operations in a single interactive mode, the 5G New Calling **Custom Service Line** leverages a visual UI interface to enable touch-screen interaction, significantly enhancing operational flexibility and service accessibility for users.
 
