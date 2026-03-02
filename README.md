@@ -130,7 +130,7 @@ When a user is on a call, if the device integrates the Normal version, a 5G New 
 
 ---
 
-<span style="font-size: 1.2em;">[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#IX. Contact)</span>
+[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#ix-contact)
 
 ---
 
