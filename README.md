@@ -128,11 +128,8 @@ Terminals must be adapted according to the [《5G New Calling SDK Terminal Adapt
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
 When a user is on a call, if the device integrates the Normal version, a 5G New Calling icon will appear as a floating bubble on the native call interface, tapping this icon will open the 5G New Calling IMS Data Channel Application space; If the device integrates the Dialer version and has been implemented according to the adaptation specifications, a fixed entry button will appear on the native call interface, clicking this button will open the 5G New Calling IMS Data Channel Application space.
 
----
+>[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#ix-contact)
 
-[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#ix-contact)
-
----
 
 ## VII. IMS Data Channel Application Development & Debugging
 Using the Local (Local debugging version) SDK, developers can debug IMS Data Channel Applications on ordinary Android terminals without relying on an IMS Data Channel network environment or terminal adaptation.
