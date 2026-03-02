@@ -7,13 +7,13 @@ Note: This document aims to help developers understand the architectural design 
 
 - The following are three IMS Data Channel Application service demonstrations for 5G New Calling. We hope that through vivid and engaging presentations, you can quickly gain a comprehensive understanding of the complete business capabilities of 5G New Calling.
   
-  - **Doodle Together**
+  - **Doodle Together(Left:Sender Right:Receiver)**
   
     <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
   
     **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
   
-  - **File Sharing**
+  - **File Sharing(Left:Sender Right:Receiver)**
   
     <div align="center"><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></div> 
   
