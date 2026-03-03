@@ -25,7 +25,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.SPUtils
-import com.ct.ertclib.dc.core.common.WebActivity
+import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.data.common.PolicyValue
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
@@ -46,6 +46,7 @@ object SDKPermissionUtils {
 
     const val PERMISSION_TYPE_KEY = "permission_type_key"
     const val PERMISSION_DID_CALL_NUM_SP_KEY = "permission_did_call_num_sp_key"
+    const val PERMISSION_LAST_TIME_SP_KEY = "permission_last_time_sp_key"
     const val POLICY_VERSION_KEY = "policy_version_key"
     const val ENABLE_NEW_CALL_SP_KEY = "enableNewCall"
     const val POLICY_CHANGE_KEY = "policy_change_key"
@@ -110,16 +111,36 @@ object SDKPermissionUtils {
         // 累加一次
         val num = SPUtils.getInstance().getInt(PERMISSION_DID_CALL_NUM_SP_KEY,0)
         SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY, num+1,true)
+        SPUtils.getInstance().put(PERMISSION_LAST_TIME_SP_KEY, System.currentTimeMillis(), true)
     }
 
     fun permissionDoneAllTimes():Boolean{
-        // 最多三次
         val num = SPUtils.getInstance().getInt(PERMISSION_DID_CALL_NUM_SP_KEY,0)
-        return num<3
+        val lastTime = SPUtils.getInstance().getLong(PERMISSION_LAST_TIME_SP_KEY, 0L)
+        val currentTime = System.currentTimeMillis()
+        val timeDiff = currentTime - lastTime
+
+        val daysInMillis = 24 * 60 * 60 * 1000L
+        // 测试 (1天 = 1分钟)
+        // val daysInMillis = 60 * 1000L
+
+        return when {
+            // 阶段1：第1、2、3次
+            num < 3 -> true
+            // 阶段2：短期冷却期（3天），上限2次（即第4、5次）
+            num < 5 -> timeDiff >= 3 * daysInMillis
+            // 阶段3：中期冷却期（7天），上限1次（即第6次）
+            num < 6 -> timeDiff >= 7 * daysInMillis
+            // 阶段4：长期冷却期（14天），上限1次（即第7次，最后一次）
+            num < 7 -> timeDiff >= 14 * daysInMillis
+            // 超过阶段4的上限后，永久不再弹窗
+            else -> false
+        }
     }
 
     fun setPermissionDidZero(){
         SPUtils.getInstance().put(PERMISSION_DID_CALL_NUM_SP_KEY,0,true)
+        SPUtils.getInstance().put(PERMISSION_LAST_TIME_SP_KEY, 0L, true)
     }
 
     fun checkPermissions(context: Context, permission: String): Boolean {

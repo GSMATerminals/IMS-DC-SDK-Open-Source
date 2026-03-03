@@ -1,0 +1,36 @@
+<!-- res/drawable/ic_bell_animated.xml -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="48dp"
+            android:height="48dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <!-- 包裹铃铛的 group，用于旋转 -->
+            <group
+                android:name="bell_group"
+                android:pivotX="12"
+                android:pivotY="12">
+                <path
+                    android:name="bell"
+                    android:fillColor="#FFB300"
+                    android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.9,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5S10,3.17 10,4v0.68C7.16,5.36 5.5,7.92 5.5,11v5L4,17.5v1h16v-1L18,16z" />
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <!-- 对 group 做旋转动画 -->
+    <target android:name="bell_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="300"
+                android:propertyName="rotation"
+                android:valueFrom="-10"
+                android:valueTo="10"
+                android:repeatMode="reverse"
+                android:repeatCount="-1"
+                android:interpolator="@android:interpolator/accelerate_decelerate" />
+        </aapt:attr>
+    </target>
+</animated-vector>

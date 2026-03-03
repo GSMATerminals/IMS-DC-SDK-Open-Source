@@ -34,27 +34,21 @@ import com.ct.ertclib.dc.feature.testing.databinding.ActivityLocalTestMiniAppEdi
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 
-/**
- * 新增或修改小程序
- */
+/** * 新增或修改小程序 */
 class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
-
     companion object {
         private const val TAG = "LocalTestMiniAppEditActivity"
     }
 
     private val sLogger = Logger.getLogger(TAG)
     private lateinit var binding: ActivityLocalTestMiniAppEditBinding
-
     private var oldAppId: String = ""
     private var oldAppPath: String = ""
     private var oldAppInfo: MiniAppInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        intent.getStringExtra("appId")?.let {
-            oldAppId = it
-        }
+        intent.getStringExtra("appId")?.let { oldAppId = it }
         binding = ActivityLocalTestMiniAppEditBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
@@ -62,13 +56,13 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
     }
 
     private fun init() {
-        if (oldAppId.isNotEmpty()){
+        if (oldAppId.isNotEmpty()) {
             SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
                 var strs = apps.split(",")
                 strs.forEach { item ->
                     val split = item.split("&zipPath=")
                     val temp = JsonUtil.fromJson(Base64Utils.decodeFromBase64(split[0]), MiniAppInfo::class.java)
-                    if (oldAppId == temp?.appId){
+                    if (oldAppId == temp?.appId) {
                         oldAppInfo = temp
                         oldAppPath = split[1]
                         return@forEach
@@ -77,7 +71,8 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             }
             binding.btnDelete.text = getString(R.string.delete_btn)
         }
-        if (oldAppInfo != null){
+
+        if (oldAppInfo != null) {
             binding.etAppId.setText(oldAppInfo?.appId)
             binding.etAppName.setText(oldAppInfo?.appName)
             binding.etVersion.setText(oldAppInfo?.eTag)
@@ -85,64 +80,62 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             binding.swAutoload.isChecked = oldAppInfo?.autoLoad == true
             binding.swPhase.isChecked = oldAppInfo?.phase == "PRECALL"
         }
-        if (oldAppPath.isNotEmpty()){
+
+        if (oldAppPath.isNotEmpty()) {
             binding.path.text = oldAppPath
         }
 
-        binding.backIcon.setOnClickListener {
-            onBack()
-        }
+        binding.backIcon.setOnClickListener { onBack() }
         binding.btnDelete.setOnClickListener {
-            var tips = getString(R.string.discard_edit)
-            if (oldAppId.isNotEmpty()){
-                tips = getString(R.string.delete_miniappp_tips)
-            }
-            AlertDialog.Builder(this@LocalTestMiniAppEditActivity)
-                .setTitle(R.string.confirm)
-                .setMessage(tips)
-                .setPositiveButton(com.ct.ertclib.dc.core.R.string.ok_btn) { dialog, which ->
-                    // 确定按钮点击事件
-                    dialog.dismiss()
-
-                    SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
-                        var strs = apps.split(",")
-                        var builder = StringBuilder()
-                        strs.forEach{ item ->
-                            try {
-                                val split = item.split("&zipPath=");
-                                val appInfoJsonStr = split[0]
-                                val temp = JsonUtil.fromJson(Base64Utils.decodeFromBase64(appInfoJsonStr), MiniAppInfo::class.java)
-                                if (temp?.appId != oldAppId){
-                                    if (builder.isNotEmpty()){
-                                        builder.append(",")
+            if (oldAppId.isEmpty()) {
+                onBack()
+            } else {
+                // ===== 编辑模式：btnDelete = "删除" =====
+                // 删除操作与是否修改无关，直接确认删除
+                AlertDialog.Builder(this@LocalTestMiniAppEditActivity)
+                    .setTitle(R.string.confirm)
+                    .setMessage(getString(R.string.delete_miniappp_tips))
+                    .setPositiveButton(com.ct.ertclib.dc.core.R.string.ok_btn) { dialog, _ ->
+                        dialog.dismiss()
+                        // 执行删除逻辑（原代码）
+                        SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
+                            var strs = apps.split(",")
+                            var builder = StringBuilder()
+                            strs.forEach { item ->
+                                try {
+                                    val split = item.split("&zipPath=")
+                                    val temp = JsonUtil.fromJson(Base64Utils.decodeFromBase64(split[0]), MiniAppInfo::class.java)
+                                    if (temp?.appId != oldAppId) {
+                                        if (builder.isNotEmpty()) {
+                                            builder.append(",")
+                                        }
+                                        builder.append(item)
                                     }
-                                    builder.append(item)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
                                 }
-                            } catch (e : Exception){
-                                e.printStackTrace()
                             }
+                            SPUtils.getInstance().put("TestMiniAppList", builder.toString())
                         }
-                        SPUtils.getInstance().put("TestMiniAppList", builder.toString())
-                    }
-                    if (oldAppId.isNotEmpty()){
                         ToastUtils.showShortToast(this, R.string.delete_successful)
+                        finish()
                     }
-                    finish()
-                }
-                .setNegativeButton(com.ct.ertclib.dc.core.R.string.cancel_btn) { dialog, which ->
-                    dialog.dismiss()
-                }
-                .show()
+                    .setNegativeButton(com.ct.ertclib.dc.core.R.string.cancel_btn) { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
         }
+
         binding.btnSave.setOnClickListener {
-            if (binding.etAppId.text.isNullOrEmpty()
-                || binding.etAppName.text.isNullOrEmpty()
-                || binding.etVersion.text.isNullOrEmpty()
-                || binding.etScene.text.isNullOrEmpty()
-                || binding.path.text.isNullOrEmpty()) {
+            if (binding.etAppId.text.isNullOrEmpty() || binding.etAppName.text.isNullOrEmpty() ||
+                binding.etVersion.text.isNullOrEmpty() || binding.etScene.text.isNullOrEmpty() ||
+                binding.path.text.isNullOrEmpty()
+            ) {
                 ToastUtils.showShortToast(this, R.string.edit_all_info)
                 return@setOnClickListener
             }
+
             val miniAppInfo = MiniAppInfo(
                 appId = binding.etAppId.text.toString(),
                 appName = binding.etAppName.text.toString(),
@@ -163,12 +156,13 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                 isStartAfterInstalled = true,
                 lastUseTime = 0
             )
+
             var builder = StringBuilder()
             SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
                 var strs = apps.split(",")
                 strs.forEach { item ->
                     try {
-                        val split = item.split("&zipPath=");
+                        val split = item.split("&zipPath=")
                         val temp = JsonUtil.fromJson(
                             Base64Utils.decodeFromBase64(split[0]),
                             MiniAppInfo::class.java
@@ -192,9 +186,9 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                 }
             }
             if (builder.isNotEmpty()) {
-                builder.insert(0,",")
+                builder.insert(0, ",")
             }
-            builder.insert(0,Base64Utils.encodeToBase64(JsonUtil.toJson(miniAppInfo)) + "&zipPath=" + binding.path.text.toString())
+            builder.insert(0, Base64Utils.encodeToBase64(JsonUtil.toJson(miniAppInfo)) + "&zipPath=" + binding.path.text.toString())
             SPUtils.getInstance().put("TestMiniAppList", builder.toString())
             ToastUtils.showShortToast(this, R.string.saved_ok)
             finish()
@@ -219,14 +213,11 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
                     override fun onDenied(permissions: MutableList<String>, never: Boolean) {
                         if (never) {
                             ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, R.string.miss_permission_forever)
-                            // 如果是被永久拒绝就跳转到应用权限系统设置页面
                             XXPermissions.startPermissionActivity(this@LocalTestMiniAppEditActivity, permissions)
                         } else {
                             ToastUtils.showShortToast(this@LocalTestMiniAppEditActivity, R.string.got_permissions)
                         }
                     }
-
-
                 })
         }
     }
@@ -246,31 +237,51 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
             val uri = data?.data
             sLogger.info("uri:$uri")
             if (uri != null) {
-                binding.path.text = FileUtils.getPath(this, uri)?.let {
-                    sLogger.info("path:$it")
-                    it
-                }
+                binding.path.text = FileUtils.getPath(this, uri)?.let { sLogger.info("path:$it"); it }
             }
         }
     }
 
-    private fun onBack(){
-        if (binding.etAppId.text.toString() != oldAppInfo?.appId
-            || binding.etAppName.text.toString() != oldAppInfo?.appName
-            || binding.etVersion.text.toString() != oldAppInfo?.eTag
-            || binding.etScene.text.toString() != oldAppInfo?.supportScene.toString()
-            || binding.path.text.toString() != oldAppPath
-            || binding.swAutoload.isChecked != oldAppInfo?.autoLoad
-            || binding.swPhase.isChecked != (oldAppInfo?.phase == "PRECALL")
-        ) {
+    // ====== 新增：判断是否已修改 ======
+    private fun isModified(): Boolean {
+        val currentAppId = binding.etAppId.text.toString()
+        val currentAppName = binding.etAppName.text.toString()
+        val currentVersion = binding.etVersion.text.toString()
+        val currentScene = binding.etScene.text.toString()
+        val currentPath = binding.path.text.toString()
+        val currentAutoload = binding.swAutoload.isChecked
+        val currentPhase = binding.swPhase.isChecked // true 表示 PRECALL
+
+        // 如果是新增（oldAppInfo == null），只要任一字段非空即视为已修改
+        if (oldAppInfo == null) {
+            return currentAppId.isNotEmpty() ||
+                    currentAppName.isNotEmpty() ||
+                    currentVersion.isNotEmpty() ||
+                    currentScene.isNotEmpty() ||
+                    currentPath.isNotEmpty() ||
+                    currentAutoload ||
+                    currentPhase
+        }
+
+        // 如果是编辑，逐项对比
+        return currentAppId != oldAppInfo?.appId ||
+                currentAppName != oldAppInfo?.appName ||
+                currentVersion != oldAppInfo?.eTag ||
+                currentScene != oldAppInfo?.supportScene.toString() ||
+                currentPath != oldAppPath ||
+                currentAutoload != (oldAppInfo?.autoLoad == true) ||
+                currentPhase != (oldAppInfo?.phase == "PRECALL")
+    }
+
+    private fun onBack() {
+        // ✅ 最小修改：仅当有修改时才弹窗
+        if (isModified()) {
             AlertDialog.Builder(this@LocalTestMiniAppEditActivity)
                 .setTitle(R.string.confirm)
                 .setMessage(R.string.discard_edit)
                 .setPositiveButton(com.ct.ertclib.dc.core.R.string.ok_btn) { dialog, which ->
-                    // 确定按钮点击事件
                     dialog.dismiss()
                     finish()
-
                 }
                 .setNegativeButton(com.ct.ertclib.dc.core.R.string.cancel_btn) { dialog, which ->
                     dialog.dismiss()
@@ -279,7 +290,6 @@ class LocalTestMiniAppEditActivity : BaseAppCompatActivity() {
         } else {
             finish()
         }
-
     }
 
     override fun onBackPressed() {

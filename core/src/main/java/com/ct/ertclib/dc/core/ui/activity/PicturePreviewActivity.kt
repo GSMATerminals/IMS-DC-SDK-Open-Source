@@ -14,19 +14,14 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.core.common
+package com.ct.ertclib.dc.core.ui.activity
 
-import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.core.view.isVisible
+import com.ct.ertclib.dc.core.common.load
 import com.ct.ertclib.dc.core.databinding.ActivityPicturePreviewBinding
-import com.ct.ertclib.dc.core.picker.pickCamera
-import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
 import com.ct.ertclib.dc.core.utils.common.BitmapUtils
-import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
-import com.ct.ertclib.dc.core.utils.common.UriUtils
 
 class PicturePreviewActivity : BaseAppCompatActivity() {
     private lateinit var mViewBinding: ActivityPicturePreviewBinding

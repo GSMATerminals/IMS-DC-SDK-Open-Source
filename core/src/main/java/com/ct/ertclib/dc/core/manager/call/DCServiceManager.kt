@@ -27,7 +27,6 @@ import com.newcalllib.datachannel.V1_0.IImsDataChannelServiceController
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.port.dc.ImsDcServiceConnectionCallback
-import com.ct.ertclib.dc.core.utils.common.CallUtils
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 

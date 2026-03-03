@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.manager.call
 
 import android.content.Context
+import android.telecom.Call
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.IImsDataChannelCallback
 import com.ct.ertclib.dc.core.utils.logger.Logger
@@ -50,14 +51,15 @@ import java.lang.Class
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 
-class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
-
+class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
     companion object {
         private const val TAG = "DCManager"
+        val instance: DCManager by lazy {
+            DCManager()
+        }
     }
 
     private val sLogger: Logger = Logger.getLogger(TAG)
-
 
     private val mBdcCreateListenerMap = ConcurrentHashMap<String, IDcCreateListener>()
     private val mAdcCreateListenerMap = ConcurrentHashMap<String, IDcCreateListener>()
@@ -71,7 +73,6 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
     private var mIsDataChannelServiceConnected = false
     private var mIsNetworkManagerInit = false
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var currentCallId:String? = null
     private var job1:Job? = null
     private var job2:Job? = null
 
@@ -419,7 +420,9 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
                     delay(1000)
                     continue
                 }
-                if (data.callId != currentCallId){
+                val callState = getStateFromCallsManager(data.callId)
+                if (callState != Call.STATE_DIALING && callState != Call.STATE_RINGING && callState != Call.STATE_ACTIVE){
+                    createAdcQueue.add(data)
                     delay(200)
                     continue
                 }
@@ -476,9 +479,8 @@ class DCManager() : ICallStateListener, ImsDcServiceConnectionCallback {
             canCreateADC = true
         }
     }
-
-    fun setCurrentCallId(callId:String?){
-        currentCallId = callId
+    fun getStateFromCallsManager(callId: String): Int? {
+        return NewCallsManager.instance.getState(callId)
     }
 
     private fun createNewXml(labels: Array<String>, description: String): String {

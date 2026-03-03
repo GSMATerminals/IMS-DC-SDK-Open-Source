@@ -1,20 +1,4 @@
-/*
- *   Copyright 2025-China Telecom Research Institute.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *        https://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
-
-package com.ct.ertclib.dc.core.common
+package com.ct.ertclib.dc.core.manager.common
 
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
@@ -76,18 +60,18 @@ class LicenseManager {
 
     // 调用示例：LicenseManager.getInstance().verifyLicense("aa","6","eKGExEKb140FXgZqNgkP7o210sol6x6ieF9AvWvjbMef2ec7+UtggJumjOyizeNQJ8e9D2PG5Cjxv4jo/aRLMag==")
     fun verifyLicense(miniAppId: String, apiCodes: String, license: String): Boolean {
-        return VerifyHelper.getInstance().verifyLicense(miniAppId, apiCodes, license)
+        return VerifyHelper.Companion.getInstance().verifyLicense(miniAppId, apiCodes, license)
     }
 
     fun parseImgData(img: String): String {
-        return VerifyHelper.getInstance().parseImg(img)
+        return VerifyHelper.Companion.getInstance().parseImg(img)
     }
 
     fun verifyMiniAppPkg(zipPath: String): Boolean {
-        return VerifyHelper.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
+        return VerifyHelper.Companion.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
     }
 
     fun verifyMiniAppFolder(folderPath: String): Boolean {
-        return VerifyHelper.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
+        return VerifyHelper.Companion.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
     }
 }

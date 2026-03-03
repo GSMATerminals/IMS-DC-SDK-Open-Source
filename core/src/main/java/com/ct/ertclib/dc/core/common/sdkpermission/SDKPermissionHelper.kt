@@ -49,6 +49,9 @@ class SDKPermissionHelper(
             sLogger.debug("checkAndRequestPermission type $type")
         }
         if (SDKPermissionUtils.hasAllPermissions(context)) {
+            if (sLogger.isDebugActivated) {
+                sLogger.debug("checkAndRequestPermission has all permissions")
+            }
             callback?.onAgree()
             // 创建桌面图标
             PkgUtils.checkAndCreatePinnedShortcuts(context)

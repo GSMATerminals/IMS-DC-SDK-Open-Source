@@ -28,15 +28,21 @@ import android.view.LayoutInflater
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
+import com.ct.ertclib.dc.core.constants.CommonConstants
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.MUTED
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.SPEAKERPHONE_ON
+import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.miniapp.ui.adapter.PermissionRequestAdapter
+import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.PermissionUtils
 import com.hjq.permissions.OnPermissionCallback
@@ -51,12 +57,19 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
 
     companion object {
         private const val TAG = "MiniAppViewModel"
-
+        const val MIC_STATUS_OPEN = 0
+        const val MIC_STATUS_MUTE = 1
+        const val SPEAKER_STATUS_NORMAL = 0
+        const val SPEAKER_STATUS_OPEN = 1
     }
 
     private val logger = Logger.getLogger(TAG)
     private val permissionUseCase: IPermissionUseCase by inject()
+    private val miniToParentManager: IMiniToParentManager by inject()
     private var mediaPlayer: MediaPlayer? = null
+    var phoneButtonShowStatus = MutableLiveData(false)
+    var micStatus = MutableLiveData(MIC_STATUS_OPEN)
+    var speakerStatus = MutableLiveData(SPEAKER_STATUS_NORMAL)
 
     @RequiresApi(Build.VERSION_CODES.S)
     fun startGrantPermission(
@@ -185,5 +198,38 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
     fun stopPlayVoice() {
         mediaPlayer?.release()
         mediaPlayer = null
+    }
+
+    fun hangup() {
+        val request = AppRequest(
+            CommonConstants.CALL_APP_EVENT,
+            CommonConstants.ACTION_HANGUP,
+            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
+        )
+        viewModelScope.launch(Dispatchers.Default) {
+            miniToParentManager.sendMessageToParent(request.toJson(), null)
+        }
+    }
+
+    fun setMicMute(mute: Boolean) {
+        val request = AppRequest(
+            CommonConstants.CALL_APP_EVENT,
+            CommonConstants.ACTION_SET_MUTED,
+            mapOf(MUTED to mute)
+        )
+        viewModelScope.launch(Dispatchers.Default) {
+            miniToParentManager.sendMessageToParent(request.toJson(), null)
+        }
+    }
+
+    fun setSpeakerOn(open: Boolean) {
+        val request = AppRequest(
+            CommonConstants.CALL_APP_EVENT,
+            CommonConstants.ACTION_SET_SPEAKERPHONE,
+            mapOf(SPEAKERPHONE_ON to open)
+        )
+        viewModelScope.launch(Dispatchers.Default) {
+            miniToParentManager.sendMessageToParent(request.toJson(), null)
+        }
     }
 }

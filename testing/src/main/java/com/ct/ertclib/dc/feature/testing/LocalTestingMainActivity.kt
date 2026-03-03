@@ -19,68 +19,67 @@ package com.ct.ertclib.dc.feature.testing
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.Animatable
+import android.os.Build
 import android.os.Bundle
 import android.telecom.Call
 import android.telecom.Call.STATE_RINGING
+import android.view.View
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
-import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.Utils
+import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
+import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.manager.call.NewCallsManager
-import com.ct.ertclib.dc.core.manager.call.BDCManager
-import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
-import com.ct.ertclib.dc.core.miniapp.MiniAppManager
-import com.ct.ertclib.dc.core.manager.call.DCManager
+import com.ct.ertclib.dc.core.manager.common.InCallServiceManager
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
-import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
-import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.feature.testing.databinding.ActivityLocalTestingMainBinding
 import com.ct.ertclib.dc.feature.testing.socket.DCSocketManager
-import com.ct.ertclib.dc.feature.testing.socket.HotspotIpHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
 
-class LocalTestingMainActivity : BaseAppCompatActivity() {
-    private val TAG = "LocalTestingMainActivity"
+class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
+    companion object {
+        private const val TAG = "LocalTestingMainActivity"
+        private const val CALL_ID = "TC@1000000"
+    }
     private val sLogger = Logger.getLogger(TAG)
     private lateinit var binding: ActivityLocalTestingMainBinding
     private lateinit var viewModel: TestingViewModel
-    private lateinit var scope: CoroutineScope
-    private lateinit var spUtils: SPUtils
+    private var scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    var callInfo: CallInfo? = null
-    var testNetworkManager: DCManager? = null
-    var mCallGuideManager: BDCManager? = null
-    var callsManager: NewCallsManager? = null
-
-
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLocalTestingMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         window.navigationBarColor = Color.TRANSPARENT
 
-        viewModel = ViewModelProvider(this).get(TestingViewModel::class.java)
-        scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-        spUtils = SPUtils.getInstance()
+        viewModel = ViewModelProvider(this)[TestingViewModel::class.java]
         DCSocketManager.registerCallObserver { value ->
             when(value){
                 "added" -> {
                     scope.launch(Dispatchers.Main){
-                        createCall()
+                        checkPermission()
                     }
                 }
                 "hangup" -> {
                     scope.launch(Dispatchers.Main){
-                        hangup()
+                        dealHangup()
                     }
                 }
                 "active" -> {
                     scope.launch(Dispatchers.Main){
-                        activeCall()
+                        dealActiveCall()
                     }
                 }
             }
@@ -94,118 +93,85 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
             startActivity(intent)
         }
 
-        binding.btnFakePrecall.setOnClickListener {
-            createCall()
+        binding.btnSimulateCall.setOnClickListener {
             DCSocketManager.notifyCallAdded()
+            checkPermission()
         }
 
-        binding.btnFakeIncall.setOnClickListener {
-            activeCall()
+        binding.btnAccept.setOnClickListener {
             DCSocketManager.notifyCallActive()
+            dealActiveCall()
         }
-        binding.btnFakeEndcall.setOnClickListener {
-            hangup()
+        binding.btnDecline.setOnClickListener {
             DCSocketManager.notifyHangUp()
+            dealHangup()
         }
     }
 
-    fun activeCall(){
-        scope.launch {
-            callInfo?.let {
-                it.state = Call.STATE_ACTIVE
-                sLogger.info("testNotifyCallStateChange")
-                callsManager?.testNotifyCallStateChange(it.telecomCallId, it.state)
+    private fun checkPermission() {
+        val permissionHelper = SDKPermissionHelper(Utils.getApp(),object : IPermissionCallback {
+            @RequiresApi(Build.VERSION_CODES.Q)
+            override fun onAgree() {
+                dealAddCall()
             }
-        }
+            override fun onDenied() {
+                sLogger.debug("checkPermission onCallAdded onDenied and will check permission after call")
+            }
+        })
+        permissionHelper.checkAndRequestPermission(NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL)
     }
 
-    fun createCall(){
-        val enableNewCall = spUtils.getBoolean("enableNewCall", false)
-        if (!enableNewCall) {
-            ToastUtils.showShortToast(this@LocalTestingMainActivity, getString(com.ct.ertclib.dc.core.R.string.please_open))
-            return
-        }
-        binding.btnSetting.isEnabled = false
-        binding.btnFakePrecall.isEnabled = false
-        binding.btnFakeIncall.isEnabled = true
-        binding.btnFakeEndcall.isEnabled = true
-
-
-        var myNumber: String? = "12345678901"
-        var remoteNumber: String? = "12345678902"
-
-        testNetworkManager = DCManager()
-
-        callInfo = CallInfo(
-            slotId = 0,
-            telecomCallId = "TC@1",
-            myNumber = myNumber,
-            remoteNumber = remoteNumber,
-            state = STATE_RINGING,
-            videoState = 0,
-            isConference = false,
-            isOutgoingCall = false,
-            isCtCall = true
-        )
-
-        spUtils.put("myNumber", myNumber)
-
-        val callList = ArrayList<CallInfo>().also {
-            it.add(callInfo!!)
-        }
-        callsManager = NewCallsManager(callList)
-        MiniAppManager.setCallsManager(callsManager!!)
-        MiniAppManager.setNetworkManager(testNetworkManager!!)
-        val miniAppPackageManagerImpl = MiniAppManager(callInfo!!)
-        miniAppPackageManagerImpl.setMiniAppStartManager(MiniAppStartManager)
-        mCallGuideManager = BDCManager(callInfo!!, miniAppPackageManagerImpl)
-        testNetworkManager?.setCurrentCallId("TC@1")
-        testNetworkManager?.registerBDCCallback(
-            "TC@1",
-            mCallGuideManager!!
-        )
-        callsManager?.addCallStateListener("TC@1", testNetworkManager!!)
-        callsManager?.addCallStateListener("TC@1", miniAppPackageManagerImpl)
-        callsManager?.addCallStateListener("TC@1", mCallGuideManager!!)
-        callsManager?.addCallStateListener("TC@1", object : ICallStateListener{
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun dealAddCall(){
+        NewCallsManager.instance.addCallStateListener(CALL_ID, object : ICallStateListener{
             override fun onCallAdded(
                 context: Context,
                 callInfo: CallInfo
             ) {
+                scope.launch(Dispatchers.Main) {
+                    binding.contentLayout.background = ContextCompat.getDrawable(this@LocalTestingMainActivity, R.drawable.call_background)
+                    binding.btnSetting.visibility = View.GONE
+                    binding.btnSimulateCall.visibility = View.GONE
+                    binding.layoutState.visibility = View.VISIBLE
+                    binding.ivRingingBell.visibility = View.VISIBLE
+                    binding.tvState.text = getString(R.string.ringing)
+                    val newDrawable = ContextCompat.getDrawable(this@LocalTestingMainActivity, R.drawable.ic_bell_animated)
+                    binding.ivRingingBell.setImageDrawable(newDrawable)
+                    (binding.ivRingingBell.drawable as? Animatable)?.start()
+                    binding.layoutIncomingCall.visibility = View.VISIBLE
+                    binding.btnAccept.visibility = View.VISIBLE
+                }
             }
 
             override fun onCallRemoved(
                 context: Context,
                 callInfo: CallInfo
             ) {
+                scope.launch(Dispatchers.Main) {
+                    binding.ivRingingBell.visibility = View.GONE
+                    binding.tvState.text = getString(R.string.hangingup)
+                    binding.layoutIncomingCall.visibility = View.GONE
+                    delay(1000)
+                    binding.btnSetting.visibility = View.VISIBLE
+                    binding.btnSimulateCall.visibility = View.VISIBLE
+                    (binding.ivRingingBell.drawable as? Animatable)?.stop()
+                    binding.layoutState.visibility = View.GONE
+                    binding.btnAccept.visibility = View.VISIBLE
+                    binding.contentLayout.background = null
+                }
             }
 
             override fun onCallStateChanged(
-                info: CallInfo,
+                callInfo: CallInfo,
                 state: Int
             ) {
                 scope.launch(Dispatchers.Main) {
-                    if (state == Call.STATE_DISCONNECTED){
-                        if (callInfo!=null){
-                            DCSocketManager.notifyHangUp()
-                        }
-                        binding.btnSetting.isEnabled = true
-                        binding.btnFakePrecall.isEnabled = true
-                        binding.btnFakeIncall.isEnabled = false
-                        binding.btnFakeEndcall.isEnabled = false
-                        TestImsDataChannelManager.closeBdc(0, "TC@1")
-                        testNetworkManager?.unBindService(Utils.getApp())
-                        sLogger.info("onImsDCClose mCallGuideManager:$mCallGuideManager")
-                        mCallGuideManager?.onImsCallRemovedBDCClose()
-                        testNetworkManager = null
-                        callsManager = null
-                        callInfo = null
-
-                    } else if (state == Call.STATE_ACTIVE){
-                        binding.btnSetting.isEnabled = false
-                        binding.btnFakePrecall.isEnabled = false
-                        binding.btnFakeIncall.isEnabled = false
-                        binding.btnFakeEndcall.isEnabled = true
+                    if (state == Call.STATE_ACTIVE){
+                        (binding.ivRingingBell.drawable as? Animatable)?.stop()
+                        binding.layoutState.visibility = View.VISIBLE
+                        binding.ivRingingBell.visibility = View.GONE
+                        binding.tvState.text = getString(R.string.active)
+                        binding.btnAccept.visibility = View.GONE
                     }
                 }
             }
@@ -214,15 +180,40 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
             }
 
         })
-        callsManager?.notifyOnCallAdded(callInfo!!)
+
+        val callInfo = CallInfo(
+            slotId = 0,
+            telecomCallId = CALL_ID,
+            myNumber = "12345678901",
+            remoteNumber = "12345678902",
+            state = STATE_RINGING,
+            videoState = 0,
+            isConference = false,
+            isOutgoingCall = false,
+            isCtCall = true
+        )
+
+        // 模拟建立通话
+        InCallServiceManager.instance.onBind(this@LocalTestingMainActivity,null)
+        InCallServiceManager.instance.onCallAdded(callInfo,null)
+
     }
 
-    fun hangup(){
+    private fun dealActiveCall(){
+        // 处理接听
         scope.launch {
-            callInfo?.let {
-                it.state = Call.STATE_DISCONNECTED
-                callsManager?.testNotifyCallStateChange(it.telecomCallId, it.state)
-            }
+            NewCallsManager.instance.testNotifyCallStateChange(CALL_ID, Call.STATE_ACTIVE)
+        }
+    }
+
+    private fun dealHangup(){
+        scope.launch {
+            // 处理挂断
+            NewCallsManager.instance.testNotifyCallStateChange(CALL_ID, Call.STATE_DISCONNECTED)
+            TestImsDataChannelManager.closeBdc(0, CALL_ID)
+
+            InCallServiceManager.instance.onCallRemoved(CALL_ID)
+            InCallServiceManager.instance.onUnbind()
         }
     }
     override fun onResume() {
@@ -231,7 +222,8 @@ class LocalTestingMainActivity : BaseAppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        hangup()
+        DCSocketManager.notifyHangUp()
+        dealHangup()
         DCSocketManager.unRegisterCallObserver()
     }
 }
