@@ -5,11 +5,29 @@ Note: This document aims to help developers understand the architectural design 
 
 - The 5G New Calling Terminal SDK (hereinafter referred to as the SDK) is developed by the China Telecom Research Institute. After a call is established, the chip and the network negotiate the establishment of the IMS Data Channel. The terminal encapsulates the call logic for the IMS Data Channel and provides it to the SDK via AIDL interfaces ([Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl)). The SDK serves as the runtime environment for the 5G New Calling Application (hereinafter referred to as IMS Data Channel Application) and provides a unified interface for IMS Data Channel Application to call, enabling them to operate the IMS Data Channel and other terminal capability interfaces.
 
-<img src="images/ScreenShare(Initiator).gif" alt="Description" width="150" /> <img src="images/ScreenShare(Receiver).gif" alt="Description" width="150" />  <img src="images/Yi Share(Initiator).gif" alt="Description" width="150" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="150" /> <img src="images/10000_EN.gif" alt="Description" width="185" /> 
+- The following are three IMS Data Channel Application service demonstrations for 5G New Calling. We hope that through vivid and engaging presentations, you can quickly gain a comprehensive understanding of the complete business capabilities of 5G New Calling.
+  
+  - **Doodle Together(Left:Sender Right:Receiver)**
+  
+    <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
+  
+    **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
+  
+  - **File Sharing(Left:Sender Right:Receiver)**
+  
+    <div align="center"><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></div> 
+  
+    **File Sharing** enables two parties in 5G New Calling to share real-time information such as locations and files without switching applications, streamlining both conversation and information exchange in one seamless experience.
+  
+  - **Customer Service Line**
+  
+     <div align="center"><img src="images/10000_EN.gif" alt="Description" width="250" /></div> 
+  
+    **Custom Service Line** is a toB application exclusively designed for the 5G New Calling DC service. Compared with the traditional 10000 service, which only supports voice prompts and keypad operations in a single interactive mode, the 5G New Calling **Custom Service Line** leverages a visual UI interface to enable touch-screen interaction, significantly enhancing operational flexibility and service accessibility for users.
 
-&nbsp;ScreenShare(Left: Sender/Right: Receiver)&emsp;&emsp;&nbsp;Yi Share(Left: Sender/Right: Receiver)&emsp;&nbsp;&emsp;10000 Customer Service
 
 ## I. Features
+
 While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
 
 - Closely associated with call state, manages the lifecycle of IMS Data Channel Application, providing a stable runtime environment;
@@ -110,6 +128,9 @@ Terminals must be adapted according to the [《5G New Calling SDK Terminal Adapt
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
 When a user is on a call, if the device integrates the Normal version, a 5G New Calling icon will appear as a floating bubble on the native call interface, tapping this icon will open the 5G New Calling IMS Data Channel Application space; If the device integrates the Dialer version and has been implemented according to the adaptation specifications, a fixed entry button will appear on the native call interface, clicking this button will open the 5G New Calling IMS Data Channel Application space.
 
+>[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#x-contact)
+
+
 ## VII. IMS Data Channel Application Development & Debugging
 Using the Local (Local debugging version) SDK, developers can debug IMS Data Channel Applications on ordinary Android terminals without relying on an IMS Data Channel network environment or terminal adaptation.
 
@@ -123,7 +144,49 @@ Using the Local (Local debugging version) SDK, developers can debug IMS Data Cha
 ## VIII. License
 This project is licensed under the Apache 2.0 License.
 
-## IX. Contact
+## IX. FAQ
+
+### Who should use the code from this open-source project?
+
+After obtaining the code, **Original Equipment Manufacturers (OEMs)** should compile and integrate it according to the document[《5G New Calling SDK Terminal Adaptation Specification》](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx).
+
+### **What can operators do?**
+
+- Provide a network environment that supports DC, deploy IMS DC Application, and test services using OEM terminals integrated with the SDK.
+- In the absence of a DC network and adapted terminals, the Local version of the SDK can be compiled directly to experience IMS DC Application.
+
+### How to experience IMS Data Channel Application using the Local version SDK?
+
+1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1).
+
+<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
+
+2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
+
+3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
+
+4. **Enable Features:** Find and open the **"5G Enhanced Call"** app on the home screen. Tap the **Settings** button in the top-right corner and toggle the **"Open/Close 5G Enhanced Call"** switch to **ON**. Once authorized, tap **Local debug entry** to enter the **Local debug** page.
+
+5. **Configure MiniApp:**
+
+- Tap the **Config** button (top-right) to enter the **MiniApp Repository**.
+
+- Tap **Create** (top-right) to enter the **Edit MiniApp** page.
+- Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
+- Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
+<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
+
+**Establish Connection:**
+
+- On the **Server side:** Select "Server" in the repository page. Once the IP address appears, tap **start**.
+- On the **Client side:** Select "Client," enter the IP address displayed on the server device, and tap **Start**.
+- Both devices should then return to the **Local debug** page.
+
+**Experience the Feature:** Tap **SIMULATE CALL**. Floating ball will appear. Once the "call" is connected, tap the **floating ball** to display the MiniApp list. Open a MiniApp to experience interactive features like real-time doodling.
+
+
+
+##   X. Contact
 xuq17@chinatelecom.cn
 
 pengc23@chinatelecom.cn
