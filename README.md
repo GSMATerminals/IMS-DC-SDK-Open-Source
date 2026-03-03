@@ -162,7 +162,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1).
 
-<img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\image-20260303163643165.png" alt="image-20260303163643165" style="zoom: 33%;" />
+<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" style="zoom: 33%;" /></div>
 
 2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
 
@@ -177,7 +177,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 - Tap **Create** (top-right) to enter the **Edit MiniApp** page.
 - Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
 - Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
-<div align="center"><img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" style="zoom:20%;" /></div>
+<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" style="zoom:20%;" /></div>
 
 **Establish Connection:**
 
