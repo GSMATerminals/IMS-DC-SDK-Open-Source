@@ -1,12 +1,29 @@
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
+
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
 
 - 5G增强通话终端SDK（下文称SDK）由中国电信研究院开发。通话建立后，芯片与网络会协商IMS Data Channel的建立，终端对IMS Data Channel的调用逻辑进行封装并通过AIDL接口（即Android接口定义语言[Android Interface Definition Language](https://developer.android.google.cn/develop/background-work/services/aidl?hl=zh-cn)）提供给SDK，SDK作为5G增强通话小程序（下文称小程序）的运行载体，将操作IMS Data Channel和终端其他能力接口通过统一的接口提供给小程序调用。
 
-<img src="images/屏幕共享（发起方）.gif" alt="Description" width="150"/> <img src="images/屏幕共享（接收方）.gif" alt="Description" width="150"/> <img src="images/翼分享（发起方）.gif" alt="Description" width="150" /> <img src="images/翼分享（接收方）.gif" alt="Description" width="150"/> <img src="images/10000_CN.gif" alt="Description" width="185"/> 
+- 以下是三个关于5G增强通话的DC应用业务演示，我们希望通过形象生动的展示，有助于您快速了解5G增强通话完整业务形态。
 
-&nbsp;&emsp;&nbsp;屏幕共享（左：发起方 右：接收方）&emsp;&emsp;&emsp;&nbsp;&nbsp;翼分享（左：发起方 右：接收方）&emsp;&nbsp;&emsp;&emsp;10000号客服小程序
+  - **翼起涂鸦（左：发起方 右：接收方）**
+
+    <div align="center"><img src="images/翼起涂鸦（发起方）.gif" alt="Description" width="200"/> <img src="images/翼起涂鸦（接收方）.gif" alt="Description" width="200"/></div>
+  
+  ​    "翼起涂鸦"DC小程序支持画笔涂鸦，发送表情符号和显示特效等功能。它还允许用户根据自己的喜好调整画笔的类型、粗细和颜色。这款应用有效提升通话双方的互动体验，让沟通更直观、理解更精准。
+  
+  - **翼分享（左：发起方 右：接收方）**
+  
+    <div align="center"><img src="images/翼分享（发起方）.gif" alt="Description" width="200" /><img src="images/翼分享（接收方）.gif" alt="Description" width="200"/></div>
+  
+       "翼分享"DC小程序支持通话双方在5G增强通话中，无需切换应用，即可实时互相分享位置、文件等信息，通话与信息交互一步到位。
+  
+  - **10000号客服小程序**
+  
+      <div align="center"><img src="images/10000_CN.gif" alt="Description" width="250"/></div>
+  
+  ​    "10000号客服小程序"是专为5G增强通话DC业务打造的toB应用。相较于传统10000号仅支持语音播报、按键操作的单一交互模式，5G增强通话10000号服务可借助可视化UI界面实现触屏交互，大幅提升用户操作的灵活性与服务使用的便捷性。
 
 ## 一、功能特性
 SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性：
@@ -75,16 +92,20 @@ NewCall
 - 推荐开发工具 AndroidStudio
 
 ## 六、快速开始（构建发布）
+
+
 - 打包：目前共配置了三个渠道包：Normal(悬浮球入口版本)、Dialer(拨号盘入口版本)、Local(本地调试版本，仅用于本地调试)
+
    ```bash
    ./gradlew assembleRelease 
 
 - 终端适配：  
-终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
+  终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
 
 - 发布：  
-终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
-当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，且按照适配规范实现，原生通话界面会出现固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
+  终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
+  当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，且按照适配规范实现，原生通话界面会出现固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
+>[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#十联系方式)
 
 ## 七、小程序开发调试
 使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序。
@@ -96,7 +117,39 @@ NewCall
 ## 八、许可证
 本项目采用 [Apache2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) 开源协议。
 
-## 九、联系方式
+## 九、常见问题
+
+### 1、谁应该使用该开源项目的代码
+
+OEM获取代码后，按照[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行编译集成。
+
+### 2、运营商可以做什么？
+
+- 提供支持DC的网络环境，部署小程序，使用OEM集成SDK后的终端来测试业务。
+
+- 在没有DC网络和适配终端的情况下，可以直接编译Local版本的SDK体验DC小程序。
+
+### 3、如何使用Local版本体验DC小程序？
+
+1、从[开源网站](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1)上下载apk和小程序包并在手机上安装。
+
+<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
+
+2、将开源项目提供的小程序zip压缩包拷贝到手机SD卡目录下，并安装Local SDK。
+
+3、将两台手机接入同一局域网（可以用手机热点实现）。
+
+4、在手机桌面找到"5G增强通话"APP并打开，点击右上角的设置按钮进入设置页面，在设置页面中点击开启/关闭5G增强通话滑块开启5G增强通话。按照提示授权成功后，点击本地调试入口，进入本地调试页面。
+
+5、点击右上角配置按钮进入小程序仓库页面，再点击右上角新增按钮，进入编辑小程序页面，点击选择小程序安装包，选择第2步的拷贝的zip包，填写小程序相关信息（如下图所示），填好点击保存（注：该步为模拟网络部署小程序的操作）。
+
+<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
+
+6、在小程序仓库页面，一端选择server，待显示IP后点击启动，另一端选择client，填入server端显示的IP，点击启动。两端都回到上一页面，即本地调试页面。
+
+7、点击模拟通话，会出现悬浮球，接通后点击悬浮球展示小程序列表，打开小程序即可体验简单的涂鸦互动。 
+
+## 十、联系方式
 xuq17@chinatelecom.cn
 
 pengc23@chinatelecom.cn
