@@ -18,6 +18,7 @@ object HttpUtils {
 
     private const val MAX_LINK_TIME = 15L
     private const val TAG = "HttpUtils"
+    const val REQUEST_FAILED = "failed"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(MAX_LINK_TIME, TimeUnit.SECONDS)
@@ -39,7 +40,7 @@ object HttpUtils {
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         LogUtils.error(TAG, "sendGetRequest failed : ${e.message}")
-                        resultCallback.invoke("")
+                        resultCallback.invoke(REQUEST_FAILED)
                     }
 
                     override fun onResponse(call: Call, response: Response) {
@@ -54,7 +55,7 @@ object HttpUtils {
                 })
             }.onFailure {
                 LogUtils.error(TAG, "sendGetRequest onFailure failed : ${it.message}")
-                resultCallback.invoke("")
+                resultCallback.invoke(REQUEST_FAILED)
             }
         }
     }
@@ -72,7 +73,7 @@ object HttpUtils {
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         LogUtils.error(TAG, "sendPostRequest failed: $e")
-                        resultCallback.invoke("")
+                        resultCallback.invoke(REQUEST_FAILED)
                     }
 
                     override fun onResponse(call: Call, response: Response) {
@@ -86,7 +87,7 @@ object HttpUtils {
                 })
             }.onFailure {
                 LogUtils.debug(TAG, "sendPostRequest onFailure : $it")
-                resultCallback.invoke("")
+                resultCallback.invoke(REQUEST_FAILED)
             }
         }
     }

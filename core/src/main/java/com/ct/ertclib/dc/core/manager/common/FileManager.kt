@@ -1,6 +1,9 @@
 package com.ct.ertclib.dc.core.manager.common
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.ct.ertclib.dc.core.common.FileScanner
 import com.ct.ertclib.dc.core.common.NewCallDatabase
@@ -24,6 +27,10 @@ class FileManager {
     }
 
     fun updateFiles(context: Context){
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            sLogger.info("updateFiles no permission")
+            return
+        }
         if (isScanning){
             return
         }

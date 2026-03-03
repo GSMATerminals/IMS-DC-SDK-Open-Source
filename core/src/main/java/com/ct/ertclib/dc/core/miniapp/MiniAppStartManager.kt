@@ -20,7 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.RemoteException
-import com.ct.ertclib.dc.core.common.LicenseManager
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.logger.Logger

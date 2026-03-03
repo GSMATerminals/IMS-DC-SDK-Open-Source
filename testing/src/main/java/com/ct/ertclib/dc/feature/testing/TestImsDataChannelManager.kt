@@ -77,17 +77,26 @@ object TestImsDataChannelManager {
     }
 
     fun closeBdc(soltId: Int, callId: String) {
-        val imsDataChannelImpl = mDCMaps["bdc"]
-        if (imsDataChannelImpl == null) {
-            sLogger.info("close bdc is null")
-        } else if (imsDataChannelImpl.isClosed) {
+        val bdc0 = mDCMaps["bdc0"]
+        val bdc100 = mDCMaps["bdc100"]
+        if (bdc0 == null) {
+            sLogger.info("close bdc0 is null")
+        } else if (bdc0.isClosed) {
             sLogger.info("close bdc is already closed")
         } else {
-            if (soltId == imsDataChannelImpl.slotId && callId == imsDataChannelImpl.telecomCallId) {
-                imsDataChannelImpl.setDcStatus(ImsDCStatus.DC_STATE_CLOSED)
-                mDCMaps.clear()
-            }
+            bdc0.setDcStatus(ImsDCStatus.DC_STATE_CLOSED)
         }
+
+        if (bdc100 == null) {
+            sLogger.info("close bdc0 is null")
+        } else if (bdc100.isClosed) {
+            sLogger.info("close bdc is already closed")
+        } else {
+            bdc100.setDcStatus(ImsDCStatus.DC_STATE_CLOSED)
+        }
+
+        mDCMaps.remove("bdc0")
+        mDCMaps.remove("bdc100")
 
     }
 

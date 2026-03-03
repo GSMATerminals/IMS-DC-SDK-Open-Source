@@ -17,7 +17,6 @@
 package com.ct.ertclib.dc.core.ui.activity
 
 import android.os.Bundle
-import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
@@ -26,7 +25,7 @@ import com.ct.ertclib.dc.core.databinding.LayoutSettingBinding
 import com.ct.ertclib.dc.core.ui.fragment.SettingPreferenceFragment
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 
-class SettingActivity: BaseToolBarActivity() {
+class MiniAppSettingActivity: BaseToolBarActivity() {
 
     companion object {
         private const val TAG = "SettingActivity"

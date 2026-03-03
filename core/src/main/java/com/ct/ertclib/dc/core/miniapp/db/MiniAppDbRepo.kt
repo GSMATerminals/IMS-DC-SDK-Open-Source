@@ -27,7 +27,11 @@ class MiniAppDbRepo {
         miniAppInfoDao.upsert(miniAppInfo)
     }
 
-    fun getAll(): List<MiniAppInfo>{
+    fun getAll(): List<MiniAppInfo> {
         return miniAppInfoDao.getAll()
+    }
+
+    fun delete(miniAppInfo: MiniAppInfo) {
+        miniAppInfoDao.delete(miniAppInfo)
     }
 }

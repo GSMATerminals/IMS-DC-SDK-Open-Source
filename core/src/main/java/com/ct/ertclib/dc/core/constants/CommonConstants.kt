@@ -50,10 +50,6 @@ object CommonConstants {
     const val DC_SEND_DATA_ERR_ARGUMENTS: Int = 20003 //发送参数错误
     const val DC_SEND_DATA_ERR_UNKNOWN: Int = 20004 //未知错误
 
-    const val MINI_APP_SP_KEYS_KEY = "miniAppSpKeysKey"
-    const val MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY = "miniAppSpExpiryItemSplitKeysKey"
-    const val MINI_APP_SP_EXPIRY_SPLIT_KEY = "miniAppSpExpirySplitKeysKey"
-
     const val PERCENT_CONSTANTS = 100
 
     const val MINI_APP_LIST_PAGE_SIZE = 100

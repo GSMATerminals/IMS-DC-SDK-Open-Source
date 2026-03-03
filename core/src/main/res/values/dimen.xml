@@ -31,8 +31,10 @@
 
     <dimen name="common_preference_top">20dp</dimen>
     <dimen name="common_preference_bottom">20dp</dimen>
+    <dimen name="common_text_preference_top">16dp</dimen>
+    <dimen name="common_text_preference_bottom">16dp</dimen>
 
-    <dimen name="version_preference_bottom">12dp</dimen>
+    <dimen name="version_preference_top_bottom">16dp</dimen>
     <dimen name="common_dialog_width">312dp</dimen>
 
     <dimen name="common_dialog_button_width">100dp</dimen>
@@ -56,4 +58,6 @@
     <dimen name="toolbar_layout_padding_start">56dp</dimen>
 
     <dimen name="permission_usage_item_height">56dp</dimen>
+    <dimen name="delete_layout_height">72dp</dimen>
+    <dimen name="preference_padding_top_bottom">4dp</dimen>
 </resources>

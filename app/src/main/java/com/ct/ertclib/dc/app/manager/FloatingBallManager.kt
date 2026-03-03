@@ -41,12 +41,13 @@ object FloatingBallManager: KoinComponent {
 
     private val context: Context by inject()
 
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var scope : CoroutineScope? = null
 
     @JvmStatic
     fun init() {
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "initManager")
-        scope.launch(Dispatchers.Main) {
+        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        scope?.launch(Dispatchers.Main) {
             NewCallAppSdkInterface.floatingBallStatusFlow.distinctUntilChanged().collect { floatingBallData ->
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "floatingBallStatusFlow floatingBallData: $floatingBallData")
                 if (floatingBallData.showStatus == SDK_FLOATING_DISPLAY) {
@@ -62,12 +63,17 @@ object FloatingBallManager: KoinComponent {
 
     @JvmStatic
     fun release() {
-        entryHolder = null
-        scope.cancel()
+        scope?.launch(Dispatchers.Main) {
+            entryHolder?.dismiss()
+            entryHolder = null
+        }?.invokeOnCompletion {
+            scope?.cancel()
+            scope = null
+        }
     }
 
     private fun show(callInfo: CallInfo, miniAppList: MiniAppList, style: Int) {
-        scope.launch(Dispatchers.Main) {
+        scope?.launch(Dispatchers.Main) {
             if (entryHolder == null){
                 entryHolder = MiniAppEntryHolder(context)
             }
@@ -78,7 +84,7 @@ object FloatingBallManager: KoinComponent {
     }
 
     private fun dismiss() {
-        scope.launch(Dispatchers.Main) {
+        scope?.launch(Dispatchers.Main) {
             entryHolder?.dismiss()
             entryHolder = null
         }

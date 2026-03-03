@@ -170,7 +170,7 @@ data class MiniAppInfo(
 
     override fun toString(): String {
         return "MiniAppInfo(appId: $appId, appName: $appName, autoLaunch: $autoLaunch, autoLoad: $autoLoad, callId: $callId, ifWorkWithoutPeerDc: $ifWorkWithoutPeerDc, isOutgoingCall: $isOutgoingCall, myNumber: $myNumber, " +
-                "path: $path, qosHint: $qosHint, remoteNumber: $remoteNumber, slotId: $slotId, supportScene: $supportScene, isFromBDC100: $isFromBDC100, isActiveStart: $isActiveStart),isStartByOthers: $isStartByOthers, startByOthersParams: $startByOthersParams"
+                "path: $path, qosHint: $qosHint, remoteNumber: $remoteNumber, slotId: $slotId, supportScene: $supportScene, isFromBDC100: $isFromBDC100, isActiveStart: $isActiveStart, isStartByOthers: $isStartByOthers, startByOthersParams: $startByOthersParams)"
     }
 
     companion object CREATOR : Parcelable.Creator<MiniAppInfo> {

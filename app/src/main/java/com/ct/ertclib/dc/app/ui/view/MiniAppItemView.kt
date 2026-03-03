@@ -122,7 +122,6 @@ class MiniAppItemView : LinearLayout {
     fun updateStatus(@Status status: Int) {
         this.status = status
         progressBar.status = when (status) {
-
             Status.STATUS_DOWNLOAD -> {
                 CircleProgressBar.Status.Loading
             }

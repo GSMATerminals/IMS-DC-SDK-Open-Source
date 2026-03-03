@@ -98,6 +98,7 @@ class MiniAppEntryHolder(private val context: Context) {
             NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "entry is displaying")
             return
         }
+        currentMode = EntryMode.DISPLAY
 
         if (windowManager == null) {
             windowManager = context.getSystemService(WindowManager::class.java)
@@ -127,14 +128,13 @@ class MiniAppEntryHolder(private val context: Context) {
                 windowManager?.addView(miniAppEntryView, floatLps)
             }
         }
-
-        currentMode = EntryMode.DISPLAY
     }
 
     fun dismiss() {
         if (currentMode == EntryMode.DISMISS) {
             return
         }
+        currentMode = EntryMode.DISMISS
         miniAppEntryView?.let {
             if (it.isAttachedToWindow) {
                 startEntryHideAnimation {
@@ -144,7 +144,6 @@ class MiniAppEntryHolder(private val context: Context) {
                 }
             }
         }
-        currentMode = EntryMode.DISMISS
     }
 
     private fun refreshUI() {

@@ -10,10 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.blankj.utilcode.util.ArrayUtils
 import com.blankj.utilcode.util.SPUtils
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.utils.common.Base64Utils
@@ -23,7 +23,6 @@ import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.feature.testing.databinding.ActivityLocalTestMiniAppWarehouseBinding
 import com.ct.ertclib.dc.feature.testing.socket.DCSocketManager
 import com.ct.ertclib.dc.feature.testing.socket.HotspotIpHelper
-import kotlin.toString
 
 class LocalTestMiniAppWarehouseActivity : AppCompatActivity() {
     companion object {
@@ -57,45 +56,46 @@ class LocalTestMiniAppWarehouseActivity : AppCompatActivity() {
             val intent = Intent(this, LocalTestMiniAppEditActivity::class.java)
             startActivity(intent)
         }
-        binding.btClient.setOnCheckedChangeListener {var1, isChecked ->
-            if (isChecked){
-                val host = spUtils.getString("host")
-                binding.etIp.setText(host)
-                binding.tvIp.text = ""
-            }
+        binding.tvClient.setOnClickListener {
+            binding.tvClient.isSelected = true
+            binding.tvServer.isSelected = false
+            binding.etIp.isEnabled = true
+            binding.etIp.hint = getString(R.string.client_hint)
+            binding.etIp.setText("")
+
         }
-        binding.btServer.setOnCheckedChangeListener {var1, isChecked ->
-            if (isChecked){
-                val host = hotspotIpHelper.getHotspotIpAddress()
-                binding.etIp.setText("")
-                binding.tvIp.text = host
-            }
+        binding.tvServer.setOnClickListener {
+            binding.tvClient.isSelected = false
+            binding.tvServer.isSelected = true
+            val host = hotspotIpHelper.getHotspotIpAddress()
+            binding.etIp.isEnabled = false
+            binding.etIp.hint = getString(R.string.server_hint)
+            binding.etIp.setText(host)
         }
-        binding.btnSaveTcp.setOnClickListener {
-            if (binding.btClient.isChecked){
+        binding.btnTcpToggle.setOnClickListener {
+            if (binding.tvClient.isSelected){
                 val host = binding.etIp.text.toString()
                 if (host.isEmpty()){
-                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,"请填写服务端IP")
+                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,R.string.client_hint)
+                    return@setOnClickListener
                 } else {
                     spUtils.put("host",host)
                     spUtils.put("tcpRole","client")
-                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,"已保存")
+                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,getString(R.string.saved_ok))
+                    DCSocketManager.initSocket()
                 }
-            } else if (binding.btServer.isChecked){
+            } else if (binding.tvServer.isSelected){
                 val host = hotspotIpHelper.getHotspotIpAddress()
-                binding.etIp.setText("")
-                binding.tvIp.text = host
+                binding.etIp.setText(host)
                 if (host.isNullOrEmpty()){
-                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,"请开启热点")
+                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,R.string.server_hint)
+                    return@setOnClickListener
                 } else {
                     spUtils.put("tcpRole","server")
-                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,"已保存")
+                    ToastUtils.showShortToast(this@LocalTestMiniAppWarehouseActivity,getString(R.string.saved_ok))
+                    DCSocketManager.initSocket()
                 }
             }
-            DCSocketManager.initSocket()
-        }
-        binding.btnStopTcp.setOnClickListener{
-            DCSocketManager.destroy()
         }
     }
 
@@ -134,15 +134,11 @@ class LocalTestMiniAppWarehouseActivity : AppCompatActivity() {
         }
         class SomeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             //获取子条目的布局控件ID
-            val mItem: View = view
-            var mImgItem: ImageView = view.findViewById(R.id.miniapp_icon)
-            var mTxtItem: TextView = view.findViewById(R.id.miniapp_title)
-            var mDeleteContainer: View = view.findViewById(R.id.delete_container)
-            var mBtnDelete: View = view.findViewById(R.id.btn_delete)
-            var mBtnCancel: View = view.findViewById(R.id.btn_cancel)
-            var mTvPreCall: TextView = view.findViewById(R.id.tv_precall)
-            var mTvInCall: TextView = view.findViewById(R.id.tv_incall)
-            var mTvAutoload: TextView = view.findViewById(R.id.tv_autoload)
+            val item: View = view
+            var imgItem: ImageView = view.findViewById(R.id.miniapp_icon)
+            var txtItem: TextView = view.findViewById(R.id.miniapp_title)
+            var tvSupportScene: TextView = view.findViewById(R.id.tv_support_scene)
+            var tvAutoload: TextView = view.findViewById(R.id.tv_autoload)
         }
 
         @SuppressLint("InflateParams")
@@ -152,61 +148,61 @@ class LocalTestMiniAppWarehouseActivity : AppCompatActivity() {
             return SomeViewHolder(someView)
         }
 
-        @SuppressLint("NotifyDataSetChanged")
+        @SuppressLint("NotifyDataSetChanged", "SetTextI18n")
         override fun onBindViewHolder(holder: SomeViewHolder, position: Int) {
             //这里给子条目控件设置图片跟文字
             val miniAppInfo = data[position]
-            holder.mTxtItem.text = data[position].appName
+            holder.txtItem.text = data[position].appName
             if (miniAppInfo.autoLoad){
-                holder.mTvAutoload.visibility = View.VISIBLE
+                holder.tvAutoload.visibility = View.VISIBLE
             } else {
-                holder.mTvAutoload.visibility = View.GONE
+                holder.tvAutoload.visibility = View.GONE
             }
             if (miniAppInfo.isPhasePreCall()){
-                holder.mTvPreCall.visibility = View.VISIBLE
-                holder.mTvInCall.visibility = View.GONE
+                holder.tvSupportScene.text = "Pre"
             } else {
-                holder.mTvPreCall.visibility = View.GONE
-                holder.mTvInCall.visibility = View.VISIBLE
+                holder.tvSupportScene.text = "In"
             }
 
-            holder.mItem.setOnClickListener {
+            holder.item.setOnClickListener {
                 val intent = Intent(context, LocalTestMiniAppEditActivity::class.java)
                 intent.putExtra("appId", miniAppInfo.appId)
                 context.startActivity(intent)
             }
             holder.itemView.setOnLongClickListener {
-                holder.mDeleteContainer.visibility = View.VISIBLE
-                return@setOnLongClickListener true
-            }
-            holder.mBtnDelete.setOnClickListener {
-                holder.mDeleteContainer.visibility = View.GONE
-
-                SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
-                    var strs = apps.split(",")
-                    var builder = StringBuilder()
-                    strs.forEach{ item ->
-                        try {
-                            val split = item.split("&zipPath=");
-                            val appInfoJsonStr = split[0]
-                            val temp = JsonUtil.fromJson(Base64Utils.decodeFromBase64(appInfoJsonStr), MiniAppInfo::class.java)
-                            if (temp?.appId != miniAppInfo.appId){
-                                if (builder.isNotEmpty()){
-                                    builder.append(",")
+                AlertDialog.Builder(context)
+                    .setTitle("确认删除")
+                    .setMessage("你确定要删除该小程序吗？")
+                    .setPositiveButton("删除") { dialog, which ->
+                        // 执行删除操作
+                        SPUtils.getInstance().getString("TestMiniAppList")?.let { apps ->
+                            val strs = apps.split(",")
+                            val builder = StringBuilder()
+                            strs.forEach { item ->
+                                try {
+                                    val split = item.split("&zipPath=");
+                                    val appInfoJsonStr = split[0]
+                                    val temp = JsonUtil.fromJson(
+                                        Base64Utils.decodeFromBase64(appInfoJsonStr),
+                                        MiniAppInfo::class.java
+                                    )
+                                    if (temp?.appId != miniAppInfo.appId) {
+                                        if (builder.isNotEmpty()) {
+                                            builder.append(",")
+                                        }
+                                        builder.append(item)
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
                                 }
-                                builder.append(item)
                             }
-                        } catch (e : Exception){
-                            e.printStackTrace()
+                            SPUtils.getInstance().put("TestMiniAppList", builder.toString())
+                            setData()
                         }
                     }
-                    SPUtils.getInstance().put("TestMiniAppList", builder.toString())
-                    setData()
-                }
-            }
-            holder.mBtnCancel.setOnClickListener {
-                holder.mDeleteContainer.visibility = View.GONE
-                notifyDataSetChanged()
+                    .setNegativeButton("取消", null)
+                    .show()
+                return@setOnLongClickListener true
             }
         }
         override fun getItemCount(): Int {
@@ -218,17 +214,17 @@ class LocalTestMiniAppWarehouseActivity : AppCompatActivity() {
     private fun initRole(){
         val role = spUtils.getString("tcpRole")
         if (role == "client"){
-            binding.btClient.isChecked = true
-            binding.btServer.isChecked = false
+            binding.tvClient.isSelected = true
+            binding.tvServer.isSelected = false
             val host = spUtils.getString("host")
+            binding.etIp.isEnabled = true
             binding.etIp.setText(host)
-            binding.tvIp.text = ""
         } else if (role == "server"){
-            binding.btClient.isChecked = false
-            binding.btServer.isChecked = true
+            binding.tvClient.isSelected = false
+            binding.tvServer.isSelected = true
             val host = hotspotIpHelper.getHotspotIpAddress()
-            binding.etIp.setText("")
-            binding.tvIp.text = host
+            binding.etIp.isEnabled = false
+            binding.etIp.setText(host)
         }
     }
 }

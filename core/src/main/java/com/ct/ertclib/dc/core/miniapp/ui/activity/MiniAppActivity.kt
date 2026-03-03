@@ -42,7 +42,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.WindowCompat
-import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.SPUtils
@@ -73,7 +72,7 @@ import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
-import com.ct.ertclib.dc.core.ui.activity.SettingActivity
+import com.ct.ertclib.dc.core.ui.activity.MiniAppSettingActivity
 import com.ct.ertclib.dc.core.utils.common.PermissionUtils
 import com.ct.ertclib.dc.core.ui.widget.PermissionBottomSheetDialog
 import com.ct.ertclib.dc.core.utils.common.LogUtils
@@ -93,7 +92,9 @@ import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_IME_HEIGHT_NOTIFY
+import com.ct.ertclib.dc.core.miniapp.ui.viewmodel.MiniAppViewModel.Companion.SPEAKER_STATUS_OPEN
 
 open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
@@ -146,6 +147,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         miniToParentManager.miniAppInterface = this
         handleIntent(intent)
         initView()
+        initViewModel()
 
         miniApp?.let {
             val appName = it.appName
@@ -253,7 +255,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             onBackPressed()
         }
         binding.ivSetting.setOnClickListener {
-            val intent = Intent(this, SettingActivity::class.java).apply {
+            val intent = Intent(this, MiniAppSettingActivity::class.java).apply {
                 putExtra(PARAMS_APP_ID, miniApp?.appId)
                 putExtra(PARAMS_CALL_ID, miniApp?.callId)
                 miniApp?.path?.let { path ->
@@ -285,6 +287,61 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
             // 继续分发 insets，保证其他 UI 逻辑不受影响
             insets
+        }
+
+        binding.layoutMic.setOnClickListener {
+            when (viewModel.micStatus.value) {
+                MiniAppViewModel.MIC_STATUS_MUTE -> {
+                    viewModel.micStatus.postValue(MiniAppViewModel.MIC_STATUS_OPEN)
+                    viewModel.setMicMute(false)
+                }
+                else -> {
+                    viewModel.micStatus.postValue(MiniAppViewModel.MIC_STATUS_MUTE)
+                    viewModel.setMicMute(true)
+                }
+            }
+
+        }
+        binding.iconHangUp.setOnClickListener {
+            viewModel.hangup()
+        }
+        binding.layoutSpeaker.setOnClickListener {
+            when (viewModel.speakerStatus.value) {
+                MiniAppViewModel.SPEAKER_STATUS_NORMAL -> {
+                    viewModel.speakerStatus.postValue(SPEAKER_STATUS_OPEN)
+                    viewModel.setSpeakerOn(true)
+                }
+                else -> {
+                    viewModel.speakerStatus.postValue(MiniAppViewModel.SPEAKER_STATUS_NORMAL)
+                    viewModel.setSpeakerOn(false)
+                }
+            }
+        }
+    }
+
+    private fun initViewModel() {
+        viewModel.micStatus.observe(this) { status ->
+            when (status) {
+                MiniAppViewModel.MIC_STATUS_MUTE -> {
+                    binding.iconMic.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.icon_mute_mic))
+                }
+                else -> {
+                    binding.iconMic.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.icon_mic))
+                }
+            }
+        }
+        viewModel.speakerStatus.observe(this) { status ->
+            when (status) {
+                MiniAppViewModel.SPEAKER_STATUS_NORMAL -> {
+                    binding.iconSpeaker.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.icon_speaker_off))
+                }
+                else -> {
+                    binding.iconSpeaker.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.icon_speaker_phone))
+                }
+            }
+        }
+        viewModel.phoneButtonShowStatus.observe(this) { status ->
+            binding.phoneOperationLayout.isVisible = status
         }
     }
 
@@ -393,6 +450,12 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                 binding.ivSetting.setImageResource(R.drawable.icon_setting_black)
                 binding.ivClose.setImageResource(R.drawable.icon_mini_close)
             }
+        }
+
+        if (miniApp?.appProperties?.showPhoneButton == true) {
+            viewModel.phoneButtonShowStatus.postValue(true)
+        } else {
+            viewModel.phoneButtonShowStatus.postValue(false)
         }
 
         updateBack()

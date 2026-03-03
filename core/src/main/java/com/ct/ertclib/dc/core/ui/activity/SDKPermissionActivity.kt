@@ -51,6 +51,7 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
     override fun onStart() {
         super.onStart()
         sLogger.debug("onStart")
+        userClicked = false
         checkPermission()
     }
 
@@ -95,9 +96,11 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             }
 
             binding.privacyPolicyTextview.setOnClickListener{
+                userClicked = true
                 SDKPermissionUtils.startPrivacyActivity(this@SDKPermissionActivity)
             }
             binding.userTextview.setOnClickListener{
+                userClicked = true
                 SDKPermissionUtils.startUserServiceActivity(this@SDKPermissionActivity)
             }
             binding.btnCancel.setOnClickListener {
