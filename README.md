@@ -174,7 +174,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 - Tap **Create** (top-right) to enter the **Edit MiniApp** page.
 - Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
 - Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
-<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="300" /></div>
+<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
 
 **Establish Connection:**
 
