@@ -9,7 +9,7 @@ Note: This document aims to help developers understand the architectural design 
   
   - **Doodle Together**
   
-    <center><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></center> 
+    <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
   
     **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
   
@@ -130,7 +130,7 @@ When a user is on a call, if the device integrates the Normal version, a 5G New 
 
 ---
 
-<span style="font-size: 1.2em;">[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#IX. Contact)</span>
+[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#IX-Contact)
 
 ---
 
@@ -147,7 +147,49 @@ Using the Local (Local debugging version) SDK, developers can debug IMS Data Cha
 ## VIII. License
 This project is licensed under the Apache 2.0 License.
 
-##   IX. Contact
+## IX. FAQ
+
+### Who should use the code from this open-source project?
+
+After obtaining the code, **Original Equipment Manufacturers (OEMs)** should compile and integrate it according to the document[《5G New Calling SDK Terminal Adaptation Specification》](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx).
+
+### **What can operators do?**
+
+- Provide a network environment that supports DC, deploy IMS DC Application, and test services using OEM terminals integrated with the SDK.
+- In the absence of a DC network and adapted terminals, the Local version of the SDK can be compiled directly to experience IMS DC Application.
+
+### How to experience IMS Data Channel Application using the Local version SDK?
+
+1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1).
+
+<img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\image-20260303163643165.png" alt="image-20260303163643165" style="zoom: 33%;" />
+
+2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
+
+3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
+
+4. **Enable Features:** Find and open the **"5G Enhanced Call"** app on the home screen. Tap the **Settings** button in the top-right corner and toggle the **"Open/Close 5G Enhanced Call"** switch to **ON**. Once authorized, tap **Local debug entry** to enter the **Local debug** page.
+
+5. **Configure MiniApp:**
+
+- Tap the **Config** button (top-right) to enter the **MiniApp Repository**.
+
+- Tap **Create** (top-right) to enter the **Edit MiniApp** page.
+- Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
+- Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
+<div align="center"><img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" style="zoom:20%;" /></div>
+
+**Establish Connection:**
+
+- On the **Server side:** Select "Server" in the repository page. Once the IP address appears, tap **start**.
+- On the **Client side:** Select "Client," enter the IP address displayed on the server device, and tap **Start**.
+- Both devices should then return to the **Local debug** page.
+
+**Experience the Feature:** Tap **SIMULATE CALL**. Floating ball will appear. Once the "call" is connected, tap the **floating ball** to display the MiniApp list. Open a MiniApp to experience interactive features like real-time doodling.
+
+
+
+##   X. Contact
 xuq17@chinatelecom.cn
 
 pengc23@chinatelecom.cn

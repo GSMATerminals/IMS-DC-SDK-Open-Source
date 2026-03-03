@@ -1,4 +1,5 @@
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
+
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
 
@@ -128,7 +129,39 @@ NewCall
 ## 八、许可证
 本项目采用 [Apache2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) 开源协议。
 
-## 九、联系方式
+## 九、常见问题
+
+### 1、谁应该使用该开源项目的代码
+
+OEM获取代码后，按照[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行编译集成。
+
+### 2、运营商可以做什么？
+
+- 提供支持DC的网络环境，部署小程序，使用OEM集成SDK后的终端来测试业务。
+
+- 在没有DC网络和适配终端的情况下，可以直接编译Local版本的SDK体验DC小程序。
+
+### 3、如何使用Local版本体验DC小程序？
+
+1、从[开源网站](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1)上下载apk和小程序包并在手机上安装。
+
+<img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\image-20260303163643165.png" alt="image-20260303163643165" style="zoom: 33%;" />
+
+2、将开源项目提供的小程序zip压缩包拷贝到手机SD卡目录下，并安装Local SDK。
+
+3、将两台手机接入同一局域网（可以用手机热点实现）。
+
+4、在手机桌面找到"5G增强通话"APP并打开，点击右上角的设置按钮进入设置页面，在设置页面中点击开启/关闭5G增强通话滑块开启5G增强通话。按照提示授权成功后，点击本地调试入口，进入本地调试页面。
+
+5、点击右上角配置按钮进入小程序仓库页面，再点击右上角新增按钮，进入编辑小程序页面，点击选择小程序安装包，选择第2步的拷贝的zip包，填写小程序相关信息（如下图所示），填好点击保存（注：该步为模拟网络部署小程序的操作）。
+
+<div align="center"><img src="D:\pecie\code\IMS-DC-SDK-Open-Source\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" style="zoom:20%;" /></div>
+
+6、在小程序仓库页面，一端选择server，待显示IP后点击启动，另一端选择client，填入server端显示的IP，点击启动。两端都回到上一页面，即本地调试页面。
+
+7、点击模拟通话，会出现悬浮球，接通后点击悬浮球展示小程序列表，打开小程序即可体验简单的涂鸦互动。 
+
+## 十、联系方式
 xuq17@chinatelecom.cn
 
 pengc23@chinatelecom.cn
