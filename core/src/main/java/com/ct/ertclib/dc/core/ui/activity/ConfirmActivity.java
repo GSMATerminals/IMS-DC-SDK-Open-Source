@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.core.common;
+package com.ct.ertclib.dc.core.ui.activity;
 
 import android.app.KeyguardManager;
 import android.content.Context;
@@ -22,7 +22,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.ct.ertclib.dc.core.ui.activity.BaseFragmentActivity;
+import com.ct.ertclib.dc.core.ui.widget.ConfirmDialog;
 import com.ct.ertclib.dc.core.utils.logger.Logger;
 import com.ct.ertclib.dc.core.R;
 
@@ -39,6 +39,7 @@ public class ConfirmActivity extends BaseFragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirm);
+        this.setFinishOnTouchOutside(false);
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -49,6 +50,7 @@ public class ConfirmActivity extends BaseFragmentActivity {
             confirmDialog = new ConfirmDialog(message, mConfirmCallback);
             if (!TextUtils.isEmpty(accept)) confirmDialog.setAcceptText(accept);
             if (!TextUtils.isEmpty(cancel)) confirmDialog.setCancelText(cancel);
+            confirmDialog.setCancelable(false);
             confirmDialog.show(getSupportFragmentManager(), ConfirmDialog.class.getSimpleName());
             confirmDialog.setCallback(new ConfirmDialog.Callback() {
                 @Override

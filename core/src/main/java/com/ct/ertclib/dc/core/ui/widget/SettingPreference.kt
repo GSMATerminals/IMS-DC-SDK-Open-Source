@@ -20,6 +20,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.ct.ertclib.dc.core.R
@@ -28,7 +29,9 @@ import com.ct.ertclib.dc.core.R
 class SettingPreference @JvmOverloads constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int = 0): Preference(context, attrs, defStyleAttr) {
 
     private var settingTitle: TextView? = null
+    private var settingSummary: TextView? = null
     private var title = ""
+    private var summary = ""
 
     init {
         val typeArray = context.obtainStyledAttributes(attrs, androidx.preference.R.styleable.Preference)
@@ -36,11 +39,31 @@ class SettingPreference @JvmOverloads constructor(context: Context, attrs: Attri
         typeArray.getString(androidx.preference.R.styleable.Preference_title)?.let {
             title = it
         }
+        typeArray.getString(androidx.preference.R.styleable.Preference_summary)?.let {
+            summary = it
+        }
     }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
         settingTitle = holder.itemView.findViewById(R.id.setting_preference_title)
         settingTitle?.text = title
+        settingSummary = holder.itemView.findViewById(R.id.setting_preference_summary)
+        settingSummary?.text = summary
+        adjustPadding()
+    }
+
+    private fun adjustPadding() {
+        if (summary.isEmpty()) {
+            settingTitle?.let {
+                it.setPadding(it.paddingLeft, context.resources.getDimensionPixelSize(R.dimen.preference_padding_top_bottom), it.paddingRight, it.paddingBottom)
+            }
+            settingSummary?.isVisible = false
+        } else {
+            settingTitle?.let {
+                it.setPadding(it.paddingLeft, 0, it.paddingRight, it.paddingBottom)
+            }
+            settingSummary?.isVisible = true
+        }
     }
 }

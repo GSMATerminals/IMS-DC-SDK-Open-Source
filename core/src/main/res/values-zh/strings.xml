@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="request_nc_permission_dialog_content">5G增强通话是指基于运营商IMS网络进行系统增强和业务创新，使得个人及企业行业的用户体验获得提升的一系列业务统称。其最显著的技术特征是在基于IMS音频、视频通道的基础上增加数据通道和融入AR等技术，依赖终端上的5G增强通话终端SDK，实现用户在通话时的交互式信息传递和互动，带来用户通话体验升级。\n使用增强通话功能需要显示在其他应用上层和读取通话的权限</string>
-    <string name="request_nc_permission_dialog_privacy">《隐私政策》</string>
-    <string name="request_nc_permission_dialog_user">《用户协议》</string>
+    <string name="request_nc_permission_dialog_privacy">隐私政策</string>
+    <string name="request_nc_permission_dialog_user">用户协议</string>
     <string name="request_nc_permission_dialog_title">需要授予5G增强通话权限</string>
     <string name="request_nc_permission_dialog_click">点击阅读</string>
     <string name="request_nc_permission_dialog_privacy_change_title">5G增强通话隐私协议变更</string>
@@ -84,11 +84,12 @@
 
     <string name="open_tips">5G增强通话是指基于运营商IMS网络进行系统增强和业务创新，使得个人及企业行业的用户体验获得提升的一系列业务统称。\n其最显著的技术特征是在基于IMS音频、视频通道的基础上增加数据通道和融入AR等技术，依赖终端上的5G增强通话终端SDK，实现用户在通话时的交互式信息传递和互动，带来用户通话体验升级。</string>
     <string name="main_activity_title">增强通话</string>
-    <string name="used_miniapp_title">使用过的小程序</string>
+    <string name="used_miniapp_title">最近使用过的小程序</string>
     <string name="open_btn_title">前往开启</string>
 
     <string name="open_switch_title">开启/关闭5G增强通话</string>
     <string name="local_debug_entry">本地调试入口</string>
+    <string name="local_debug_entry_summary">点击后进入调试页面，可进行本地调试</string>
     <string name="please_open">请先开启5G增强通话</string>
     <string name="open_switch_tips">开启表明您已经同意《隐私政策》和《用户协议》</string>
     <string name="close_switch_tips">关闭表明您不同意或撤回同意《隐私政策》和《用户协议》</string>
@@ -105,4 +106,12 @@
 
     <string name="permission_usage_tips_recently">仅展示过去7天的使用记录</string>
     <string name="permission_usage_tips_none">暂无个人信息与权限使用记录</string>
+    <string name="main_page_title_close">暂未开启增强通话</string>
+    <string name="main_page_description_close">5G增强通话可以为您提供更优秀的通话服务</string>
+    <string name="main_page_title_no_history">暂无小程序使用记录</string>
+    <string name="main_page_description_no_history">通话中使用的小程序将展示在这里</string>
+    <string name="delete_string">删除</string>
+    <string name="delete_string_ensure">松手即可删除</string>
+    <string name="mic_mute">静音</string>
+    <string name="speaker_on">扬声器</string>
 </resources>

@@ -17,10 +17,6 @@
 package com.ct.ertclib.dc.core.usecase.common
 
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
@@ -39,6 +35,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.DateUtils
 import com.ct.ertclib.dc.core.utils.common.PermissionUtils
+import com.hjq.permissions.XXPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -150,7 +147,7 @@ class PermissionUseCase(
     }
 
     override fun isSystemPermissionGranted(permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        return XXPermissions.isGranted(context, permission)
     }
 
     override suspend fun refreshPermissionMapFromRepo(appId: String) {

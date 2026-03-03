@@ -534,7 +534,7 @@ class BDCManager(
         updateMiniAppEntryHolder()
         mRequestMessageQueue.clear()
         if (!mHandlerThreadQuited){
-            mHandlerThreadQuited = mHandlerThread.quit()
+            mHandlerThreadQuited = mHandlerThread.quitSafely()
         }
     }
 
@@ -633,10 +633,12 @@ class BDCManager(
     }
 
     override fun onCallAdded(context: Context, callInfo: CallInfo) {
+        DCManager.instance.registerBDCCallback(callInfo.telecomCallId, this)
+        NewCallsManager.instance.addCallInfoUpdateListener(callInfo.telecomCallId, this)
     }
 
     override fun onCallRemoved(context: Context, callInfo: CallInfo) {
-        sLogger.debug("$mTag NewCallGuideManager onCallRemoved, callInfo: $callInfo")
+        sLogger.debug("$mTag onCallRemoved, callInfo: $callInfo")
         if (callInfo.telecomCallId != this.callInfo.telecomCallId){ // 加一下防护
             return
         }

@@ -275,7 +275,7 @@ class MiniToParentManager : IMiniToParentManager {
             streamId: String?,
             iImsDataChannel: IImsDataChannel?
         ) {
-            logger.info("IDCCallback.Stub onDcCreated callId:$callId, streamId:$streamId, iImsDataChannel:${iImsDataChannel?.state}")
+            logger.info("IDCCallback.Stub onDcCreated callId:$callId, streamId:$streamId, iImsDataChannel:${iImsDataChannel?.state}, dcLabel:${iImsDataChannel?.dcLabel}")
             if (callId == null || streamId == null || iImsDataChannel == null) {
                 return
             }
@@ -302,7 +302,7 @@ class MiniToParentManager : IMiniToParentManager {
     }
 
     private fun onDataChannelStateChange(dc: IImsDataChannel?) {
-        logger.debug("DCCallbackImpl onDataChannelStateChange dc:${dc?.state}")
+        logger.debug("DCCallbackImpl onDataChannelStateChange dc:${dc?.state}, dcLabel:${dc?.dcLabel}")
         if (dc == null) {
             return
         }
@@ -322,7 +322,7 @@ class MiniToParentManager : IMiniToParentManager {
             val map = mapOf("dcLabel" to dc.dcLabel, "imsDCStatus" to state.ordinal)
             miniAppInterface?.callHandler(FUNCTION_NOTIFY_DATA_CHANNEL, arrayOf(JsonUtil.toJson(map)))
         }
-        logger.debug("DCCallbackImpl onDataChannelStateChange now openDCList size: ${openDCList.size}")
+        logger.debug("DCCallbackImpl onDataChannelStateChange now openDCList size: ${openDCList.size}, list:${openDCList.map { it.dcLabel }}")
     }
 
     inner class ImsDCObserverImpl(
@@ -331,7 +331,7 @@ class MiniToParentManager : IMiniToParentManager {
     ) : IImsDCObserver.Stub() {
 
         override fun onDataChannelStateChange(status: ImsDCStatus?, errCode: Int) {
-            logger.debug("ImsDCObserverImpl onDataChannelStateChange status:$status")
+            logger.debug("ImsDCObserverImpl onDataChannelStateChange status:$status, label:$label")
             appServiceImpl?.onDataChannelStateChange(getMiniAppInfo()?.callId, getMiniAppInfo()?.appId, dc, status, errCode)
             onDataChannelStateChange(dc)
         }

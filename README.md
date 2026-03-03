@@ -7,21 +7,21 @@ Note: This document aims to help developers understand the architectural design 
 
 - The following are three IMS Data Channel Application service demonstrations for 5G New Calling. We hope that through vivid and engaging presentations, you can quickly gain a comprehensive understanding of the complete business capabilities of 5G New Calling.
   
-  - **Doodle Together**
+  - **Doodle Together(Left:Sender Right:Receiver)**
   
     <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
   
     **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
   
-  - **File Sharing**
+  - **File Sharing(Left:Sender Right:Receiver)**
   
-    <center><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></center> 
+    <div align="center"><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></div> 
   
     **File Sharing** enables two parties in 5G New Calling to share real-time information such as locations and files without switching applications, streamlining both conversation and information exchange in one seamless experience.
   
   - **Customer Service Line**
   
-     <center><img src="images/10000_EN.gif" alt="Description" width="250" /> 
+     <div align="center"><img src="images/10000_EN.gif" alt="Description" width="250" /></div> 
   
     **Custom Service Line** is a toB application exclusively designed for the 5G New Calling DC service. Compared with the traditional 10000 service, which only supports voice prompts and keypad operations in a single interactive mode, the 5G New Calling **Custom Service Line** leverages a visual UI interface to enable touch-screen interaction, significantly enhancing operational flexibility and service accessibility for users.
 
@@ -128,11 +128,8 @@ Terminals must be adapted according to the [《5G New Calling SDK Terminal Adapt
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
 When a user is on a call, if the device integrates the Normal version, a 5G New Calling icon will appear as a floating bubble on the native call interface, tapping this icon will open the 5G New Calling IMS Data Channel Application space; If the device integrates the Dialer version and has been implemented according to the adaptation specifications, a fixed entry button will appear on the native call interface, clicking this button will open the 5G New Calling IMS Data Channel Application space.
 
----
+>[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#ix-contact)
 
-[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#IX-Contact)
-
----
 
 ## VII. IMS Data Channel Application Development & Debugging
 Using the Local (Local debugging version) SDK, developers can debug IMS Data Channel Applications on ordinary Android terminals without relying on an IMS Data Channel network environment or terminal adaptation.

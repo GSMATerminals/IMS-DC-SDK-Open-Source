@@ -27,10 +27,14 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.IS_PEER_SUPPORT_DC_PARA
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
 import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.data.miniapp.AppResponse
+import com.ct.ertclib.dc.core.data.miniapp.DataChannel
+import com.ct.ertclib.dc.core.data.miniapp.DataChannelApp
+import com.ct.ertclib.dc.core.data.miniapp.DataChannelAppInfo
 import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IDCMiniEventUseCase
 import com.ct.ertclib.dc.core.utils.common.FileUtils
+import com.ct.ertclib.dc.core.utils.common.XmlUtils
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,14 +59,30 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
         handler: CompletionHandler<String?>
     ) {
         logger.info("createAppDataChannel")
-        if (params["dcLabels"] == null || params["DataChannelAppInfoXml"] == null) {
+        if (params["dcLabels"] == null || (params["DataChannelAppInfoXml"] == null && params["DataChannelAppInfoJson"] == null)) {
             val response = JSResponse("1", "dcLabels or description is null", "")
             handler.complete(JsonUtil.toJson(response))
             logger.info("JSApi asyn dcLabels or description is null")
             return
         }
         val dcLabels = params["dcLabels"] as List<String>
-        var description = params["DataChannelAppInfoXml"] as String
+        val xmlInfo = params["DataChannelAppInfoXml"] as? String
+        val jsonInfo = params["DataChannelAppInfoJson"] as? String
+
+        var description = ""
+
+        if (!jsonInfo.isNullOrEmpty()){
+            val classes = arrayOf<Class<*>>(
+                DataChannelAppInfo::class.java,
+                DataChannelApp::class.java,
+                DataChannel::class.java
+            )
+            val dataChannelAppInfo = JsonUtil.fromJson(jsonInfo, DataChannelAppInfo::class.java)
+            description = XmlUtils.toXml(dataChannelAppInfo, classes)
+        } else if (!xmlInfo.isNullOrEmpty()) {
+            description = xmlInfo
+        }
+
         dcLabels.forEach {
             // 校验小程序ID
             if (!miniToParentManager.getMiniAppInfo()?.let { it1 -> it.contains("_${it1.appId}_") }!!) {

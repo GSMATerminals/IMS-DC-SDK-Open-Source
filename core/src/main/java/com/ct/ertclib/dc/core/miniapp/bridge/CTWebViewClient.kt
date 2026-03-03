@@ -16,6 +16,8 @@
 
 package com.ct.ertclib.dc.core.miniapp.bridge
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Bitmap
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -24,6 +26,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
 import com.ct.ertclib.dc.core.utils.logger.Logger
+import androidx.core.net.toUri
+import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
+
 
 class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewClient() {
 
@@ -33,9 +38,48 @@ class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewCli
 
     private val sLogger: Logger = Logger.getLogger(TAG)
 
+    @SuppressLint("QueryPermissionsNeeded")
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-        if (sLogger.isDebugActivated) sLogger.debug("shouldOverrideUrlLoading request:$request")
-        return super.shouldOverrideUrlLoading(view, request)
+        sLogger.info("shouldOverrideUrlLoading request:${request?.url}")
+        val url = request?.url.toString()
+
+        // 如果不在allowedUrls中，则拦截
+        var pass = false
+        (miniAppActivity as? IMiniApp)?.miniApp?.appProperties?.allowedUrls?.forEach{
+            if (url.startsWith(it)){
+                pass = true
+            }
+        }
+
+        if (!pass){
+            sLogger.error("shouldOverrideUrlLoading url:$url not in app urls")
+            return true
+        }
+
+        // 打开其他应用要拦截处理
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            // scheme
+            try {
+                val uri = url.toUri()
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+                // 检查应用是否存在
+                if (intent.resolveActivity(miniAppActivity.packageManager) != null) {
+                    sLogger.info("startActivity intent:$intent")
+                    miniAppActivity.startActivity(intent)
+                } else {
+                    // 应用未安装，跳转到fallback_url
+                    sLogger.error("Application not installed, redirecting to fallback URL")
+                }
+                return true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return true
+            }
+        }
+        // 放行
+        return false
     }
 
     override fun shouldInterceptRequest(

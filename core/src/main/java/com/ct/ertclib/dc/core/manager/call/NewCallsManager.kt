@@ -43,10 +43,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
-class NewCallsManager() {
+class NewCallsManager {
 
     companion object {
         private const val TAG = "NewCallsManager"
+        val instance: NewCallsManager by lazy {
+            NewCallsManager()
+        }
     }
 
     private var mCallInfoMap = ConcurrentHashMap<String, CallInfo>()
@@ -62,34 +65,22 @@ class NewCallsManager() {
 
     private val sLogger: Logger = Logger.getLogger(TAG)
 
-
-    init {
-        audioControlHelper.registerAudioDeviceCallback(object : AudioControlHelper.OnAudioDeviceChangeListener {
-            override fun onAudioDeviceChange() {
-                handleAudioDeviceChange()
-            }
-        })
-    }
-
-    constructor(callInfoList: ArrayList<CallInfo>) : this() {
-        callInfoList.forEach {
-            mCallInfoMap[it.telecomCallId] = it
-        }
-        sLogger.info("constructor:$this")
-    }
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job1 : Job?= null
 
-    init {
-        job1 = scope.launch {
-            StateFlowManager.callInfoFlow.distinctUntilChanged().collect { callState ->
-                updateCallInfo(callState.callInfo.telecomCallId)
-            }
-        }
+    fun isCallExist(callId: String): Boolean{
+        return mCallsMap[callId] != null
+    }
+
+    fun isCallEmpty(): Boolean{
+        return mCallsMap.isEmpty()
     }
 
     @SuppressLint("NewApi")
-    fun addCallStateListener(telecomCallId: String, iCallStateListener: ICallStateListener) {
+    fun addCallStateListener(telecomCallId: String, iCallStateListener: ICallStateListener?) {
+        if (iCallStateListener == null) {
+            return
+        }
         mCallStateListMap.computeIfAbsent(
             telecomCallId
         ) {
@@ -102,12 +93,12 @@ class NewCallsManager() {
     }
 
     @SuppressLint("NewApi")
-    fun addCallInfoUpdateListener(telecomCallId: String, iCallStateListener: ICallInfoUpdateListener) {
+    fun addCallInfoUpdateListener(telecomCallId: String, iCallInfoUpdateListener: ICallInfoUpdateListener) {
         mCallInfoUpdateListMap.computeIfAbsent(
             telecomCallId
         ) {
             ArrayList()
-        }.add(iCallStateListener)
+        }.add(iCallInfoUpdateListener)
     }
 
     fun removeCallInfoUpdateListener(telecomCallId: String, iCallStateListener: ICallInfoUpdateListener) {
@@ -116,24 +107,22 @@ class NewCallsManager() {
 
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    fun onCallAdded(call: Call?): CallInfo? {
-        call?.let {
-            try {
-                val callInfo = createCallInfo(call) ?: return null
-                if (sLogger.isDebugActivated) {
-                    sLogger.debug("onCallAdded callInfo: $callInfo")
-                }
+    fun onCallAdded(callInfo: CallInfo, call: Call?) {
+        try {
+            if (sLogger.isDebugActivated) {
+                sLogger.debug("onCallAdded callInfo: $callInfo")
+            }
+            mCallInfoMap[callInfo.telecomCallId] = callInfo
+            call?.let {
+                mCallsMap[callInfo.telecomCallId] = it
                 val callBack = CallBack()
                 mCallbackMap[callInfo.telecomCallId] = callBack
-                call.registerCallback(callBack)
-                mCallInfoMap[callInfo.telecomCallId] = callInfo
-                mCallsMap[callInfo.telecomCallId] = call
-                return callInfo
-            } catch (e: Exception) {
-                sLogger.error("onCallAdded error", e)
+                it.registerCallback(callBack)
             }
+            notifyOnCallAdded(callInfo)
+        } catch (e: Exception) {
+            sLogger.error("onCallAdded error", e)
         }
-        return null
     }
 
     @SuppressLint("NewApi")
@@ -249,36 +238,8 @@ class NewCallsManager() {
         return mCallInfoMap[callId]
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun createCallInfo(call: Call): CallInfo? {
-        if (call.details == null) {
-            sLogger.info("createCallInfo call.details is null")
-            return null
-        }
-        val handle = call.details.handle
-        if (handle == null || "tel" != handle.scheme) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("createCallInfo - is not a telephone number：$handle")
-            }
-            return null
-        }
-
-        val subId = CallUtils.getSubId(call)
-        val slotId = CallUtils.getSlotId(subId)
-        if (sLogger.isDebugActivated) {
-            sLogger.debug("createCallInfo subId：$subId, slotId:$slotId")
-        }
-
-        val telecomCallId = CallUtils.getTelecomCallId(call)
-        val remoteNumber = CallUtils.getRemoteNumber(call)
-        val isOutgoingCall = CallUtils.isOutgoingCall(call)
-        val isConference = CallUtils.isConference(call)
-        val isCtCall = CallUtils.isCtCall(subId)
-
-        return CallInfo(
-            slotId, telecomCallId!!, call.state, remoteNumber, null,
-            call.details.videoState, isConference, isOutgoingCall, isCtCall
-        )
+    fun getState(callId: String): Int?{
+        return mCallInfoMap.getOrDefault(callId, null)?.state
     }
 
     private fun updateCallInfo(callId: String){
@@ -305,7 +266,7 @@ class NewCallsManager() {
         }
     }
 
-    fun notifyOnCallAdded(callInfo: CallInfo) {
+    private fun notifyOnCallAdded(callInfo: CallInfo) {
         mCallStateListMap[callInfo.telecomCallId]?.forEach {
             it.onCallAdded(Utils.getApp(), callInfo)
         }
@@ -361,6 +322,20 @@ class NewCallsManager() {
             mCallsMap.remove(callInfo.telecomCallId)
             mCallbackMap.remove(callInfo.telecomCallId)
         }
+    }
+
+    fun onCallServiceBind(service: InCallService?) {
+        inCallService = service
+        job1 = scope.launch {
+            StateFlowManager.callInfoFlow.distinctUntilChanged().collect { callState ->
+                updateCallInfo(callState.callInfo.telecomCallId)
+            }
+        }
+        audioControlHelper.registerAudioDeviceCallback(object : AudioControlHelper.OnAudioDeviceChangeListener {
+            override fun onAudioDeviceChange() {
+                handleAudioDeviceChange()
+            }
+        })
     }
 
     @SuppressLint("NewApi")
@@ -451,6 +426,5 @@ class NewCallsManager() {
     }
 
     fun setInCallService(service: InCallService?) {
-        inCallService = service
     }
 }

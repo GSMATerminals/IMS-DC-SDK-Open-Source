@@ -7,28 +7,21 @@
 
 - 以下是三个关于5G增强通话的DC应用业务演示，我们希望通过形象生动的展示，有助于您快速了解5G增强通话完整业务形态。
 
-  - **翼起涂鸦**
+  - **翼起涂鸦（左：发起方 右：接收方）**
 
-    <center><img src="images/翼起涂鸦（发起方）.gif" alt="Description" width="200"/> <img src="images/翼起涂鸦（接收方）.gif" alt="Description" width="200"/></center>
-
-    <center>翼起涂鸦（左：发起方 右：接收方）</center>
-
+    <div align="center"><img src="images/翼起涂鸦（发起方）.gif" alt="Description" width="200"/> <img src="images/翼起涂鸦（接收方）.gif" alt="Description" width="200"/></div>
   
   ​    "翼起涂鸦"DC小程序支持画笔涂鸦，发送表情符号和显示特效等功能。它还允许用户根据自己的喜好调整画笔的类型、粗细和颜色。这款应用有效提升通话双方的互动体验，让沟通更直观、理解更精准。
   
-  - **翼分享**
+  - **翼分享（左：发起方 右：接收方）**
   
-    <center><img src="images/翼分享（发起方）.gif" alt="Description" width="200" /><img src="images/翼分享（接收方）.gif" alt="Description" width="200"/></center>
-  
-    <center>翼分享（左：发起方 右：接收方)</center>
+    <div align="center"><img src="images/翼分享（发起方）.gif" alt="Description" width="200" /><img src="images/翼分享（接收方）.gif" alt="Description" width="200"/></center>
   
        "翼分享"DC小程序支持通话双方在5G增强通话中，无需切换应用，即可实时互相分享位置、文件等信息，通话与信息交互一步到位。
   
   - **10000号客服小程序**
   
-      <center><img src="images/10000_CN.gif" alt="Description" width="250"/></center>
-  
-     <center>10000号客服小程序</center>
+      <div align="center"><img src="images/10000_CN.gif" alt="Description" width="250"/></div>
   
   ​    "10000号客服小程序"是专为5G增强通话DC业务打造的toB应用。相较于传统10000号仅支持语音播报、按键操作的单一交互模式，5G增强通话10000号服务可借助可视化UI界面实现触屏交互，大幅提升用户操作的灵活性与服务使用的便捷性。
 
@@ -112,12 +105,7 @@ NewCall
 - 发布：  
   终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
   当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，且按照适配规范实现，原生通话界面会出现固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
-
----
-
-<span style="font-size: 1.2em;">[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#九、联系方式)</span>
-
----
+>[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#九联系方式)
 
 ## 七、小程序开发调试
 使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序。

@@ -14,14 +14,13 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.core.common
+package com.ct.ertclib.dc.core.ui.activity
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import com.ct.ertclib.dc.core.databinding.ActivityWebBinding
-import com.ct.ertclib.dc.core.ui.activity.BaseAppCompatActivity
 
 class WebActivity: BaseAppCompatActivity() {
     companion object{

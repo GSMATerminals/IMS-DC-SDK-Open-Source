@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".LocalTestMiniAppWarehouseActivity">
+
+    <!-- 顶部导航栏 -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp">
+        android:layout_height="56dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
         <ImageView
             android:id="@+id/back_icon"
             android:layout_width="wrap_content"
@@ -17,92 +21,104 @@
             android:src="@drawable/icon_back"
             android:layout_gravity="start|center_vertical"/>
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:text="@string/miniapp_repository"/>
-        <Button
-            android:id="@+id/btn_add"
-            android:layout_gravity="right|center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:textSize="16sp"
-            android:textColor="@color/green"
-            android:text="@string/create_btn"/>
+            android:layout_gravity="center"
+            android:text="@string/miniapp_repository"
+            android:textColor="@color/common_text_neutral_black"
+            android:textSize="20sp"
+            android:includeFontPadding="false" />
 
+        <TextView
+            android:id="@+id/btn_add"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end|center_vertical"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/create_btn"
+            android:textColor="#07C160"
+            android:textSize="17sp" />
     </FrameLayout>
+
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#e7e7e7"/>
+        android:layout_height="0.5dp"
+        android:background="#E5E5E5" /> <!-- 更细的分割线 -->
+
+    <!-- 列表 -->
     <androidx.recyclerview.widget.RecyclerView
-        android:layout_marginTop="10dp"
+        android:id="@+id/recyclerview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:id="@+id/recyclerview"/>
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
 
+    <!-- 底部 TCP 配置区（微信风格简化） -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:background="#F5F5F5"
+        android:padding="12dp"
         android:orientation="horizontal">
-        <RadioGroup
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/bt_client"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="client"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp"/>
-
-            <RadioButton
-                android:id="@+id/bt_server"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="server"
-                android:textSize="16sp"/>
-        </RadioGroup>
+        <!-- 模式切换（client/server） -->
         <LinearLayout
-            android:layout_marginLeft="5dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-            <EditText
-                android:id="@+id/et_ip"
-                android:inputType="numberDecimal"
-                android:digits="0123456789."
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"/>
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:orientation="horizontal"> <!-- 自定义圆角矩形背景 -->
+
             <TextView
-                android:id="@+id/tv_ip"
-                android:inputType="numberDecimal"
-                android:digits="0123456789."
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"/>
+                android:id="@+id/tv_client"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="client"
+                android:textSize="14sp"
+                android:textColor="@color/selector_segment_text_color"
+                android:background="@drawable/bg_segmented_control" />
+
+            <TextView
+                android:layout_marginLeft="4dp"
+                android:id="@+id/tv_server"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="server"
+                android:textSize="14sp"
+                android:textColor="@color/selector_segment_text_color"
+                android:background="@drawable/bg_segmented_control" />
         </LinearLayout>
-        <Button
-            android:id="@+id/btn_save_tcp"
-            android:layout_width="50dp"
-            android:layout_height="match_parent"
-            android:text="@string/start" />
-        <Button
-            android:id="@+id/btn_stop_tcp"
-            android:layout_width="50dp"
-            android:layout_marginLeft="4dp"
-            android:layout_height="match_parent"
-            android:text="@string/stop" />
+
+        <!-- IP 输入 -->
+        <EditText
+            android:id="@+id/et_ip"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/tcp_hint"
+            android:enabled="false"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textSize="14sp"
+            android:inputType="numberDecimal"
+            android:digits="0123456789." />
+
+        <!-- 启停按钮（合并为一个状态按钮） -->
+        <TextView
+            android:id="@+id/btn_tcp_toggle"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button_green"
+            android:gravity="center"
+            android:text="@string/start"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
     </LinearLayout>
 </LinearLayout>

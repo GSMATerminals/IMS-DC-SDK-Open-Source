@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.ct.ertclib.dc.core.ui.widget.SwitchPreference
+        app:key="new_call_open_switch_preference"
+        app:layout="@layout/switch_preference_layout"
+        app:title="@string/open_switch_title"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false" />
+
+    <com.ct.ertclib.dc.core.ui.widget.SwitchPreference
+        app:key="follow_open_switch_preference"
+        app:layout="@layout/switch_preference_layout"
+        app:title="@string/fellow_dialer"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false" />
+
+    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
+        app:key="debug_preference"
+        app:layout="@layout/setting_preference_layout"
+        app:title="@string/local_debug_entry"
+        app:summary="@string/local_debug_entry_summary"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
+        app:key="privacy_preference"
+        app:layout="@layout/setting_preference_layout"
+        app:title="@string/request_nc_permission_dialog_privacy"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
+        app:key="user_preference"
+        app:layout="@layout/setting_preference_layout"
+        app:title="@string/request_nc_permission_dialog_user"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+    <com.ct.ertclib.dc.core.ui.widget.VersionPreference
+        app:key="permission_version"
+        app:layout="@layout/version_preference_layout"
+        app:title="@string/version_preference_title"
+        app:allowDividerAbove="false"
+        app:allowDividerBelow="false"/>
+
+
+
+</androidx.preference.PreferenceScreen>

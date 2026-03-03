@@ -1,93 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:clipChildren="false"
     android:background="@color/common_layout_background"
     tools:context="com.ct.ertclib.dc.core.ui.activity.MainActivity">
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="60dp">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:textColor="@color/common_text_black"
-            android:textSize="20sp"
-            android:text="@string/main_activity_title"/>
-        <ImageView
-            android:id="@+id/btn_setting"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="right|center_vertical"
-            android:src="@drawable/icon_mini_setting"
-            android:padding="15dp"/>
-    </FrameLayout>
+
+    <include
+        android:id="@+id/toolbar_layout"
+        layout="@layout/layout_toolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/common_divider_color"/>
+        android:background="@color/common_divider_color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_layout"/>
 
-    <LinearLayout
+    <ImageView
+        android:id="@+id/main_page_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_layout"
+        />
+
+    <TextView
+        android:id="@+id/main_page_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize ="20sp"
+        android:textColor="@color/common_text_black"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_page_image"/>
+
+    <TextView
+        android:id="@+id/main_page_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize ="14sp"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/common_text_neutral_black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_page_title"/>
+
+    <TextView
+        android:id="@+id/main_page_open"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize ="14sp"
+        android:textColor="#0909F9"
+        android:layout_marginTop="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:background="@drawable/click_ripple_rectangle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_page_description"/>
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/miniapp_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:layout_gravity="center"
+        android:layout_marginStart="@dimen/common_margin_start_end"
+        android:textSize="14sp"
+        android:textColor="@color/common_text_neutral_black"
+        android:text="@string/used_miniapp_title"
+        android:layout_marginTop="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_layout"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/delete_layout"
+        android:layout_width="match_parent"
+        android:visibility="gone"
+        android:background="@drawable/delete_background"
+        android:layout_height="@dimen/delete_layout_height"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/delete_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:src="@drawable/icon_delete"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/delete_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/delete_string"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/delete_icon"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <LinearLayout
-                android:visibility="gone"
-                android:id="@+id/content_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-                <TextView
-                    android:textSize="14sp"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:textColor="@color/common_text_black"
-                    android:text="@string/used_miniapp_title"/>
-                <androidx.fragment.app.FragmentContainerView
-                    android:id="@+id/fragment_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-            </LinearLayout>
-            <LinearLayout
-                android:visibility="gone"
-                android:id="@+id/tips_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="30dp"
-                    android:layout_marginLeft="30dp"
-                    android:layout_marginRight="30dp"
-                    android:textColor="@color/common_text_neutral_black"
-                    android:textSize="18dp"
-                    android:text="@string/open_tips"/>
-                <Button
-                    android:id="@+id/btn_open"
-                    android:layout_width="160dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/open_btn_bg"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    android:singleLine="true"
-                    android:text="@string/open_btn_title"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp" />
-            </LinearLayout>
+        android:id="@+id/recyclerview"
+        android:layout_marginTop="8dp"
+        android:clipChildren="false"
+        app:layout_constrainedHeight="true"
+        android:layout_marginStart="@dimen/common_margin_start_end"
+        android:layout_marginEnd="@dimen/common_margin_start_end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/miniapp_title"
+        app:layout_constraintBottom_toTopOf="@id/delete_layout"/>
+    
 
-        </FrameLayout>
-    </LinearLayout>
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

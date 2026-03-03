@@ -1,92 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:gravity="center">
+    android:padding="8dp">
 
+    <!-- 卡片容器 -->
     <FrameLayout
-        android:id="@+id/box1"
         android:layout_width="80dp"
-        android:layout_height="80dp">
-        <FrameLayout
-            android:background="@drawable/mini_apps_view_bg"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_miniapp_item_rounded">
+
+        <!-- 小程序图标 -->
+        <ImageView
+            android:id="@+id/miniapp_icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="80dp">
-            <TextView
-                android:id="@+id/tv_precall"
-                android:visibility="gone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="前"/>
-            <TextView
-                android:id="@+id/tv_incall"
-                android:visibility="gone"
-                android:layout_gravity="right"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="中"/>
-            <TextView
-                android:id="@+id/tv_autoload"
-                android:visibility="gone"
-                android:layout_gravity="bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/green"
-                android:text="auto"/>
-            <ImageView
-                android:layout_margin="10dp"
-                android:id="@+id/miniapp_icon"
-                android:src="@drawable/icon_miniapp"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitCenter" />
-            <LinearLayout
-                android:visibility="gone"
-                android:id="@+id/delete_container"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="2dp">
-                <Button
-                    android:id="@+id/btn_delete"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:text="删除"
-                    android:textSize="15dp"
-                    android:background="@color/red"
-                    android:textColor="@color/white"
-                    android:gravity="center"/>
-                <Button
-                    android:id="@+id/btn_cancel"
-                    android:layout_marginTop="2dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:text="取消"
-                    android:textSize="15dp"
-                    android:background="@color/gray"
-                    android:textColor="@color/white"
-                    android:gravity="center"/>
-            </LinearLayout>
-        </FrameLayout>
+            android:scaleType="fitCenter"
+            android:src="@drawable/icon_miniapp" />
+
+        <!-- 状态徽标：运行中（右上）-->
+        <TextView
+            android:id="@+id/tv_support_scene"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_badge_gray"
+            android:gravity="center"
+            android:text="In"
+            android:textSize="8sp"
+            android:textColor="#FFFFFF"/>
+
+        <!-- 自动加载（右下）-->
+        <TextView
+            android:id="@+id/tv_autoload"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_badge_green"
+            android:gravity="center"
+            android:text="A"
+            android:textSize="8sp"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
+
     </FrameLayout>
 
+    <!-- 小程序名称 -->
     <TextView
-        android:layout_marginTop="5dp"
         android:id="@+id/miniapp_title"
-        android:layout_width="match_parent"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/box1"
-        android:ellipsize="end"
+        android:layout_marginTop="6dp"
         android:gravity="center"
+        android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/black"
-        android:textSize="16sp" />
+        android:textColor="#000000"
+        android:textSize="12sp" />
 
 </LinearLayout>
