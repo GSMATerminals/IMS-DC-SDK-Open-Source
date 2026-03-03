@@ -128,7 +128,7 @@ Terminals must be adapted according to the [《5G New Calling SDK Terminal Adapt
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
 When a user is on a call, if the device integrates the Normal version, a 5G New Calling icon will appear as a floating bubble on the native call interface, tapping this icon will open the 5G New Calling IMS Data Channel Application space; If the device integrates the Dialer version and has been implemented according to the adaptation specifications, a fixed entry button will appear on the native call interface, clicking this button will open the 5G New Calling IMS Data Channel Application space.
 
->[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#ix-contact)
+>[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#x-contact)
 
 
 ## VII. IMS Data Channel Application Development & Debugging
@@ -159,7 +159,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1).
 
-<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" style="zoom: 33%;" /></div>
+<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
 
 2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
 
@@ -174,7 +174,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 - Tap **Create** (top-right) to enter the **Edit MiniApp** page.
 - Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
 - Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
-<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" style="zoom:20%;" /></div>
+<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="300" /></div>
 
 **Establish Connection:**
 
