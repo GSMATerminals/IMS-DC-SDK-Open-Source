@@ -69,7 +69,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".common.ConfirmActivity"
+            android:name=".ui.activity.ConfirmActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:excludeFromRecents="true"
@@ -85,6 +85,7 @@
             android:screenOrientation="portrait"
             android:taskAffinity=""
             android:theme="@style/MiniApp"
+            android:excludeFromRecents="true"
             />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity1"
@@ -94,7 +95,8 @@
             android:process=":mini_app_activity_1"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true"/>
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity2"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -103,7 +105,8 @@
             android:process=":mini_app_activity_2"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity3"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -112,7 +115,8 @@
             android:process=":mini_app_activity_3"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity4"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -121,7 +125,8 @@
             android:process=":mini_app_activity_4"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity5"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -130,7 +135,8 @@
             android:process=":mini_app_activity_5"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity6"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -139,7 +145,8 @@
             android:process=":mini_app_activity_6"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity7"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -148,7 +155,8 @@
             android:process=":mini_app_activity_7"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity8"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -157,7 +165,8 @@
             android:process=":mini_app_activity_8"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity9"
             android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
@@ -166,10 +175,11 @@
             android:process=":mini_app_activity_9"
             android:screenOrientation="portrait"
             android:taskAffinity=""
-            android:theme="@style/MiniApp" />
+            android:theme="@style/MiniApp"
+            android:excludeFromRecents="true" />
 
         <activity
-            android:name=".common.PicturePreviewActivity"
+            android:name=".ui.activity.PicturePreviewActivity"
             android:theme="@style/ImagePreviewTheme"
             android:permission="com.ct.ertclib.dc.GET_FEATURE"
             android:exported="true">
@@ -180,8 +190,9 @@
         </activity>
 
         <activity
-            android:name="com.ct.ertclib.dc.core.ui.activity.SettingsActivity"
+            android:name="com.ct.ertclib.dc.core.ui.activity.MainSettingActivity"
             android:enabled="true"
+            android:theme="@style/SettingPreference"
             android:permission="com.ct.ertclib.dc.GET_FEATURE"
             android:exported="true" >
             <intent-filter>
@@ -191,7 +202,7 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.SettingActivity"
+            android:name=".ui.activity.MiniAppSettingActivity"
             android:theme="@style/SettingPreference"
             android:exported="false" />
 
@@ -217,7 +228,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".common.WebActivity"/>
+            android:name=".ui.activity.WebActivity"/>
 
         <service
             android:name=".service.MiniAppService"

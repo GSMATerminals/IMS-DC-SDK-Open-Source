@@ -38,4 +38,10 @@
     <color name="common_text_black">#D9000000</color>
     <color name="common_text_neutral_black">#A8000000</color>
     <color name="common_divider_color">#e7e7e7</color>
+
+    <color name="main_miniapp_normal_background_color">#B2888888</color>
+    <color name="main_miniapp_normal_background_stroke_color">#AA333333</color>
+
+    <color name="warn_color">#DD0A0A</color>
+    <color name="floating_background_color">#66666666</color>
 </resources>

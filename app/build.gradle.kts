@@ -27,12 +27,12 @@ android {
 
     defaultConfig {
         applicationId = "com.ct.ertclib.dc"
-        versionCode = 7
-        versionName = "1.1.5"
+        versionCode = 8
+        versionName = "1.1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk{
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            abiFilters += listOf("arm64-v8a")
         }
     }
 
@@ -93,7 +93,7 @@ android {
         outputs.all {
             if (this is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
                 val dateFormat = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
-                var apkName = "CtCallSDK_v${versionName}_${dateFormat}_${flavorName}"
+                var apkName = "CtCallSDK_v${versionName}_${versionCode}_${dateFormat}_${flavorName}"
                 if (buildType == "release") {
                     apkName = "${apkName}_release"
                 } else if (buildType == "debug") {

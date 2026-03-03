@@ -139,7 +139,7 @@ class MiniAppService : Service(), CoroutineScope by MainScope(), KoinComponent  
             imsDataChannel: IImsDataChannel
         ) {
             if (sLogger.isDebugActivated) {
-                sLogger.debug("DcCreateListener onDataChannelCreated telecomCallId:$telecomCallId, streamId:$streamId")
+                sLogger.debug("DcCreateListener onDataChannelCreated telecomCallId:$telecomCallId, streamId:$streamId, dcLabel:${imsDataChannel.dcLabel}")
             }
 
             try {

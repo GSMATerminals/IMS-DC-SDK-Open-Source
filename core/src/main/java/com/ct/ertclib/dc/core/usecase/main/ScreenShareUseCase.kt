@@ -20,7 +20,7 @@ package com.ct.ertclib.dc.core.usecase.main
 import android.content.Context
 import com.ct.ertclib.dc.core.constants.OEMECConstants
 import com.ct.ertclib.dc.core.constants.OEMECConstants.MODULE_SCREEN_SHARE
-import com.ct.ertclib.dc.core.common.LicenseManager
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_RESPONSE_CODE_SUCCESS
 import com.ct.ertclib.dc.core.constants.CommonConstants.APP_RESPONSE_MESSAGE_SUCCESS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SCREEN_SHARE_NOTIFY

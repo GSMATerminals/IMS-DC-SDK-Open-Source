@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="#F5F5F5"
     tools:context=".LocalTestingMainActivity">
+
+    <!-- 顶部导航栏 -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp">
+        android:layout_height="56dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
         <ImageView
             android:id="@+id/back_icon"
             android:layout_width="wrap_content"
@@ -16,64 +21,100 @@
             android:src="@drawable/icon_back"
             android:layout_gravity="start|center_vertical"/>
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:text="@string/local_debug"/>
-        <Button
-            android:id="@+id/btn_setting"
-            android:layout_gravity="right|center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:textSize="16sp"
-            android:text="@string/config_btn"/>
+            android:layout_gravity="center"
+            android:text="@string/local_debug"
+            android:textColor="@color/common_text_neutral_black"
+            android:textSize="20sp"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/btn_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end|center_vertical"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/config_btn"
+            android:textColor="#07C160"
+            android:textSize="17sp" />
     </FrameLayout>
+
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#e7e7e7"/>
-    <LinearLayout
+        android:layout_height="0.5dp"
+        android:background="#E5E5E5" />
+
+    <FrameLayout
+        android:id="@+id/content_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center|bottom"
-            android:paddingBottom="100dp"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btn_fake_incall"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:enabled="false"
-                android:background="@drawable/button_answer_selector"/>
-
-            <Button
-                android:layout_marginLeft="80dp"
-                android:id="@+id/btn_fake_endcall"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:enabled="false"
-                android:background="@drawable/button_hangup_selector"/>
-        </LinearLayout>
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <Button
-            android:id="@+id/btn_fake_precall"
+            android:id="@+id/btn_simulate_call"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/simulate_call" />
+            android:layout_height="52dp"
+            android:layout_gravity="center"
+            android:layout_margin="24dp"
+            android:background="@drawable/bg_button_green_rounded"
+            android:text="@string/simulate_call"
+            android:textColor="@android:color/white"
+            android:textSize="17sp" />
 
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/layout_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="gone">
 
+            <!-- 动态铃铛 -->
+            <ImageView
+                android:id="@+id/iv_ringing_bell"
+                android:layout_width="60dp"
+                android:layout_height="60dp"/>
 
+            <TextView
+                android:id="@+id/tv_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/ringing"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+        </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/layout_incoming_call"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="24dp"
+            android:visibility="gone">
 
+            <Button
+                android:id="@+id/btn_accept"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_marginEnd="60dp"
+                android:background="@drawable/button_answer_selector"
+                android:scaleType="centerInside" />
+
+            <Button
+                android:id="@+id/btn_decline"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:background="@drawable/button_hangup_selector"
+                android:enabled="true"
+                android:scaleType="centerInside" />
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

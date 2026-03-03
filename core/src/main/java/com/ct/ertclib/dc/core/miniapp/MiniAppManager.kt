@@ -55,8 +55,8 @@ import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppDownloadResult
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
-import com.ct.ertclib.dc.core.common.ConfirmActivity
-import com.ct.ertclib.dc.core.common.LicenseManager
+import com.ct.ertclib.dc.core.ui.activity.ConfirmActivity
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.Model
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnADCListener
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnSendCallback
@@ -82,7 +82,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
-class MiniAppManager(private val callInfo: CallInfo) :
+class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartManager: IMiniAppStartManager) :
     ICallStateListener, IControlDcCreateListener ,IAdverseDcCreateListener{
 
     companion object {
@@ -98,18 +98,9 @@ class MiniAppManager(private val callInfo: CallInfo) :
         private const val CONST_START_MINI_APP: Int = 3
 
         val mMiniAppPMMap = ConcurrentHashMap<String, MiniAppManager>()
-        @SuppressLint("StaticFieldLeak")
-        private var mCallsManager: NewCallsManager? = null
 
-
-        fun setCallsManager(callsManager: NewCallsManager) {
-            mCallsManager = callsManager
-        }
-
-        private var mNetworkManager: DCManager? = null
-
-        fun setNetworkManager(networkManager: DCManager) {
-            mNetworkManager = networkManager
+        fun release(){
+            mMiniAppPMMap.clear()
         }
 
         fun getAppPackageManager(telecomCallId: String?): MiniAppManager? {
@@ -122,28 +113,28 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
 
         fun hangUp(telecomCallId: String){
-            mCallsManager?.hangUp(telecomCallId)
+            NewCallsManager.instance.hangUp(telecomCallId)
         }
         fun answer(telecomCallId: String){
-            mCallsManager?.answer(telecomCallId)
+            NewCallsManager.instance.answer(telecomCallId)
         }
         fun playDtmfTone(telecomCallId: String,digit: Char){
-            mCallsManager?.playDtmfTone(telecomCallId,digit)
+            NewCallsManager.instance.playDtmfTone(telecomCallId,digit)
         }
         fun setSpeakerphone(on: Boolean){
-            mCallsManager?.setSpeakerphone(on)
+            NewCallsManager.instance.setSpeakerphone(on)
         }
         fun isSpeakerphoneOn(): Boolean{
-            return mCallsManager?.isSpeakerphoneOn() == true
+            return NewCallsManager.instance.isSpeakerphoneOn() == true
         }
         fun setMuted(muted: Boolean){
-            mCallsManager?.setMuted(muted)
+            NewCallsManager.instance.setMuted(muted)
         }
         fun isMuted(): Boolean{
-            return mCallsManager?.isMuted() == true
+            return NewCallsManager.instance.isMuted() == true
         }
         fun isVideoCall(telecomCallId: String):Boolean{
-            return if (mCallsManager == null) false else mCallsManager!!.isVideoCall(telecomCallId)
+            return NewCallsManager.instance.isVideoCall(telecomCallId)
         }
         fun supportScene(data: MiniAppInfo):Boolean{
             return !((data.supportScene == SupportScene.VIDEO.value && !isVideoCall(data.callId))//配置只能视频但当前非视频
@@ -171,8 +162,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
     private var mHandlerThread: HandlerThread? = null
     private var mHandler: MiniAppPMHandler
 
-
-    private var miniAppStartManager: IMiniAppStartManager? = null
 
     private var mIsBDCOpen = false
 
@@ -401,10 +390,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
             sLogger.debug("$mTag handleReceiveMiniAppList applications is null")
             return
         }
-        if (mCallsManager == null) {
-            sLogger.debug("$mTag handleReceiveMiniAppList callsManager is null")
-            return
-        }
         val iterator = applications.iterator()
         while (iterator.hasNext()){
             val miniAppInfo = iterator.next()
@@ -415,7 +400,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
 
         val isFirstPage = miniAppList.beginIndex == 0
         val callId = miniAppList.callId
-        val callInfo = callId?.let { mCallsManager?.getCallInfo(it) }
+        val callInfo = callId?.let { NewCallsManager.instance.getCallInfo(it) }
         if (callInfo == null) {
             sLogger.debug("$mTag handleReceiveMiniAppList call info is null")
             return
@@ -498,7 +483,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         val appPath = "${Utils.getApp().getDir("miniApps", Context.MODE_PRIVATE)}${File.separator}$appId"
         val pathFiles = FileUtils.getPathFiles(appPath)
         if (pathFiles.isNullOrEmpty()) {
-            sLogger.debug("$mTag getInstalledPath is null, appPath:$appPath")
             return null
         }
         var path = pathFiles[0].path
@@ -565,6 +549,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
                 fileOutputStream.close()
                 //校验小程序签名
                 if(!LicenseManager.getInstance().verifyMiniAppPkg(cacheFile!!.absolutePath)){
+                    FileUtils.deletePath(cacheFile.absolutePath)
                     sLogger.debug("$mTag handleStartMiniAppFailed verifyMiniAppPkg false")
                     return false
                 }
@@ -658,10 +643,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         }
     }
 
-    fun setMiniAppStartManager(miniAppStartManager: IMiniAppStartManager) {
-        this.miniAppStartManager = miniAppStartManager
-    }
-
     fun registerMiniAppListLoadedListener(miniAppListLoadedCallback: IMiniAppListLoadedCallback) {
         if (sLogger.isDebugActivated) {
             sLogger.debug("registerMiniAppListLoadedListener")
@@ -734,21 +715,18 @@ class MiniAppManager(private val callInfo: CallInfo) :
     override fun onCallAdded(context: Context, callInfo: CallInfo) {
         if (sLogger.isDebugActivated) sLogger.debug("$mTag onCallAdded")
         val telecomCallId = callInfo.telecomCallId
-        mTag = "MiniAppManager[$telecomCallId]"
-        mMiniAppPMMap[telecomCallId] = this
         onCallStateChanged(callInfo, callInfo.state)
-        mNetworkManager?.registerControlAppDataChannelCallback(telecomCallId,this)
-        mNetworkManager?.registerAdverseAppDataChannelCallback(telecomCallId,this)
+        DCManager.instance.registerControlAppDataChannelCallback(telecomCallId,this)
+        DCManager.instance.registerAdverseAppDataChannelCallback(telecomCallId,this)
     }
 
     override fun onCallRemoved(context: Context, callInfo: CallInfo) {
         if (sLogger.isDebugActivated) sLogger.debug("$mTag onCallRemoved")
         mCallState = callInfo.state
-        miniAppStartManager?.clearBackgroundTaskList()
-        miniAppStartManager = null
+        miniAppStartManager.clearBackgroundTaskList()
         mMiniAppPMMap.remove(callInfo.telecomCallId)
-        mNetworkManager?.unregisterAdverseAppDataChannelCallback(callInfo.telecomCallId)
-        mNetworkManager?.unregisterControlAppDataChannelCallback(callInfo.telecomCallId)
+        DCManager.instance.unregisterAdverseAppDataChannelCallback(callInfo.telecomCallId)
+        DCManager.instance.unregisterControlAppDataChannelCallback(callInfo.telecomCallId)
     }
 
     override fun onCallStateChanged(callInfo: CallInfo, state: Int) {
@@ -781,12 +759,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag createApplicationDataChannelsInternal appId:$appId, labels:$toTypedArray, description:$description")
         }
-        if (mNetworkManager == null) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("$mTag createApplicationDataChannelsInternal networkManager is null")
-            }
-            return 1
-        }
 
         var modifiedDescription = description
         if (!isSupportQosHit(description)) {
@@ -810,13 +782,13 @@ class MiniAppManager(private val callInfo: CallInfo) :
             }
             return 3
         }
-        return mNetworkManager?.createApplicationDataChannels(
+        return DCManager.instance.createApplicationDataChannels(
             callInfo.slotId,
             callInfo.telecomCallId,
             callInfo.remoteNumber,
             toTypedArray,
             modifiedDescription
-        ) ?: 1
+        )
     }
 
     private fun isSupportQosHit(description: String): Boolean {
@@ -909,13 +881,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag registerAppDataChannelCallbackInternal appId$appId, createListener:$createListener")
         }
-        if (mNetworkManager == null) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("$mTag registerAppDataChannelCallbackInternal networkManager is null")
-            }
-            return
-        }
-        mNetworkManager?.registerAppDataChannelCallback(callInfo.telecomCallId, appId, createListener)
+        DCManager.instance.registerAppDataChannelCallback(callInfo.telecomCallId, appId, createListener)
     }
 
 
@@ -926,10 +892,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag registerCallStateChangeCallbackInternal appId$appId, createListener:$callStateListener")
         }
-        if (mCallsManager == null) {
-            sLogger.debug("$mTag registerCallStateChangeCallbackInternal callsManager is null")
-            return
-        }
         val startedApp = getStartedApp(appId)
         if (startedApp == null) {
             if (sLogger.isDebugActivated) {
@@ -937,18 +899,12 @@ class MiniAppManager(private val callInfo: CallInfo) :
             }
             return
         }
-        mCallsManager?.addCallStateListener(startedApp.callId, callStateListener)
+        NewCallsManager.instance.addCallStateListener(startedApp.callId, callStateListener)
     }
 
     fun unregisterAppDataChannelCallbackInternal(appId: String) {
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag unregisterAppDataChannelCallbackInternal appId$appId")
-        }
-        if (mNetworkManager == null) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("$mTag registerAppDataChannelCallbackInternal networkManager is null")
-            }
-            return
         }
         val startedApp = getStartedApp(appId)
         if (startedApp == null) {
@@ -957,7 +913,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
             }
             return
         }
-        mNetworkManager?.unregisterAppDataChannelCallback(startedApp.callId, appId)
+        DCManager.instance.unregisterAppDataChannelCallback(startedApp.callId, appId)
         startedApp.appStatus = MiniAppStatus.STOPPED
     }
 
@@ -968,12 +924,6 @@ class MiniAppManager(private val callInfo: CallInfo) :
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag unregisterCallStateListenerInternal appId$appId, iCallStateListener:$iCallStateListener")
         }
-        if (mCallsManager == null) {
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("$mTag unregisterCallStateListenerInternal mCallsManager is null")
-            }
-            return
-        }
         val miniAppInfo = getMiniAppInfo(appId)
         if (miniAppInfo == null) {
             if (sLogger.isDebugActivated) {
@@ -981,7 +931,7 @@ class MiniAppManager(private val callInfo: CallInfo) :
             }
             return
         }
-        mCallsManager?.removeCallStateListener(miniAppInfo.callId, iCallStateListener)
+        NewCallsManager.instance.removeCallStateListener(miniAppInfo.callId, iCallStateListener)
     }
 
     override fun onControlDataChannelCreated(

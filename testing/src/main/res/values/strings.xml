@@ -29,4 +29,10 @@
     <string name="simulate_call">Simulate call</string>
     <string name="start">start</string>
     <string name="stop">stop</string>
+    <string name="ringing">Ringing...</string>
+    <string name="active">Active...</string>
+    <string name="hangingup">Hanging up...</string>
+    <string name="tcp_hint">Local Area Network</string>
+    <string name="client_hint">Please input the server IP.</string>
+    <string name="server_hint">Should In a local area network.</string>
 </resources>

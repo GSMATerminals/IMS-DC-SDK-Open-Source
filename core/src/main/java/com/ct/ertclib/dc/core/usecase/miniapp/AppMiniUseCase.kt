@@ -20,11 +20,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.FileUtils
 import com.blankj.utilcode.util.Utils
-import com.ct.ertclib.dc.core.common.LicenseManager
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.common.NativeApp
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.utils.common.CallUtils
@@ -33,7 +31,7 @@ import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.MimeUtils
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.common.UriUtils
-import com.ct.ertclib.dc.core.common.WebActivity
+import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.ct.ertclib.dc.core.common.startImagePreview
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_MOVE_TO_FRONT
@@ -78,6 +76,7 @@ import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IAppMiniUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
+import com.ct.ertclib.dc.core.utils.common.HttpUtils
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
@@ -89,16 +88,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
 import wendu.dsbridge.CompletionHandler
 import java.io.File
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.collections.get
@@ -963,8 +955,7 @@ class AppMiniUseCase(
         WebActivity.startActivity(context,url, title,miniToParentManager.getCallInfo()?.telecomCallId)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
-
-    @RequiresApi(Build.VERSION_CODES.O)
+    
     override fun getHttpResult(params: Map<String, Any>, handler: CompletionHandler<String?>) {
         scope.launch {
             val url = params[URL] as? String
@@ -988,95 +979,58 @@ class AppMiniUseCase(
                 }
                 val decodeJson = String(com.ct.ertclib.dc.core.utils.common.FileUtils.base64ToByteArray(paramsJson))
                 LogUtils.debug(TAG, "getHttpResult, decodeJson: $decodeJson")
-                val requestBody = RequestBody.create(mediaType.toMediaTypeOrNull(), decodeJson)
-                val builder = Request.Builder().url(url)
+
+                val headMap = mutableMapOf<String, String>()
                 decodeHeader?.let {
                     val headerMap = JsonUtil.fromJson(decodeHeader, Map::class.java)
                     headerMap?.forEach { (entry, value) ->
-                        builder.addHeader(entry.toString(), value.toString())
+                        headMap[entry.toString()] = value.toString()
                     }
                 }
-                val request = builder.post(requestBody).build()
-                scope.launch(Dispatchers.IO) {
-                    kotlin.runCatching {
-                        val call = okHttpClient.newCall(request)
-                        call.enqueue(object: Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                val jsResponse = JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
-                                logger.debug("getHttpResult, failed")
-                                handler.complete(JsonUtil.toJson(jsResponse))
-                            }
-
-                            override fun onResponse(call: Call, response: Response) {
-                                val responseBody = response.body?.string()
-                                responseBody?.let {
-                                    val jsResponse = JSResponse(
-                                        RESPONSE_SUCCESS_CODE,
-                                        RESPONSE_SUCCESS_MESSAGE,
-                                        hashMapOf(
-                                            PARAMS_RESPONSE to com.ct.ertclib.dc.core.utils.common.FileUtils.byteArrayToBase64(
-                                                it.toByteArray()
-                                            )
-                                        )
-                                    )
-                                    logger.debug("getHttpResult, get success response: $response responseBody: $it")
-                                    handler.complete(JsonUtil.toJson(jsResponse))
-                                } ?: run {
-                                    val jsResponse =
-                                        JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
-                                    logger.debug("getHttpResult, post success  response null")
-                                    handler.complete(JsonUtil.toJson(jsResponse))
-                                }
-                            }
-                        })
-                    }.onFailure {
-                        LogUtils.error(TAG, "getHttpResult error: ${it.message}")
+                HttpUtils.sendPostRequest(url, headMap, paramsJson, mediaType) { result ->
+                    if (result == HttpUtils.REQUEST_FAILED) {
+                        val jsResponse = JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
+                        logger.debug("getHttpResult, failed")
+                        handler.complete(JsonUtil.toJson(jsResponse))
+                    } else {
+                        val jsResponse = JSResponse(
+                            RESPONSE_SUCCESS_CODE,
+                            RESPONSE_SUCCESS_MESSAGE,
+                            hashMapOf(
+                                PARAMS_RESPONSE to com.ct.ertclib.dc.core.utils.common.FileUtils.byteArrayToBase64(
+                                    result.toByteArray()
+                                )
+                            )
+                        )
+                        logger.debug("getHttpResult, get success result: $result")
+                        handler.complete(JsonUtil.toJson(jsResponse))
                     }
                 }
             } else {
-                val builder = Request.Builder().url(url)
+                val headMap = mutableMapOf<String, String>()
                 decodeHeader?.let {
                     val headerMap = JsonUtil.fromJson(decodeHeader, Map::class.java)
                     headerMap?.forEach { (entry, value) ->
-                        builder.addHeader(entry.toString(), value.toString())
+                        headMap[entry.toString()] = value.toString()
                     }
                 }
-                val request = builder.get().build()
-                val call = okHttpClient.newCall(request)
-                scope.launch(Dispatchers.IO) {
-                    kotlin.runCatching {
-                        call.enqueue(object: Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                val jsResponse = JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
-                                logger.debug("getHttpResult, failed")
-                                handler.complete(JsonUtil.toJson(jsResponse))
-                            }
-
-
-                            override fun onResponse(call: Call, response: Response) {
-                                val responseBody = response.body?.string()
-                                responseBody?.let {
-                                    val jsResponse = JSResponse(
-                                        RESPONSE_SUCCESS_CODE,
-                                        RESPONSE_SUCCESS_MESSAGE,
-                                        hashMapOf(
-                                            PARAMS_RESPONSE to com.ct.ertclib.dc.core.utils.common.FileUtils.byteArrayToBase64(
-                                                it.toByteArray()
-                                            )
-                                        )
-                                    )
-                                    logger.debug("getHttpResult, get success response: $response responseBody: $it")
-                                    handler.complete(JsonUtil.toJson(jsResponse))
-                                } ?: run {
-                                    val jsResponse =
-                                        JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
-                                    logger.debug("getHttpResult, get success  response null")
-                                    handler.complete(JsonUtil.toJson(jsResponse))
-                                }
-                            }
-                        })
-                    }.onFailure {
-                        LogUtils.error(TAG, "getHttpResult error: ${it.message}")
+                HttpUtils.sendGetRequest(url, headMap) { result ->
+                    if (result == HttpUtils.REQUEST_FAILED) {
+                        val jsResponse = JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
+                        logger.debug("getHttpResult, failed")
+                        handler.complete(JsonUtil.toJson(jsResponse))
+                    } else {
+                        val jsResponse = JSResponse(
+                            RESPONSE_SUCCESS_CODE,
+                            RESPONSE_SUCCESS_MESSAGE,
+                            hashMapOf(
+                                PARAMS_RESPONSE to com.ct.ertclib.dc.core.utils.common.FileUtils.byteArrayToBase64(
+                                    result.toByteArray()
+                                )
+                            )
+                        )
+                        logger.debug("getHttpResult, get success result: $result")
+                        handler.complete(JsonUtil.toJson(jsResponse))
                     }
                 }
             }

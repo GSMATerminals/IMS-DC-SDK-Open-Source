@@ -102,6 +102,7 @@
 
     <string name="open_switch_title">Open/Close 5G Enhanced Call</string>
     <string name="local_debug_entry">Local debug entry</string>
+    <string name="local_debug_entry_summary">After clicking, you will enter the debugging page where local simulation environment debugging can be performed</string>
     <string name="please_open">You should open 5G Enhanced Call first.</string>
     <string name="open_switch_tips">By proceeding, you indicate that you have agreed to the 《Privacy Policy》 and 《User Agreement》.</string>
     <string name="close_switch_tips">Closing indicates that you do not agree or withdraw your consent to the 《Privacy Policy》 and 《User Agreement》.</string>
@@ -118,4 +119,12 @@
 
     <string name="permission_usage_tips_recently">Only display usage records from the past 7 days</string>
     <string name="permission_usage_tips_none">No personal information or permission usage records available</string>
+    <string name="main_page_title_close">Enhanced calling has not been enabled</string>
+    <string name="main_page_description_close">5G Enhanced Calling can provide you with superior call service</string>
+    <string name="main_page_title_no_history">No mini-program usage records</string>
+    <string name="main_page_description_no_history">Mini-programs used during calls will be displayed here</string>
+    <string name="delete_string">delete</string>
+    <string name="delete_string_ensure">Release to delete</string>
+    <string name="mic_mute">mute</string>
+    <string name="speaker_on">speaker</string>
 </resources>

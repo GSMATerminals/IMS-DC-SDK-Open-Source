@@ -36,6 +36,7 @@ import com.ct.ertclib.dc.core.data.common.FloatingBallData
 import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.event.MiniAppListGetEvent
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
@@ -49,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -60,6 +62,9 @@ object NewCallAppSdkInterface {
     const val PERMISSION_TYPE_BEFORE_CALL = 1
     const val PERMISSION_TYPE_AFTER_CALL = 2
     const val PERMISSION_TYPE_IN_APP = 3
+
+    const val CALL_START = 1
+    const val CALL_STOP = 2
 
     const val SDK_PERCENT_CONSTANTS = PERCENT_CONSTANTS
     const val SDK_MINI_APP_LIST_PAGE_SIZE = MINI_APP_LIST_PAGE_SIZE
@@ -87,30 +92,12 @@ object NewCallAppSdkInterface {
 
     val floatingBallStatusFlow = MutableSharedFlow<FloatingBallData>()
 
+    val callStateFlow = MutableSharedFlow<Int>()
+
     private var androidContext: Context? = null
     var floatPositionX: Int = 0
     var floatPositionY: Int = 0
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val miniAppDbRepo: MiniAppDbRepo by lazy { MiniAppDbRepo() }
-
-    /**
-     * 判断当前应用是否有5G增强通话相关的全部权限
-     */
-    @JvmStatic
-    fun hasAllPermissions(context: Context): Boolean {
-        return SDKPermissionUtils.hasAllPermissions(context).apply {
-            LogUtils.debug(TAG, "hasAllPermissions: $this")
-        }
-    }
-
-    /**
-     * 开启或关闭5G增强通话功能
-     */
-    @JvmStatic
-    fun setNewCallEnabled(isEnabled: Boolean) {
-        LogUtils.debug(TAG, "setNewCallEnabled, isEnabled: $isEnabled")
-        SDKPermissionUtils.setNewCallEnable(isEnabled)
-    }
 
 
     /**
@@ -233,16 +220,6 @@ object NewCallAppSdkInterface {
     }
 
     /**
-     *从数据库中读取小程序列表
-     */
-    @JvmStatic
-    fun getMiniAppListFromRepo(): List<MiniAppInfo> {
-        return miniAppDbRepo.getAll().apply {
-            LogUtils.debug(TAG, "getMiniAppListFromRepo, size: ${this.size}")
-        }
-    }
-
-    /**
      * 获取当前的通话状态
      */
     @JvmStatic
@@ -290,13 +267,17 @@ object NewCallAppSdkInterface {
     }
 
     @JvmStatic
+    fun emitCallState(callState: Int) {
+        LogUtils.debug(TAG, "emitCallState, callState: $callState")
+        scope.launch {
+            callStateFlow.emit(callState)
+        }
+    }
+
+    @JvmStatic
     fun init(applicationContext: Context) {
         LogUtils.debug(TAG, "init")
         androidContext = applicationContext
-        startKoin {
-            androidContext(applicationContext)
-            modules(coreModule)
-        }
         floatPositionY = ScreenUtils.getScreenHeight(applicationContext) / 2
         scope.launch(Dispatchers.IO) {
             androidContext?.let {
@@ -317,7 +298,6 @@ object NewCallAppSdkInterface {
     @JvmStatic
     fun release() {
         LogUtils.debug(TAG, "release")
-        scope.cancel()
     }
 
     /**

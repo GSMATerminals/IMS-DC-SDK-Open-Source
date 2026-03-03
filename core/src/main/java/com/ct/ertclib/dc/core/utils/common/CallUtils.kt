@@ -22,12 +22,15 @@ import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.provider.ContactsContract
 import android.telecom.Call
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
+import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.call.Contact
 import com.ct.ertclib.dc.core.port.dao.ContactDao
 import com.macoli.reflect_helper.ReflectHelper
@@ -37,6 +40,36 @@ import kotlin.collections.mutableListOf
 
 object CallUtils {
     private const val TAG = "CallUtils"
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun createCallInfo(call: Call): CallInfo? {
+        if (call.details == null) {
+            LogUtils.info(TAG,"createCallInfo call.details is null")
+            return null
+        }
+        val handle = call.details.handle
+        if (handle == null || "tel" != handle.scheme) {
+            LogUtils.info(TAG,"createCallInfo - is not a telephone number：$handle")
+            return null
+        }
+
+        val subId = getSubId(call)
+        val slotId = getSlotId(subId)
+        LogUtils.info(TAG,"createCallInfo subId：$subId, slotId:$slotId")
+        val telecomCallId = getTelecomCallId(call)
+        if (telecomCallId == null) {
+            return null
+        }
+        val remoteNumber = getRemoteNumber(call)
+        val isOutgoingCall = isOutgoingCall(call)
+        val isConference = isConference(call)
+        val isCtCall = isCtCall(subId)
+
+        return CallInfo(
+            slotId, telecomCallId, call.state, remoteNumber, null,
+            call.details.videoState, isConference, isOutgoingCall, isCtCall
+        )
+    }
     @SuppressLint("MissingPermission")
     fun isCtCall(subId: Int): Boolean {
 

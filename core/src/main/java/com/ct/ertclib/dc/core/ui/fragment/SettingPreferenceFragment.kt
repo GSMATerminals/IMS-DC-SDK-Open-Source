@@ -27,7 +27,7 @@ import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
 import com.ct.ertclib.dc.core.ui.activity.PermissionSettingActivity
 import com.ct.ertclib.dc.core.ui.activity.PermissionUsageActivity
-import com.ct.ertclib.dc.core.ui.activity.SettingActivity
+import com.ct.ertclib.dc.core.ui.activity.MiniAppSettingActivity
 import com.ct.ertclib.dc.core.ui.widget.SettingPreference
 import com.ct.ertclib.dc.core.ui.widget.VersionPreference
 import com.ct.ertclib.dc.core.utils.common.LogUtils
@@ -57,7 +57,7 @@ class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPrefe
             it.onPreferenceClickListener = this
         }
         activity?.let { activity ->
-            (activity as? SettingActivity)?.version?.let { version ->
+            (activity as? MiniAppSettingActivity)?.version?.let { version ->
                 versionPreference?.setVersion(version)
             }
         }
@@ -70,10 +70,10 @@ class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPrefe
                 LogUtils.info(TAG, "onPreferenceClick KEY_PERMISSION")
                 activity?.let {
                     val intent = Intent(it, PermissionSettingActivity::class.java).apply {
-                        (activity as? SettingActivity)?.appId?.let { appId ->
+                        (activity as? MiniAppSettingActivity)?.appId?.let { appId ->
                             putExtra(PARAMS_APP_ID, appId)
                         }
-                        (activity as? SettingActivity)?.callId?.let { callId ->
+                        (activity as? MiniAppSettingActivity)?.callId?.let { callId ->
                             putExtra(PARAMS_CALL_ID, callId)
                         }
                     }
@@ -85,10 +85,10 @@ class SettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPrefe
                 LogUtils.info(TAG, "onPreferenceClick KEY_PERMISSION_USAGE")
                 activity?.let {
                     val intent = Intent(it, PermissionUsageActivity::class.java).apply {
-                        (activity as? SettingActivity)?.appId?.let { appId ->
+                        (activity as? MiniAppSettingActivity)?.appId?.let { appId ->
                             putExtra(PARAMS_APP_ID, appId)
                         }
-                        (activity as? SettingActivity)?.callId?.let { callId ->
+                        (activity as? MiniAppSettingActivity)?.callId?.let { callId ->
                             putExtra(PARAMS_CALL_ID, callId)
                         }
                     }

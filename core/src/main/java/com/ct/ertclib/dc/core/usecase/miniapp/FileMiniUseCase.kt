@@ -34,9 +34,6 @@ import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.common.PathManager
-import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY
-import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_EXPIRY_SPLIT_KEY
-import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_SP_KEYS_KEY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.KEY_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_EVENT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.PARAMS_DOWNLOAD_URL
@@ -56,9 +53,9 @@ import com.ct.ertclib.dc.core.data.common.DownloadData
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
 import com.ct.ertclib.dc.core.data.miniapp.ModelInfo
-import com.ct.ertclib.dc.core.data.model.FileEntity
 import com.ct.ertclib.dc.core.data.model.ModelEntity
 import com.ct.ertclib.dc.core.manager.common.FileManager
+import com.ct.ertclib.dc.core.manager.common.SPManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.listener.IDownloadListener
 import com.ct.ertclib.dc.core.port.manager.IFileDownloadManager
@@ -157,7 +154,6 @@ class FileMiniUseCase(
                             "path" to result[0].path,
                             "size" to result[0].size,
                             "lastModified" to result[0].lastModified,
-                            "isDirectory" to result[0].isDirectory,
                             "name" to result[0].displayName
                         )
                     )
@@ -1045,17 +1041,14 @@ class FileMiniUseCase(
             logger.warn("saveKeyValue, param ttl is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
+
+        if (!ttl.matches(Regex("^[0-9]+$"))){
+            logger.warn("saveKeyValue, param ttl is not a number, return")
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
+        }
+
         miniToParentManager.getMiniAppInfo()?.let{
-            SPUtils.getInstance().put(it.appId+key,value)
-            // 存有效期，用于在SDK启动的时候清除过期的key
-            val expiryTime = System.currentTimeMillis() + ttl.toLong()
-            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
-            var builder = StringBuilder(keysStr)
-            if (builder.isNotEmpty()){
-                builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
-            }
-            builder.append("${it.appId}${key}${MINI_APP_SP_EXPIRY_SPLIT_KEY}${expiryTime}")
-            SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+            SPManager.instance.saveUpdateKeyValueWithExpiry(it.appId+key,value,ttl.toLong())
         }
         val response = JSResponse("0", "success", null)
         return JsonUtil.toJson(response)
@@ -1076,27 +1069,8 @@ class FileMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         miniToParentManager.getMiniAppInfo()?.let{ appInfo ->
-            SPUtils.getInstance().remove(appInfo.appId+key)
             scope.launch(Dispatchers.IO) {
-                val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY,"")
-                val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
-                var builder = StringBuilder()
-                keys.forEach {
-                    try {
-                        val appIdKey = it.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)[0]
-                        if (appIdKey === appInfo.appId+key){
-                            SPUtils.getInstance().remove(key)
-                        } else {
-                            if (builder.isNotEmpty()){
-                                builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
-                            }
-                            builder.append(it)
-                        }
-                    } catch (e: Exception){
-                        e.printStackTrace()
-                    }
-                }
-                SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+                SPManager.instance.deleteKeyValue(appInfo.appId+key)
             }
         }
         val response = JSResponse("0", "success", null)
@@ -1187,7 +1161,7 @@ class FileMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         miniToParentManager.getMiniAppInfo()?.let{
-            val value = SPUtils.getInstance().getString(it.appId+key)
+            val value = SPManager.instance.getKeyValue(it.appId+key)
             val valueMap = mutableMapOf<String, String>()
             valueMap["value"] = value
             val response = JSResponse("0", "success", valueMap)

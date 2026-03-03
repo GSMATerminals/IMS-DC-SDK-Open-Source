@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.core.ui.activity
 
 import android.graphics.drawable.Drawable
 import android.view.Gravity
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
@@ -25,13 +26,16 @@ import com.ct.ertclib.dc.core.R
 
 open class BaseToolBarActivity: BaseAppCompatActivity() {
 
-    open var toolbar: Toolbar? = null
+    open var iconCallback: (() -> Unit)? = null
+    private var toolbar: Toolbar? = null
     private var toolbarTitle: TextView? = null
+    private var toolbarIcon: ImageView? = null
 
     override fun onContentChanged() {
         super.onContentChanged()
         toolbar = findViewById(R.id.tool_bar)
         toolbarTitle = findViewById(R.id.tool_bar_title)
+        toolbarIcon = findViewById(R.id.tool_bar_icon)
         toolbar?.let {
             it.navigationIcon = getNavigationIcon()
             it.setNavigationOnClickListener {
@@ -48,6 +52,13 @@ open class BaseToolBarActivity: BaseAppCompatActivity() {
                 it.setPaddingRelative(resources.getDimensionPixelSize(R.dimen.toolbar_layout_padding_start), 0, 0, 0)
             }
         }
+        toolbarIcon?.let {
+            it.setImageDrawable(getToolbarIcon())
+            it.setOnClickListener {
+                iconCallback?.invoke()
+            }
+        }
+
     }
 
     open fun getTooBarTitle(): String {
@@ -56,6 +67,10 @@ open class BaseToolBarActivity: BaseAppCompatActivity() {
 
     open fun getNavigationIcon(): Drawable? {
         return AppCompatResources.getDrawable(this, R.drawable.icon_back)
+    }
+
+    open fun getToolbarIcon(): Drawable? {
+        return null
     }
 
     open fun isCenterStyle(): Boolean {

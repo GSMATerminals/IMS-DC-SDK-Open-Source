@@ -19,15 +19,25 @@
 
     <TextView
         android:id="@+id/tool_bar_title"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/common_text_neutral_black"
         android:gravity="center"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:fontFamily="sans-serif-medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tool_bar"
         app:layout_constraintBottom_toBottomOf="@id/tool_bar" />
+
+    <ImageView
+        android:id="@+id/tool_bar_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="@dimen/common_margin_start_end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tool_bar"
+        app:layout_constraintBottom_toBottomOf="@id/tool_bar"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

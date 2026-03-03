@@ -29,7 +29,7 @@ import com.blankj.utilcode.util.ArrayUtils
 import com.blankj.utilcode.util.BarUtils
 import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
 import com.ct.ertclib.dc.core.utils.logger.Logger
-import com.ct.ertclib.dc.core.common.LicenseManager
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
 import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase

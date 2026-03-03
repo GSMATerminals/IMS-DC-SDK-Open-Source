@@ -7,6 +7,8 @@
 Auditor: CT
 Publisher: yesh1
 publish Description:
+CtCallSDK_v1.1.6_20260122_FC
+	1.修复ADC队里中通话状态问题
 CtCallSDK_v1.1.4_20260122_FC
 	1.修复hide
 CtCallSDK_v1.1.2_20260115_FC
