@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="expanded_dialog_bg_color_light">#080808</color>
-    <color name="miniapp_name_title_color_light">#E5E5E5</color>
     <color name="common_layout_background">#080808</color>
     <color name="common_text_black">#D9FFFFFF</color>
     <color name="common_text_neutral_black">#A8FFFFFF</color>

@@ -55,7 +55,7 @@ import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppDownloadResult
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
-import com.ct.ertclib.dc.core.ui.activity.ConfirmActivity
+import com.ct.ertclib.dc.core.manager.common.ConfirmOverlayManager
 import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.Model
 import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnADCListener
@@ -68,6 +68,7 @@ import com.ct.ertclib.dc.core.port.miniapp.IMiniAppListLoadedCallback
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartCallback
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
+import com.ct.ertclib.dc.core.ui.widget.ConfirmOverlayWindow
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
@@ -995,14 +996,14 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
 
     private fun startMiniAppByAdverse(telecomCallId: String, appInfo: MiniAppInfo, isFromBDC100: Boolean){
         var rejectCount = mRejectPassivelyMiniAppCountMap[appInfo.appId]
-        // 最多拒绝3次，之后就不在提示
-        if (rejectCount != null && rejectCount >= 3) {
-            sLogger.info("onRemoteDataChannelCreated reject start miniApp")
+        // 最多拒绝3次，本次通话中就不再提示
+        if (rejectCount != null && rejectCount >= 2) {
+            sLogger.info("startMiniAppByAdverse reject start miniApp")
             return
         }
         var miniApp = mStartAppMap[appInfo.appId]
 
-        sLogger.info("onRemoteDataChannelCreated miniApp:${miniApp}")
+        sLogger.info("startMiniAppByAdverse miniApp:${miniApp},rejectCount:${rejectCount}")
         if (miniApp == null || miniApp.appStatus == MiniAppStatus.UNINSTALLED || miniApp.appStatus == MiniAppStatus.STOPPED){
             // 振动
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -1043,37 +1044,40 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
                     false,
                     null)
             }
-            ConfirmActivity.startConfirm(
-                Utils.getApp(), Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
-                object : ConfirmActivity.ConfirmCallback {
-                    override fun onAccept() {
-                        sLogger.debug("onAccept miniapp path: $miniApp")
-                        startMiniApp(appInfo.appId, object : IStartAppCallback() {
-                            override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
-                                if (sLogger.isDebugActivated) {
-                                    sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
+            scope.launch(Dispatchers.Main){
+                ConfirmOverlayManager.startConfirm(
+                    Utils.getApp(),
+                    Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
+                    object : ConfirmOverlayWindow.ConfirmCallback{
+                        override fun onAccept() {
+                            sLogger.debug("onAccept miniapp path: $miniApp")
+                            startMiniApp(appInfo.appId, object : IStartAppCallback() {
+                                override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
+                                    if (sLogger.isDebugActivated) {
+                                        sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
+                                    }
+                                    mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
                                 }
-                                mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
-                            }
 
-                            override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+                                override fun onDownloadProgressUpdated(appId: String, progress: Int) {
 
-                            }
-                        }, startType = PASSIVE_START_TYPE)
-                    }
-
-                    override fun onCancel() {
-                        if (rejectCount == null){
-                            mRejectPassivelyMiniAppCountMap[appInfo.appId] = 0
-                        } else {
-                            mRejectPassivelyMiniAppCountMap[appInfo.appId] = rejectCount++
+                                }
+                            }, startType = PASSIVE_START_TYPE)
                         }
-                        mMiniAppConsultControlImplMap[appInfo.appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_REJECT)
-                    }
-                },
-                Utils.getApp().resources.getString(R.string.btn_agree),
-                Utils.getApp().resources.getString(R.string.btn_refuse)
-            )
+
+                        override fun onCancel() {
+                            if (rejectCount == null){
+                                mRejectPassivelyMiniAppCountMap[appInfo.appId] = 0
+                            } else {
+                                mRejectPassivelyMiniAppCountMap[appInfo.appId] = ++rejectCount
+                            }
+                            mMiniAppConsultControlImplMap[appInfo.appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_REJECT)
+                        }
+                    },
+                    Utils.getApp().resources.getString(R.string.btn_agree),
+                    Utils.getApp().resources.getString(R.string.btn_refuse)
+                )
+            }
         }
     }
 

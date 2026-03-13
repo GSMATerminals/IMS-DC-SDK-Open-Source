@@ -28,13 +28,16 @@ class WebActivity: BaseAppCompatActivity() {
         const val PARAMS_WEB_TITLE= "params_web_title"
         const val PARAMS_CALL_ID= "params_web_call_id"
         fun startActivity(context:Context,url:String,title:String,callId:String?){
+            context.startActivity(getIntent(context, url, title, callId))
+        }
+        fun getIntent(context:Context, url:String, title:String, callId:String? = null): Intent {
             val intent = Intent(context,WebActivity::class.java)
             intent.putExtra(PARAMS_WEB_URL,url)
             intent.putExtra(PARAMS_WEB_TITLE,title)
             if (!TextUtils.isEmpty(callId)){
                 intent.putExtra(PARAMS_CALL_ID,callId)
             }
-            context.startActivity(intent)
+            return intent
         }
     }
     private lateinit var mBinding: ActivityWebBinding

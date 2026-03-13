@@ -142,11 +142,11 @@ class MiniAppAdapter(
         if (position < stableItemList.size) {
             stableItemList[position].let { item ->
                 itemViewMap[item.name] = holder.itemview
-                holder.itemview.bindSimple(item.name, item.drawableRes, NewCallAppSdkInterface.floatingBallStyle.value?.let { viewModel.getTextColor(context, it) })
+                holder.itemview.bindSimple(item.name, item.drawableRes, NewCallAppSdkInterface.floatingBallStyle.value.let { viewModel.getTextColor(context, it) })
                 holder.itemview.setOnClickListener {
                     item.onCLickListener.invoke()
                 }
-                NewCallAppSdkInterface.floatingBallStyle.value?.let {
+                NewCallAppSdkInterface.floatingBallStyle.value.let {
                     holder.itemview.titleTv.setTextColor(viewModel.getTextColor(context, it))
                 }
             }
@@ -162,13 +162,13 @@ class MiniAppAdapter(
         )
         itemViewMap[miniAppInfo.appId] = holder.itemview
         if (callInfo != null) {
-            holder.itemview.bindData(miniAppInfo, callInfo, NewCallAppSdkInterface.floatingBallStyle.value?.let { viewModel.getTextColor(context, it) })
+            holder.itemview.bindData(miniAppInfo, callInfo, NewCallAppSdkInterface.floatingBallStyle.value.let { viewModel.getTextColor(context, it) })
             NewCallAppSdkInterface.queryMiniAppStatus(callInfo.telecomCallId, miniAppInfo.appId, ::onStartResult, ::onDownloadProgressUpdated)
         }
         holder.itemview.setOnClickListener {
             handleStartApp(miniAppInfo)
         }
-        NewCallAppSdkInterface.floatingBallStyle.value?.let {
+        NewCallAppSdkInterface.floatingBallStyle.value.let {
             holder.itemview.titleTv.setTextColor(viewModel.getTextColor(context, it))
         }
     }

@@ -13,6 +13,7 @@
         android:id="@+id/miniapp_layout"
         android:layout_width="@dimen/expanded_menu_height_width"
         android:layout_height="@dimen/expanded_menu_height_width"
+        android:forceDarkAllowed="false"
         android:background="@drawable/expanded_menu_dialog_bg"
         android:paddingBottom="12dp">
         <TextView
@@ -117,6 +118,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/miniapp_setting_layout"
         android:background="@drawable/expanded_menu_dialog_bg"
+        android:forceDarkAllowed="false"
         android:layout_marginTop="@dimen/expanded_margin_bottom"
         android:layout_marginBottom="@dimen/expanded_margin_bottom"
         android:layout_width="@dimen/expanded_menu_height_width"

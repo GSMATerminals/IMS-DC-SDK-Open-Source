@@ -706,7 +706,7 @@ class BDCManager(
                     FLOATING_DISPLAY,
                     callInfo,
                     it,
-                    NewCallAppSdkInterface.floatingBallStyle.value ?: STYLE_DEFAULT)
+                    NewCallAppSdkInterface.floatingBallStyle.value)
                 )
             }
         }
