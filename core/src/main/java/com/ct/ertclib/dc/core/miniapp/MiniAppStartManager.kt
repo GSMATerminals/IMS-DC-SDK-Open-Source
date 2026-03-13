@@ -249,7 +249,7 @@ object MiniAppStartManager : IMiniAppStartManager {
         callInfo: CallInfo?
     ): MiniAppInfoWrapper? {
         for (miniAppInfoWraper in mMiniAppInfoList) {
-            if (miniAppInfoWraper.miniApp.appId == miniAppInfo.appId) {
+            if (miniAppInfoWraper.miniApp.appId == miniAppInfo.appId && miniAppInfoWraper.miniApp.callId == miniAppInfo.callId) {
                 if (miniAppInfoWraper.miniApp.appProperties?.version?.let { miniAppInfo.appProperties?.version?.let { it1 ->
                         PathManager().compareVersion(it,
                             it1

@@ -86,7 +86,7 @@ object NewCallAppSdkInterface {
 
     val callInfoEventFlow = MutableSharedFlow<CallInfo>()
 
-    val floatingBallStyle : MutableLiveData<Int> = MutableLiveData(STYLE_DEFAULT)
+    val floatingBallStyle : MutableStateFlow<Int> = MutableStateFlow(STYLE_DEFAULT)
 
     val miniAppListEventFlow = MutableSharedFlow<MiniAppListGetEvent>()
 
@@ -283,7 +283,7 @@ object NewCallAppSdkInterface {
             androidContext?.let {
                 val sharePreference =
                     it.getSharedPreferences(SHARE_PREFERENCE_CONSTANTS, Context.MODE_PRIVATE)
-                floatingBallStyle.postValue(
+                floatingBallStyle.emit(
                     sharePreference.getInt(
                         SHARE_PREFERENCE_STYLE_PARAMS, STYLE_DEFAULT
                     )

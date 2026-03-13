@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.ui.activity
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.databinding.LayoutStyleSettingBinding
@@ -40,7 +41,7 @@ class StyleSettingActivity: BaseToolBarActivity() {
         setContentView(binding.root)
         val gridLayoutManager = GridLayoutManager(this@StyleSettingActivity, EXPANDED_ITEM_SPAN_COUNT)
         binding.styleRecyclerview.layoutManager = gridLayoutManager
-        styleAdapter = StyleAdapter(this@StyleSettingActivity)
+        styleAdapter = StyleAdapter(this@StyleSettingActivity, lifecycleScope)
         binding.styleRecyclerview.adapter = styleAdapter
     }
 

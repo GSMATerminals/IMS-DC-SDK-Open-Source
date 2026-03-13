@@ -20,6 +20,8 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
 import android.app.DownloadManager
+import android.app.KeyguardManager
+import android.app.KeyguardManager.KeyguardDismissCallback
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -41,7 +43,11 @@ import android.webkit.WebView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.toColorInt
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.SPUtils
@@ -49,36 +55,41 @@ import com.blankj.utilcode.util.SizeUtils
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.constants.CommonConstants
-import com.ct.ertclib.dc.core.miniapp.bridge.CTWebChromeClient
-import com.ct.ertclib.dc.core.miniapp.bridge.CTWebViewClient
-import com.ct.ertclib.dc.core.miniapp.bridge.JSApi
-import com.ct.ertclib.dc.core.data.model.MiniAppInfo
-import com.ct.ertclib.dc.core.databinding.ActivityMiniAppBinding
-import com.ct.ertclib.dc.core.utils.common.BitmapUtils
-import com.ct.ertclib.dc.core.utils.logger.Logger
-import com.ct.ertclib.dc.core.utils.common.FileUtils
-import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_VERSION_CODE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_AUDIO_DEVICE_NOTIFY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_CALL_STATE_NOTIFY
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_IME_HEIGHT_NOTIFY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_MINI_APP_NOTIFY
 import com.ct.ertclib.dc.core.data.call.CallInfo
-import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.data.common.MediaInfo
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
+import com.ct.ertclib.dc.core.data.model.MiniAppInfo
+import com.ct.ertclib.dc.core.databinding.ActivityMiniAppBinding
+import com.ct.ertclib.dc.core.miniapp.bridge.CTWebChromeClient
+import com.ct.ertclib.dc.core.miniapp.bridge.CTWebViewClient
+import com.ct.ertclib.dc.core.miniapp.bridge.JSApi
+import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.miniapp.ui.viewmodel.MiniAppViewModel
+import com.ct.ertclib.dc.core.miniapp.ui.viewmodel.MiniAppViewModel.Companion.SPEAKER_STATUS_OPEN
 import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
 import com.ct.ertclib.dc.core.ui.activity.MiniAppSettingActivity
-import com.ct.ertclib.dc.core.utils.common.PermissionUtils
 import com.ct.ertclib.dc.core.ui.widget.PermissionBottomSheetDialog
+import com.ct.ertclib.dc.core.utils.common.BitmapUtils
+import com.ct.ertclib.dc.core.utils.common.FileUtils
+import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
+import com.ct.ertclib.dc.core.utils.common.PermissionUtils
+import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.logger.LogConfig
+import com.ct.ertclib.dc.core.utils.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -86,15 +97,6 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import wendu.dsbridge.DWebView
-import androidx.core.graphics.toColorInt
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_AUDIO_DEVICE_NOTIFY
-import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
-import com.ct.ertclib.dc.core.utils.common.PkgUtils
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_IME_HEIGHT_NOTIFY
-import com.ct.ertclib.dc.core.miniapp.ui.viewmodel.MiniAppViewModel.Companion.SPEAKER_STATUS_OPEN
 
 open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
 
@@ -276,7 +278,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             it.webChromeClient = CTWebChromeClient(this)
             it.setDownloadListener(WebViewDownloadListener(this))
             it.addJavascriptObject(JSApi(this), "")
-            it.setLayerType(View.LAYER_TYPE_HARDWARE,null)
+//            it.setLayerType(View.LAYER_TYPE_HARDWARE,null) // 工程机会崩
         }
         WebView.setWebContentsDebuggingEnabled(false)
 
@@ -317,6 +319,12 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                 }
             }
         }
+        binding.iconHangUpRinging.setOnClickListener {
+            viewModel.hangup()
+        }
+        binding.iconAnswerRinging.setOnClickListener {
+            viewModel.answer()
+        }
     }
 
     private fun initViewModel() {
@@ -341,7 +349,22 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
             }
         }
         viewModel.phoneButtonShowStatus.observe(this) { status ->
-            binding.phoneOperationLayout.isVisible = status
+            when (status) {
+                MiniAppViewModel.PHONE_BUTTON_HIDE -> {
+                    binding.phoneOperationLayout.isVisible = false
+                    binding.phoneOperationLayoutRinging.isVisible = false
+                }
+
+                MiniAppViewModel.PHONE_BUTTON_RINGING -> {
+                    binding.phoneOperationLayout.isVisible = false
+                    binding.phoneOperationLayoutRinging.isVisible = true
+                }
+
+                MiniAppViewModel.PHONE_BUTTON_CALLING -> {
+                    binding.phoneOperationLayout.isVisible = true
+                    binding.phoneOperationLayoutRinging.isVisible = false
+                }
+            }
         }
     }
 
@@ -419,7 +442,11 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         //全屏
         if (windowStyle.isFullScreen) {
             binding.topView.visibility = View.GONE
-            binding.bottomView.visibility = View.GONE
+            if (miniApp?.appProperties?.showPhoneButton == true) {
+                binding.bottomView.visibility = View.VISIBLE
+            } else {
+                binding.bottomView.visibility = View.GONE
+            }
         } else {
             binding.topView.visibility = View.VISIBLE
             binding.bottomView.visibility = View.VISIBLE
@@ -453,9 +480,14 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
         }
 
         if (miniApp?.appProperties?.showPhoneButton == true) {
-            viewModel.phoneButtonShowStatus.postValue(true)
+            if (callState == Call.STATE_RINGING) {
+                viewModel.phoneButtonShowStatus.postValue(MiniAppViewModel.PHONE_BUTTON_RINGING)
+            } else {
+                viewModel.phoneButtonShowStatus.postValue(MiniAppViewModel.PHONE_BUTTON_CALLING)
+            }
+
         } else {
-            viewModel.phoneButtonShowStatus.postValue(false)
+            viewModel.phoneButtonShowStatus.postValue(MiniAppViewModel.PHONE_BUTTON_HIDE)
         }
 
         updateBack()
@@ -514,9 +546,35 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onStart() {
         super.onStart()
+        // 如果锁屏就请求用户解锁
+        val keyguardManager = getSystemService(KeyguardManager::class.java)
+        val locked = keyguardManager.isKeyguardLocked
+        if (locked) {
+            keyguardManager.newKeyguardLock("unLock")
+            keyguardManager.requestDismissKeyguard(this, object : KeyguardDismissCallback() {
+                override fun onDismissError() {
+                    super.onDismissError()
+                }
+
+                override fun onDismissSucceeded() {
+                    super.onDismissSucceeded()
+                    checkMiniAppPermissions()
+
+                }
+
+                override fun onDismissCancelled() {
+                    super.onDismissCancelled()
+                }
+            })
+        } else {
+            checkMiniAppPermissions()
+        }
+    }
+
+    private fun checkMiniAppPermissions() {
         if (!hasAllPermission){
             miniApp?.let {
-                viewModel.startGrantPermission(this, it, ::checkMiniAppPermissions, ::finishAndKillMiniAppActivity)
+                viewModel.startGrantPermission(this@MiniAppActivity, it, ::checkMiniAppPermissions, ::finishAndKillMiniAppActivity)
 
             }
         }
@@ -673,7 +731,7 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
     override fun invokeOnCallStateChange(params: Map<String, Any?>) {
         val callState = params["callState"].toString().toFloatOrNull()?.toInt()
         LogUtils.debug(TAG, "invokeOnCallStateChange params: $params, callState: $callState, mCallState: ${this.callState}")
-        if (callState!= null && this.callState != callState){
+        if (callState!= null && this.callState != callState) {
             this.callState = callState
             callInfo?.state = callState
             lifecycleScope.launch(Dispatchers.Main) {
@@ -682,11 +740,20 @@ open class MiniAppActivity : AppCompatActivity(), IMiniApp, KoinComponent {
                 }
                 val map = mapOf("callState" to this@MiniAppActivity.callState)
                 callHandler(FUNCTION_CALL_STATE_NOTIFY, arrayOf(JsonUtil.toJson(map)))
-                // 呼叫保持的时候显示遮罩，webView内容不可点
-                if (this@MiniAppActivity.callState == Call.STATE_HOLDING) {
-                    binding.coverView.visibility = View.VISIBLE
-                } else {
-                    binding.coverView.visibility = View.GONE
+                // 通话状态改变时，修改对应的view显示状态
+                when (callState) {
+                    Call.STATE_HOLDING -> {
+                        binding.coverView.visibility = View.VISIBLE
+                    }
+                    Call.STATE_ACTIVE -> {
+                        if (viewModel.phoneButtonShowStatus.value == MiniAppViewModel.PHONE_BUTTON_RINGING) {
+                            viewModel.phoneButtonShowStatus.postValue(MiniAppViewModel.PHONE_BUTTON_CALLING)
+                        }
+                        binding.coverView.visibility = View.GONE
+                    }
+                    else -> {
+                        binding.coverView.visibility = View.GONE
+                    }
                 }
             }
         }

@@ -33,8 +33,11 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.STYLE_DEFAULT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.STYLE_WHITE
 import com.ct.ertclib.dc.core.data.miniapp.StyleItemData
 import com.ct.ertclib.dc.core.utils.common.LogUtils
+import androidx.core.content.edit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-class StyleAdapter(private val context: Context) : RecyclerView.Adapter<StyleViewHolder>() {
+class StyleAdapter(private val context: Context, private val scope: CoroutineScope) : RecyclerView.Adapter<StyleViewHolder>() {
 
     companion object {
         private const val TAG = "StyleAdapter"
@@ -55,7 +58,6 @@ class StyleAdapter(private val context: Context) : RecyclerView.Adapter<StyleVie
     }
 
     override fun getItemCount(): Int {
-        LogUtils.debug(TAG, "getItemCount: ${styleDataList.size}")
         return styleDataList.size
     }
 
@@ -70,7 +72,9 @@ class StyleAdapter(private val context: Context) : RecyclerView.Adapter<StyleVie
         holder.itemView.setOnClickListener {
             LogUtils.debug(TAG, "click styleItem position: $position")
             nowStyle = getStyleWithPosition(position)
-            NewCallAppSdkInterface.floatingBallStyle.postValue(nowStyle)
+            scope.launch {
+                NewCallAppSdkInterface.floatingBallStyle.emit(nowStyle)
+            }
             viewHolderMap.forEach { (key, holder) ->
                 holder.chooseImage.isVisible = (key == position)
             }
@@ -79,9 +83,9 @@ class StyleAdapter(private val context: Context) : RecyclerView.Adapter<StyleVie
 
     fun saveStyleSetting() {
         val sharePreference = context.getSharedPreferences(SHARE_PREFERENCE_CONSTANTS, Context.MODE_PRIVATE)
-        val editor = sharePreference.edit()
-        nowStyle?.let { editor.putInt(SHARE_PREFERENCE_STYLE_PARAMS, it) }
-        editor.apply()
+        sharePreference.edit {
+            nowStyle?.let { putInt(SHARE_PREFERENCE_STYLE_PARAMS, it) }
+        }
     }
 
     private fun getStyleWithPosition(position: Int): Int {
