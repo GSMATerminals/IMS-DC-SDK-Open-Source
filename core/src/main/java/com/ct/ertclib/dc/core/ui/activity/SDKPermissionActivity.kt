@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.blankj.utilcode.util.SizeUtils
 import com.ct.ertclib.dc.core.R
@@ -43,6 +44,12 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
     private var type:Int = NewCallAppSdkInterface.PERMISSION_TYPE_IN_APP
     private var userClicked = false
 
+    private val webActivityLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        userClicked = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         type = intent.getIntExtra(SDKPermissionUtils.PERMISSION_TYPE_KEY, NewCallAppSdkInterface.PERMISSION_TYPE_IN_APP)
@@ -51,7 +58,6 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
     override fun onStart() {
         super.onStart()
         sLogger.debug("onStart")
-        userClicked = false
         checkPermission()
     }
 
@@ -97,11 +103,13 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
 
             binding.privacyPolicyTextview.setOnClickListener{
                 userClicked = true
-                SDKPermissionUtils.startPrivacyActivity(this@SDKPermissionActivity)
+                val intent = SDKPermissionUtils.getPrivacyActivityIntent(this@SDKPermissionActivity)
+                webActivityLauncher.launch(intent)
             }
             binding.userTextview.setOnClickListener{
                 userClicked = true
-                SDKPermissionUtils.startUserServiceActivity(this@SDKPermissionActivity)
+                val intent = SDKPermissionUtils.getUserServiceActivityIntent(this@SDKPermissionActivity)
+                webActivityLauncher.launch(intent)
             }
             binding.btnCancel.setOnClickListener {
                 userClicked = true

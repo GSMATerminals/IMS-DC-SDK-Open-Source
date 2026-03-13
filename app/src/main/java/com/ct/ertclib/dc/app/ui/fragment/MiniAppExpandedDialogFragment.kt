@@ -55,6 +55,7 @@ import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -252,11 +253,12 @@ class MiniAppExpandedDialogFragment(
                 }
             }
         }
-        NewCallAppSdkInterface.floatingBallStyle.observe(this) { style ->
-            NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "viewModel.style.observe: style: $style")
-            refreshPanelUI()
+        lifecycleScope.launch {
+            NewCallAppSdkInterface.floatingBallStyle.collect { style ->
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "viewModel.style.observe: style: $style")
+                refreshPanelUI()
+            }
         }
-
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -265,7 +267,7 @@ class MiniAppExpandedDialogFragment(
     }
 
     private fun refreshPanelUI() {
-        val style = NewCallAppSdkInterface.floatingBallStyle.value ?: return
+        val style = NewCallAppSdkInterface.floatingBallStyle.value
         activity?.let {
             val textColor = viewModel.getTextColor(it, style)
             val backgroundColor = viewModel.getBackgroundDrawableColor(it, style)

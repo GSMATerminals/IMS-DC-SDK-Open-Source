@@ -114,4 +114,5 @@
     <string name="delete_string_ensure">松手即可删除</string>
     <string name="mic_mute">静音</string>
     <string name="speaker_on">扬声器</string>
+    <string name="new_call_close_tips">已关闭，将在下次通话时生效</string>
 </resources>

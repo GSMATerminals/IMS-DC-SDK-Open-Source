@@ -20,6 +20,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
@@ -192,5 +193,13 @@ object SDKPermissionUtils {
 
     fun startUserServiceActivity(context: Context){
         WebActivity.startActivity(context,CommonConstants.SDK_USER_SERVICE_URL,"用户协议",null)
+    }
+
+    fun getPrivacyActivityIntent(context: Context): Intent {
+        return WebActivity.getIntent(context, CommonConstants.SDK_PRIVACY_URL, "隐私政策", null)
+    }
+
+    fun getUserServiceActivityIntent(context: Context): Intent {
+        return WebActivity.getIntent(context, CommonConstants.SDK_USER_SERVICE_URL, "用户协议", null)
     }
 }

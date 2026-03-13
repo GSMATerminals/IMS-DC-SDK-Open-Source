@@ -137,9 +137,9 @@ class MiniAppExpandedActivity : BaseFragmentActivity() {
             }
         }
         lifecycleScope.launch(Dispatchers.Main) {
-            NewCallAppSdkInterface.callInfoEventFlow.distinctUntilChanged().collect { it ->
-                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect callInfoEventFlow, event: $it")
-                mDialogFragment.refreshCallInfo(it)
+            NewCallAppSdkInterface.callInfoEventFlow.collect { callInfo ->
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect callInfoEventFlow, event: $callInfo")
+                mDialogFragment.refreshCallInfo(callInfo)
             }
         }
     }

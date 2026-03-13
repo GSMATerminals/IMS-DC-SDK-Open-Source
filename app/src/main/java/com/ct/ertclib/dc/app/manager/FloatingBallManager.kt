@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.app.manager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.blankj.utilcode.util.LogUtils
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.app.ui.view.MiniAppEntryHolder
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
@@ -59,6 +60,12 @@ object FloatingBallManager: KoinComponent {
                 }
             }
         }
+        scope?.launch {
+            NewCallAppSdkInterface.floatingBallStyle.collect { style ->
+                LogUtils.d(TAG, "floatingBallStyle style: $style")
+                refreshStyle(style)
+            }
+        }
     }
 
     @JvmStatic
@@ -87,6 +94,12 @@ object FloatingBallManager: KoinComponent {
         scope?.launch(Dispatchers.Main) {
             entryHolder?.dismiss()
             entryHolder = null
+        }
+    }
+
+    private fun refreshStyle(style: Int) {
+        scope?.launch(Dispatchers.Main) {
+            entryHolder?.refreshUI(style)
         }
     }
 }
