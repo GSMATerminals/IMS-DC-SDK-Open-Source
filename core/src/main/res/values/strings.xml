@@ -127,4 +127,5 @@
     <string name="delete_string_ensure">Release to delete</string>
     <string name="mic_mute">mute</string>
     <string name="speaker_on">speaker</string>
+    <string name="new_call_close_tips">Closed, will take effect on the next call.</string>
 </resources>

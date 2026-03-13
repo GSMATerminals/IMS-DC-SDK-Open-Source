@@ -14,6 +14,7 @@ import com.ct.ertclib.dc.core.ui.widget.VersionPreference
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
+import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.extension.startLocalTestActivity
 
 class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
@@ -65,6 +66,7 @@ class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnP
             if (!isChecked) {
                 SDKPermissionUtils.setNewCallEnable(false)
                 newCallPreference?.updateSummary(getString(R.string.close_switch_tips))
+                ToastUtils.showShortToast(requireActivity(), getString(R.string.new_call_close_tips))
             } else {
                 activity?.let { activity ->
                     viewModel.checkAndRequestPermission(activity, PERMISSION_TYPE_IN_APP, ::updateView, ::updateView)

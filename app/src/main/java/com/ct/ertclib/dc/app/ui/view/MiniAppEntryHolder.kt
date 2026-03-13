@@ -146,10 +146,10 @@ class MiniAppEntryHolder(private val context: Context) {
         }
     }
 
-    private fun refreshUI() {
+    fun refreshUI(newStyle: Int = style) {
         miniAppEntryView?.let {
-            it.setFloatingBallIcon(style)
-            it.setFloatingHalfBallIcon(style, isLeftSide(NewCallAppSdkInterface.floatPositionX.toFloat()))
+            it.setFloatingBallIcon(newStyle)
+            it.setFloatingHalfBallIcon(newStyle, isLeftSide(NewCallAppSdkInterface.floatPositionX.toFloat()))
         }
     }
 

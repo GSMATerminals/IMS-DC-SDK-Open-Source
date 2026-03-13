@@ -61,13 +61,16 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
         const val MIC_STATUS_MUTE = 1
         const val SPEAKER_STATUS_NORMAL = 0
         const val SPEAKER_STATUS_OPEN = 1
+        const val PHONE_BUTTON_HIDE = 0
+        const val PHONE_BUTTON_RINGING = 1
+        const val PHONE_BUTTON_CALLING = 2
     }
 
     private val logger = Logger.getLogger(TAG)
     private val permissionUseCase: IPermissionUseCase by inject()
     private val miniToParentManager: IMiniToParentManager by inject()
     private var mediaPlayer: MediaPlayer? = null
-    var phoneButtonShowStatus = MutableLiveData(false)
+    var phoneButtonShowStatus = MutableLiveData(PHONE_BUTTON_HIDE)
     var micStatus = MutableLiveData(MIC_STATUS_OPEN)
     var speakerStatus = MutableLiveData(SPEAKER_STATUS_NORMAL)
 
@@ -83,7 +86,6 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
             viewModelScope.launch(Dispatchers.IO) {
                 val systemPermission = PermissionUtils.convertToSystemPermissions(allPermission)
                 val permissionMap = permissionUseCase.getPermission(miniAppInfo.appId)
-                val allPermissionsAfterFilter = allPermission.toMutableList()
                 val systemNoGrantedPermission = mutableListOf<String>()
                 val miniAppNoGrantedPermission = mutableListOf<String>()
                 withContext(Dispatchers.Main) {
@@ -91,11 +93,10 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
                     for (permission in systemPermission) {
                         if (!permissionUseCase.isSystemPermissionGranted(permission)) {
                             systemNoGrantedPermission.add(permission)
-                            allPermissionsAfterFilter.remove(PermissionUtils.convertToSingleMiniAppPermissions(permission))
                         }
                     }
-                    //筛选出除系统未授权的权限外，sdk未对小程序进行授权的权限
-                    for (permission in allPermissionsAfterFilter) {
+                    //筛选出sdk未对小程序进行授权的权限
+                    for (permission in allPermission) {
                         if ((permissionMap[permission] != true)) {
                             miniAppNoGrantedPermission.add(permission)
                         }
@@ -110,9 +111,6 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
                                     allGranted: Boolean
                                 ) {
                                     logger.info("MiniApp has all permissions: $allGranted")
-                                    val permissionGrantedMap: MutableMap<String, Boolean> = mutableMapOf()
-                                    permissionGrantedMap.putAll(PermissionUtils.convertToMiniAppPermissions(permissions).associateWith { true })
-                                    savePermissionGrantedResults(miniAppInfo.appId, permissionGrantedMap)
                                     onMiniAppPermissionRequest.invoke(PermissionUtils.convertPermissionDataList(miniAppNoGrantedPermission))
                                 }
 
@@ -204,6 +202,17 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
         val request = AppRequest(
             CommonConstants.CALL_APP_EVENT,
             CommonConstants.ACTION_HANGUP,
+            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
+        )
+        viewModelScope.launch(Dispatchers.Default) {
+            miniToParentManager.sendMessageToParent(request.toJson(), null)
+        }
+    }
+
+    fun answer() {
+        val request = AppRequest(
+            CommonConstants.CALL_APP_EVENT,
+            CommonConstants.ACTION_ANSWER,
             mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
         )
         viewModelScope.launch(Dispatchers.Default) {

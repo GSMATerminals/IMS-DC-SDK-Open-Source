@@ -68,13 +68,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.activity.ConfirmActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:excludeFromRecents="true"
-            android:theme="@style/ActivityTranslucentStyle"
-            />
 
         <activity
             android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity0"

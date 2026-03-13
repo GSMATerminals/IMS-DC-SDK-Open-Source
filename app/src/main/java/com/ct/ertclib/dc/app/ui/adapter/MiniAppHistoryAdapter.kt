@@ -70,7 +70,7 @@ class MiniAppHistoryAdapter(
         if (position < miniAppList.size) {
             val miniAppInfo = miniAppList[position]
             itemViewMap[miniAppInfo.appId] = holder.itemview
-            holder.itemview.bindData(miniAppList[position], callInfo, NewCallAppSdkInterface.floatingBallStyle.value?.let { viewModel.getTextColor(context, it) })
+            holder.itemview.bindData(miniAppList[position], callInfo, NewCallAppSdkInterface.floatingBallStyle.value.let { viewModel.getTextColor(context, it) })
             holder.itemview.setOnClickListener {
                 // NewCallAppSdkInterface.startMiniApp(callInfo.telecomCallId, miniAppInfo.appId, ::onStartResult)
                 handleStartApp(miniAppInfo)
