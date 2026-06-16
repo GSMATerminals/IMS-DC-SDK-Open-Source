@@ -5,7 +5,7 @@ Note: This document aims to help developers understand the architectural design 
 - Support Bootstrap
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
 - Access DCLab
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="200"/>  
+  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
 
 # 5G New Calling Terminal SDK
 - 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.

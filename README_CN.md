@@ -5,7 +5,7 @@
 - 支持引导程序
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
 - 接入DCLab ( New! 一个完全对标IMS现网的DC环境，可用于DC小程序和AS的开发测试及业务体验 )  
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="200"/>  
+  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
 
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
