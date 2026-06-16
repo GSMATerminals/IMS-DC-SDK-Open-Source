@@ -30,6 +30,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.view.Window
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.isVisible
@@ -40,6 +41,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ct.ertclib.dc.app.R
 import com.ct.ertclib.dc.app.databinding.ExpandedMenuDialogBinding
+import com.ct.ertclib.dc.app.ui.adapter.AdAdapter
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.event.MiniAppListGetEvent
@@ -48,6 +50,9 @@ import com.ct.ertclib.dc.app.ui.adapter.MiniAppAdapter
 import com.ct.ertclib.dc.app.ui.adapter.MiniAppHistoryAdapter
 import com.ct.ertclib.dc.app.ui.viewmodel.ExpandedFragmentViewModel
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_MINI_APP_LIST_PAGE_SIZE
+import com.ct.ertclib.dc.core.constants.CommonConstants
+import com.ct.ertclib.dc.core.data.model.AdItem
+import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.scwang.smart.refresh.footer.ClassicsFooter
 import com.scwang.smart.refresh.header.ClassicsHeader
 import com.scwang.smart.refresh.layout.api.RefreshLayout
@@ -63,11 +68,11 @@ import kotlin.math.absoluteValue
 
 
 class MiniAppExpandedDialogFragment(
-    private val startPoint: Point?,
-    private var miniAppList: MiniAppList?,
+    private var miniAppList: MiniAppList,
+    private var adList: ArrayList<AdItem>,
     private var callInfo: CallInfo?
 ) :
-    DialogFragment() {
+    BaseMiniAppListDialogFragment() {
 
     companion object {
         private const val TAG = "MiniAppExpandedDialogFragment"
@@ -96,12 +101,7 @@ class MiniAppExpandedDialogFragment(
         val window = dialog?.window
         window?.let {
             it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            it.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.TOP)
-            val attributes = it.attributes
-            startPoint?.let { point ->
-                attributes.y = point.y
-            }
-            it.attributes = attributes
+            it.setGravity(Gravity.BOTTOM)
             it.setWindowAnimations(R.style.ExpandedDialogAnimStyle)
             if (isFirstLaunch) {
                 val valueAnimator = ValueAnimator.ofFloat(0F, 1F)
@@ -115,11 +115,7 @@ class MiniAppExpandedDialogFragment(
                 }
                 valueAnimator.addListener(object: AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
-                        startPoint?.let { point ->
-                            it.decorView.pivotX = point.x.toFloat()
-                            it.decorView.pivotY = viewModel.getPanelExpandedPivotY(context, point.y)
-                            isFirstLaunch = false
-                        }
+                        isFirstLaunch = false
                     }
 
                     override fun onAnimationEnd(animation: Animator) {
@@ -151,13 +147,19 @@ class MiniAppExpandedDialogFragment(
         return dialog
     }
 
-    fun setCallback(callback: Callback) {
+    override fun setCallback(callback: Callback) {
         this.callback = callback
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun refreshCallInfo(newCallInfo: CallInfo){
+    override fun refreshCallInfo(newCallInfo: CallInfo){
         this.callInfo = newCallInfo
+        miniAppAdapter.run { notifyDataSetChanged() }
+        miniAppHistoryAdapter.run { notifyDataSetChanged() }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    override fun refreshAppStatus(){
         miniAppAdapter.run { notifyDataSetChanged() }
         miniAppHistoryAdapter.run { notifyDataSetChanged() }
     }
@@ -167,6 +169,7 @@ class MiniAppExpandedDialogFragment(
         callInfo?.telecomCallId?.let {
             viewModel.historyMiniAppList.postValue(viewModel.getHistoryMiniAppList(it))
         }
+        dismiss()
     }
 
     private fun initView() {
@@ -174,26 +177,35 @@ class MiniAppExpandedDialogFragment(
         viewBinding.refreshLayout.setRefreshFooter(ClassicsFooter(this@MiniAppExpandedDialogFragment.context))
         viewBinding.refreshLayout.setOnRefreshListener(object : OnRefreshListener {
             override fun onRefresh(refreshLayout: RefreshLayout) {
-                NewCallAppSdkInterface.emitAppListEvent(
-                    MiniAppListGetEvent(
-                        0,
-                        MiniAppListGetEvent.TO_REFRESH, miniAppList
+                miniAppList.callId?.let {
+                    NewCallAppSdkInterface.emitAppListEvent(
+                        MiniAppListGetEvent(
+                            0,
+                            MiniAppListGetEvent.TO_GET, it,0,CommonConstants.MINI_APP_LIST_PAGE_SIZE,null,null
+                        )
                     )
-                )
+                }
                 viewBinding.refreshLayout.finishRefresh(2000)
             }
         })
         viewBinding.refreshLayout.setOnLoadMoreListener(object : OnLoadMoreListener {
             override fun onLoadMore(refreshLayout: RefreshLayout) {
-                if (miniAppList!=null && miniAppList?.totalAppNum!! <= (miniAppList?.beginIndex?.plus(SDK_MINI_APP_LIST_PAGE_SIZE)!!)) {
+                if (miniAppList.totalAppNum <= (miniAppList.beginIndex.plus(SDK_MINI_APP_LIST_PAGE_SIZE)!!)) {
                     viewBinding.refreshLayout.finishLoadMoreWithNoMoreData()
                 } else {
-                    NewCallAppSdkInterface.emitAppListEvent(
-                        MiniAppListGetEvent(
-                            0,
-                            MiniAppListGetEvent.TO_LOADMORE, miniAppList
+                    miniAppList.callId?.let {
+                        NewCallAppSdkInterface.emitAppListEvent(
+                            MiniAppListGetEvent(
+                                0,
+                                MiniAppListGetEvent.TO_GET,
+                                it,
+                                miniAppList.beginIndex.plus(CommonConstants.MINI_APP_LIST_PAGE_SIZE),
+                                CommonConstants.MINI_APP_LIST_PAGE_SIZE,
+                                null,
+                                null
+                            )
                         )
-                    )
+                    }
                     viewBinding.refreshLayout.finishLoadMore(2000)
                 }
             }
@@ -207,6 +219,26 @@ class MiniAppExpandedDialogFragment(
             callInfo?.let {
                 miniAppHistoryAdapter = MiniAppHistoryAdapter(activity, callInfo!!, viewModel)
                 viewBinding.historyRecyclerview.adapter = miniAppHistoryAdapter
+            }
+
+            if (adList.isNotEmpty()) {
+                viewBinding.adLayout.visibility = View.VISIBLE
+                val adAdapter = AdAdapter{ item ->
+                    WebActivity.startActivity(activity, item.h5Url, item.title,null)
+                }
+                viewBinding.bannerViewpager.apply {
+                    adapter = adAdapter
+                    offscreenPageLimit = 1  // 预加载1页
+                    overScrollMode = View.OVER_SCROLL_NEVER  // 禁用过度滚动
+
+                    // 可选：设置页面间距
+                    setPageTransformer { page, position ->
+                        page.translationX = position * page.width * 0.01f
+                    }
+                }
+                adAdapter.submitData(adList)
+            } else {
+                viewBinding.adLayout.visibility = View.GONE
             }
         }
         viewModel.miniAppList.observe(this) { t ->
@@ -237,14 +269,13 @@ class MiniAppExpandedDialogFragment(
                 NewCallAppSdkInterface.startStyleSettingActivity(it)
             }
         }
-        setMoveListener()
         lifecycleScope.launch {
             NewCallAppSdkInterface.miniAppListEventFlow.distinctUntilChanged().collect { event ->
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "collect  miniAppListEventFlow event: ${event.message}")
-                if (MiniAppListGetEvent.ON_DOWNLOAD == event.message && event.miniAppListInfo?.callId == miniAppList?.callId) {
+                if (MiniAppListGetEvent.ON_DOWNLOAD == event.message && event.callId == miniAppList.callId && event.miniAppListInfoAll != null) {
                     withContext(Dispatchers.Main) {
-                        miniAppList = event.miniAppListInfo
-                        miniAppList?.applications?.let {
+                        miniAppList = event.miniAppListInfoAll!!
+                        miniAppList.applications?.let {
                             viewModel.miniAppList.postValue(it)
                         }
                         viewBinding.refreshLayout.finishLoadMore()
@@ -330,44 +361,5 @@ class MiniAppExpandedDialogFragment(
         super.onDismiss(dialog)
         callback?.onDismiss()
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "onDismiss")
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setMoveListener() {
-        viewBinding.expandedDialogParentLayout.setOnTouchListener { v, event ->
-            event?.let {
-                val y = it.rawY
-                when (it.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isMove = false
-                        preTouchY = it.rawY
-                    }
-
-                    MotionEvent.ACTION_MOVE -> {
-                        // 移动的距离
-                        val dy: Float = y - preTouchY
-                        val attributes = dialog?.window?.attributes
-                        attributes?.let {
-                            it.y += dy.toInt()
-                        }
-                        dialog?.window?.attributes = attributes
-                        preTouchY = y
-                        if (dy.absoluteValue > 2) {
-                            isMove = true
-                        }
-                    }
-
-                    MotionEvent.ACTION_UP -> {
-                        viewBinding.expandedDialogParentLayout.getLocationOnScreen(positionArray)
-                        NewCallAppSdkInterface.floatPositionY = positionArray[1]
-                    }
-                }
-            }
-            isMove
-        }
-    }
-
-    interface Callback {
-        fun onDismiss()
     }
 }

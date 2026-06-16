@@ -16,17 +16,17 @@
 
 package com.ct.ertclib.dc.core.port.usecase.mini
 
-import android.content.Context
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IECUseCase {
-    fun queryEC(context: Context, handler: CompletionHandler<String?>)
+    fun queryEC(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun register(context: Context, params: Map<String, Any>): String?
+    fun register(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun request(context: Context,params: Map<String, Any>): String?
+    fun request(miniAppView: MiniAppView,params: Map<String, Any>): String?
 
-    fun registerAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun registerAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun requestAsync(context: Context,params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun requestAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

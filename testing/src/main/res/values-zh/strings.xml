@@ -35,4 +35,61 @@
     <string name="tcp_hint">局域网</string>
     <string name="client_hint">请输入IP地址</string>
     <string name="server_hint">请开启热点或接入局域网</string>
+    <string name="call">通话</string>
+    <string name="dialpad">拨号键盘</string>
+    <!-- 通话界面 -->
+    <string name="calling">正在呼叫...</string>
+    <string name="mute">静音</string>
+    <string name="speaker">免提</string>
+    <string name="hangup">挂断</string>
+    <string name="answer">接听</string>
+    <string name="video">视频</string>
+
+    <!-- 通话状态 -->
+    <string name="call_status_ringing">对方振铃中...</string>
+    <string name="call_status_in_call">通话中</string>
+    <string name="call_ended">通话结束</string>
+    <string name="call_failed">通话失败</string>
+
+    <!-- 连接和注册相关 -->
+    <string name="connection_settings">连接设置</string>
+    <string name="server_url">服务器地址</string>
+    <string name="register_number">注册号码</string>
+    <string name="connect">连接</string>
+    <string name="exit">退出</string>
+    <string name="please_wait">请稍候</string>
+    <string name="connecting">正在连接服务器...</string>
+    <string name="connected_success">连接成功，正在注册设备...</string>
+    <string name="register_success">注册成功</string>
+    <string name="register_failed">注册失败：%s</string>
+    <string name="connection_error">连接错误：%s</string>
+    <string name="reconnect_failed">重连失败，请检查网络</string>
+    <string name="url_and_number_required">服务器地址和注册号码不能为空</string>
+
+    <!-- WebSocket 状态 -->
+    <string name="websocket_connected">WebSocket 连接成功</string>
+    <string name="websocket_disconnected">WebSocket 连接断开</string>
+    <string name="websocket_error">WebSocket 错误：%s</string>
+    <string name="websocket_reconnect_failed">WebSocket 重连失败</string>
+    <string name="websocket_not_connected">WebSocket 未连接，正在重连...</string>
+
+    <!-- 联系人相关 -->
+    <string name="unknown_contact">未知联系人</string>
+    <string name="just_now">刚刚</string>
+    <string name="unknown_reason">未知原因</string>
+
+    <!-- 输入提示 -->
+    <string name="hint_server_url">例如: ws://192.168.1.100:8080/websocket</string>
+    <string name="hint_register_number">例如: 18000000000</string>
+    <string name="hint_key">例如: ED5EFD6</string>
+
+    <!-- 按钮文本 -->
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_retry">重试</string>
+    <string name="btn_settings">设置</string>
+    <string name="scan_card">扫码获取新卡号</string>
+    <string name="unregister">注销</string>
+    <string name="register">注册</string>
+    <string name="no_number_tips">暂无卡号信息</string>
 </resources>

@@ -29,6 +29,7 @@ import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.port.dc.ImsDcServiceConnectionCallback
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
+import com.ct.ertclib.dc.core.utils.common.UsageStateUtils
 
 
 object DCServiceManager {
@@ -81,15 +82,27 @@ object DCServiceManager {
         var mccMncList = context.getString(R.string.ims_data_channel_service_mccmnc)
 
         // 本地测试
-        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
-            sLogger.debug("dc service local test")
-            dcPackage = context.packageName
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_Lab || FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
+            if (UsageStateUtils.isNetDCDialerShow()){
+                // 走模拟平台
+                sLogger.debug("dc service net test")
+                dcPackage = context.packageName
 
-            dcClass = "com.ct.ertclib.dc.feature.testing.TestImsDataChannelService"
+                dcClass = "com.ct.ertclib.dc.feature.testing.netdc.service.NetImsDataChannelService"
 
-            dcAction = "com.newcalllib.datachannel.V1_0.ImsDataChannelService"
+                dcAction = "com.newcalllib.datachannel.V1_0.NetImsDataChannelService"
 
-            mccMncList = "[ALL]"
+                mccMncList = "[ALL]"
+            } else {
+                sLogger.debug("dc service local test")
+                dcPackage = context.packageName
+
+                dcClass = "com.ct.ertclib.dc.feature.testing.TestImsDataChannelService"
+
+                dcAction = "com.newcalllib.datachannel.V1_0.ImsDataChannelService"
+
+                mccMncList = "[ALL]"
+            }
         }
 
         sLogger.info("bindDcService: $dcPackage $dcClass $dcAction $mccMncList")

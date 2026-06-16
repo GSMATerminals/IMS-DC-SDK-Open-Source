@@ -32,6 +32,33 @@
         <item name="android:windowDisablePreview">true</item>
     </style>
 
+    <style name="MiniAppStateActivityStyle" parent="Theme.AppCompat">
+        <!-- 透明背景 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
+
+        <!-- 状态栏和导航栏颜色（需要 API 21+） -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- 透明状态栏和导航栏背景 -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- 完全禁用动画 -->
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:activityOpenEnterAnimation">@null</item>
+        <item name="android:activityOpenExitAnimation">@null</item>
+        <item name="android:activityCloseEnterAnimation">@null</item>
+        <item name="android:activityCloseExitAnimation">@null</item>
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@null</item>
+    </style>
+
     <style name="ImagePreviewTheme" parent="Theme.AppCompat">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>

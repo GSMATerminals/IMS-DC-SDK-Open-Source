@@ -18,8 +18,6 @@ package com.ct.ertclib.dc.core.constants
 
 object ContextConstants {
 
-    const val INTENT_APP_SERVICE = "com.ct.ertclib.dc.core.service.AppService"
-
     const val TYPE_CONTACT_PERSON = "vnd.android.cursor.item/person"
     const val TYPE_CONTACT_CONTACT = "vnd.android.cursor.item/contact"
     const val TYPE_CONTACT_RAW = "vnd.android.cursor.item/raw_contact"
@@ -28,4 +26,5 @@ object ContextConstants {
     const val INTENT_PREVIEW_IMAGE = "com.ct.ertclib.dc.PREVIEW_IMAGE"
     const val INTENT_TEST_ACTIVITY = "com.ct.ertclib.dc.TEST_ACTIVITY"
     const val INTENT_SETTINGS_ACTIVITY = "com.ct.ertclib.dc.SETTINGS_ACTIVITY"
+    const val INTENT_NET_DIALER_ACTIVITY = "com.ct.ertclib.dc.DIALER_ACTIVITY"
 }

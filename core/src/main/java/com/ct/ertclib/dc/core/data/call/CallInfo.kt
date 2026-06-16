@@ -52,7 +52,7 @@ data class CallInfo(
         parcel.writeInt(videoState)
         parcel.writeByte(if (isConference) 1 else 0)
         parcel.writeByte(if (isOutgoingCall) 1 else 0)
-        parcel.writeByte(if (isOutgoingCall) 1 else 0)
+        parcel.writeByte(if (isCtCall) 1 else 0)
     }
 
     override fun describeContents(): Int {

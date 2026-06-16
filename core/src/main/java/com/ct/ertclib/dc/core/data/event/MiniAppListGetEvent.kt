@@ -17,11 +17,10 @@
 package com.ct.ertclib.dc.core.data.event
 
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
-// miniAppListInfo是全量
-class MiniAppListGetEvent(override var id: Int, override var message: String, val miniAppListInfo: MiniAppList?) : Event<String>() {
+// miniAppListInfoAll是全量
+class MiniAppListGetEvent(override var id: Int, override var message: String, var callId: String,var index: Int, var num: Int, val miniAppListInfoAll: MiniAppList?,val miniAppListInfoNewGet: MiniAppList?) : Event<String>() {
     companion object {
-        const val TO_REFRESH = "TO_REFRESH"
-        const val TO_LOADMORE = "TO_LOADMORE"
+        const val TO_GET = "TO_GET"
         const val ON_DOWNLOAD = "ON_DOWNLOAD"
     }
 }

@@ -102,7 +102,9 @@
 
     <string name="open_switch_title">Open/Close 5G Enhanced Call</string>
     <string name="local_debug_entry">Local debug entry</string>
+    <string name="net_debug_entry">Net debug entry</string>
     <string name="local_debug_entry_summary">After clicking, you will enter the debugging page where local simulation environment debugging can be performed</string>
+    <string name="net_debug_entry_summary">After clicking, you will enter the debugging page where net simulation environment debugging can be performed</string>
     <string name="please_open">You should open 5G Enhanced Call first.</string>
     <string name="open_switch_tips">By proceeding, you indicate that you have agreed to the 《Privacy Policy》 and 《User Agreement》.</string>
     <string name="close_switch_tips">Closing indicates that you do not agree or withdraw your consent to the 《Privacy Policy》 and 《User Agreement》.</string>
@@ -128,4 +130,5 @@
     <string name="mic_mute">mute</string>
     <string name="speaker_on">speaker</string>
     <string name="new_call_close_tips">Closed, will take effect on the next call.</string>
+    <string name="screen_share_not_in_top_tips">Please bring the call app to the foreground to continue viewing the doodle track.</string>
 </resources>

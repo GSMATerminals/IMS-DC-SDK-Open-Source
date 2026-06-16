@@ -16,40 +16,40 @@
 
 package com.ct.ertclib.dc.core.port.usecase.mini
 
-import android.content.Context
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IScreenShareMiniUseCase {
 
-    fun startScreenShare(context: Context,params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun startScreenShare(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun stopScreenShare(context: Context): String
+    fun stopScreenShare(miniAppView: MiniAppView): String
 
-    fun requestScreenShareAbility(handler: CompletionHandler<String?>)
+    fun requestScreenShareAbility(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun openSketchBoard(params: Map<String, Any>): String
+    fun openSketchBoard(miniAppView: MiniAppView,params: Map<String, Any>): String
 
-    fun closeSketchBoard(): String
+    fun closeSketchBoard(miniAppView: MiniAppView,): String
 
-    fun addDrawingInfo(params: Map<String, Any>): String
+    fun addDrawingInfo(miniAppView: MiniAppView,params: Map<String, Any>): String
 
-    fun addRemoteSizeInfo(params: Map<String, Any>): String
+    fun addRemoteSizeInfo(miniAppView: MiniAppView,params: Map<String, Any>): String
 
-    fun setPrivacyMode(params: Map<String, Any>): String
+    fun setPrivacyMode(miniAppView: MiniAppView,params: Map<String, Any>): String
 
-    fun addRemoteWindowSizeInfo(params: Map<String, Any>): String
+    fun addRemoteWindowSizeInfo(miniAppView: MiniAppView,params: Map<String, Any>): String
 
-    fun stopScreenShareAsync(context: Context, handler: CompletionHandler<String?>)
+    fun stopScreenShareAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun openSketchBoardAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun openSketchBoardAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun closeSketchBoardAsync(handler: CompletionHandler<String?>)
+    fun closeSketchBoardAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun addDrawingInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun addDrawingInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun addRemoteSizeInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun addRemoteSizeInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun setPrivacyModeAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun setPrivacyModeAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun addRemoteWindowSizeInfoAsync(params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun addRemoteWindowSizeInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

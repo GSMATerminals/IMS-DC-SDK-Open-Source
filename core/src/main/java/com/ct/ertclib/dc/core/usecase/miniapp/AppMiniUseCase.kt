@@ -16,8 +16,6 @@
 
 package com.ct.ertclib.dc.core.usecase.miniapp
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.blankj.utilcode.util.FileUtils
@@ -34,9 +32,7 @@ import com.ct.ertclib.dc.core.utils.common.UriUtils
 import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.ct.ertclib.dc.core.common.startImagePreview
 import com.ct.ertclib.dc.core.constants.CommonConstants
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_MOVE_TO_FRONT
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REQUEST_START_ADVERSE_APP
-import com.ct.ertclib.dc.core.constants.CommonConstants.COMMON_APP_EVENT
+import com.ct.ertclib.dc.core.constants.CommonConstants.AS_MODULE_PLATFORM_INFO_EVENT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_MODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_NAME_PARAM
@@ -65,15 +61,17 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAG
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.TITLE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.URL
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
+import com.ct.ertclib.dc.core.data.common.ASPlatformInfo
 import com.ct.ertclib.dc.core.data.common.MediaInfo
+import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStartParam
-import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
+import com.ct.ertclib.dc.core.manager.call.NewCallsManager
+import com.ct.ertclib.dc.core.miniapp.MiniAppManager
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 import com.ct.ertclib.dc.core.picker.pickCamera
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IAppMiniUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.HttpUtils
@@ -89,15 +87,15 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
+import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.collections.get
 
-class AppMiniUseCase(
-    private val miniToParentManager: IMiniToParentManager,
-    private val permissionMiniUseCase: IPermissionUseCase) : IAppMiniUseCase {
+class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IAppMiniUseCase {
 
     companion object {
         private const val TAG = "AppMiniUseCase"
@@ -107,13 +105,13 @@ class AppMiniUseCase(
     private val logger = Logger.getLogger(TAG)
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    override fun hangupAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(hangup(context))
+    override fun hangupAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(hangup(miniAppView))
     }
 
-    override fun hangup(context: Context): String {
+    override fun hangup(miniAppView: MiniAppView): String {
         //挂断电话
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("hangup, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -122,26 +120,61 @@ class AppMiniUseCase(
             logger.warn("hangup, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_HANGUP,
-            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
-        )
         scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+             miniAppView.viewModel.callInfo?.telecomCallId?.let { NewCallsManager.instance.hangUp(it) }
             logger.debug("hangUp")
         }
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
 
-    override fun answerAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(answer(context))
+    override fun answerAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(answer(miniAppView))
     }
 
-    override fun answer(context: Context): String {
+    override fun getPlatformInfo(
+        miniAppView: MiniAppView,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        LogUtils.debug(TAG, "getPlatformInfo")
+        scope.launch {
+            miniAppView.viewModel.callInfo?.telecomCallId?.let {
+                MiniAppManager.getAppPackageManager(it)?.dispatchASEvent(AS_MODULE_PLATFORM_INFO_EVENT, mapOf(), object : IMessageCallback {
+                    override fun reply(message: String?) {
+                        message?.let {
+                            LogUtils.debug(TAG, "getPlatformInfo reply: $message")
+                            val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
+                            val map = appResponse?.data as? Map<*, *>
+                            val platFormInfoString = map?.get(AS_MODULE_PLATFORM_INFO_EVENT)?.toString()
+                            platFormInfoString?.let {
+                                val platformInfo = JsonUtil.fromJson(platFormInfoString, ASPlatformInfo::class.java)
+                                val resultMap = mutableMapOf<String, Any?>()
+                                for ((key, value) in params) {
+                                    when (key) {
+                                        "callId" -> {
+                                            resultMap[key] = platformInfo?.callIdentifier
+                                        }
+                                    }
+                                }
+                                val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, resultMap)
+                                handler.complete(JsonUtil.toJson(response))
+                            } ?: run {
+                                logger.warn("getPlatformInfo, info is null")
+                                val response = JSResponse(RESPONSE_FAILED_CODE, "platformInfo is null", null)
+                                handler.complete(JsonUtil.toJson(response))
+                            }
+                        }
+                    }
+                })
+
+            }
+        }
+    }
+
+    override fun answer(miniAppView: MiniAppView): String {
         //接听电话
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("answer, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -150,13 +183,8 @@ class AppMiniUseCase(
             logger.warn("answer, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_ANSWER,
-            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
-        )
         scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+             miniAppView.viewModel.callInfo?.telecomCallId?.let { NewCallsManager.instance.answer(it) }
             logger.debug("answer")
         }
         val response = JSResponse("0", "success", "")
@@ -164,21 +192,21 @@ class AppMiniUseCase(
     }
 
     override fun playDtmfToneAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(playDtmfTone(context,params))
+        handler.complete(playDtmfTone(miniAppView,params))
     }
 
-    override fun playDtmfTone(context: Context,params: Map<String, Any>): String {
+    override fun playDtmfTone(miniAppView: MiniAppView,params: Map<String, Any>): String {
         logger.debug("playDtmfTone")
         val digit = params[DIGIT]
         val license = params[LICENSE]
         if (digit == null || license == null){
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing digit or license")))
         }
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("playDtmfTone, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
@@ -191,14 +219,8 @@ class AppMiniUseCase(
             logger.warn("playDtmfTone, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "appInfo is null")))
         }
-
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_PLAY_DTMF_TONE,
-            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId,DIGIT to digit.toString().first())
-        )
         scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+             miniAppView.viewModel.callInfo?.telecomCallId?.let { NewCallsManager.instance.playDtmfTone(it,digit.toString().first()) }
             logger.debug("playDtmfTone")
         }
         val response = JSResponse("0", "success", "")
@@ -206,20 +228,20 @@ class AppMiniUseCase(
     }
 
     override fun setSpeakerphoneAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(setSpeakerphone(context,params))
+        handler.complete(setSpeakerphone(miniAppView,params))
     }
 
-    override fun setSpeakerphone(context: Context,params: Map<String, Any>): String {
+    override fun setSpeakerphone(miniAppView: MiniAppView,params: Map<String, Any>): String {
         logger.debug("setSpeakerphone")
         val on = params[SPEAKERPHONE_ON]
-        if (on == null){
+        if (on == null || on !is Boolean){
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing on")))
         }
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setSpeakerphone, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
@@ -228,14 +250,8 @@ class AppMiniUseCase(
             logger.warn("setSpeakerphone, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "appInfo is null")))
         }
-
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_SET_SPEAKERPHONE,
-            mapOf(SPEAKERPHONE_ON to (on as Boolean))
-        )
         scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+            NewCallsManager.instance.setSpeakerphone(on)
             logger.debug("setSpeakerphone")
         }
         val response = JSResponse("0", "success", "")
@@ -243,12 +259,12 @@ class AppMiniUseCase(
     }
 
     override fun isSpeakerphoneOn(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.debug("isSpeakerphoneOn")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted"))))
@@ -260,49 +276,25 @@ class AppMiniUseCase(
             return
         }
 
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_IS_SPEAKERPHONE_ON,
-            mapOf()
-        )
-        scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
-                override fun reply(message: String?) {
-                    try {
-                        if (message != null) {
-                            logger.info("isSpeakerphoneOn reply${message}")
-                            val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                            val map = appResponse?.data as? Map<*, *>
-                            map?.let {
-                                val response = JSResponse("0", "success", mutableMapOf(IS_SPEAKERPHONE_ON to map[IS_SPEAKERPHONE_ON]))
-                                scope.launch(Dispatchers.Main) {
-                                    handler.complete(JsonUtil.toJson(response))
-                                }
-                            }
-                        }
-                    } catch (e:Exception){
-                        e.printStackTrace()
-                    }
-                }
-            })
-        }
+        val response = JSResponse("0", "success", mutableMapOf(IS_SPEAKERPHONE_ON to (NewCallsManager.instance.isSpeakerphoneOn())))
+        handler.complete(JsonUtil.toJson(response))
     }
 
     override fun setMutedAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(setMuted(context,params))
+        handler.complete(setMuted(miniAppView,params))
     }
 
-    override fun setMuted(context: Context,params: Map<String, Any>): String {
+    override fun setMuted(miniAppView: MiniAppView,params: Map<String, Any>): String {
         logger.debug("setMuted")
         val muted = params[MUTED]
-        if (muted == null){
+        if (muted == null || muted !is Boolean){
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "missing on")))
         }
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted")))
@@ -311,27 +303,18 @@ class AppMiniUseCase(
             logger.warn("setMuted, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "appInfo is null")))
         }
-
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_SET_MUTED,
-            mapOf(MUTED to (muted as Boolean))
-        )
-        scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
-            logger.debug("setMuted")
-        }
+        NewCallsManager.instance.setMuted(muted)
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
 
     override fun isMuted(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.debug("isMuted")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("setMuted, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "permission not granted"))))
@@ -342,64 +325,41 @@ class AppMiniUseCase(
             handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "appInfo is null"))))
             return
         }
-
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_IS_MUTED,
-            mapOf()
-        )
-        scope.launch {
-            miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
-                override fun reply(message: String?) {
-                    try {
-                        if (message != null) {
-                            logger.info("isMuted reply${message}")
-                            val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                            val map = appResponse?.data as? Map<*, *>
-                            map?.let {
-                                val response = JSResponse("0", "success", mutableMapOf(IS_MUTED to map[IS_MUTED]))
-                                scope.launch(Dispatchers.Main) {
-                                    handler.complete(JsonUtil.toJson(response))
-                                }
-                            }
-                        }
-                    } catch (e:Exception){
-                        e.printStackTrace()
-                    }
-                }
-            })
-        }
+        val response = JSResponse("0", "success", mutableMapOf(IS_MUTED to NewCallsManager.instance.isMuted()))
+        handler.complete(JsonUtil.toJson(response))
     }
 
-    override fun getCallStateAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(getCallState(context))
+    override fun getCallStateAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(getCallState(miniAppView))
     }
 
-    override fun getCallState(context: Context): String {
+    override fun getCallState(miniAppView: MiniAppView): String {
         logger.debug("getCallState")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_GET_CALL_STATE))) {
                 logger.warn("getCallState, permission not granted, return")
-                return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+                return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
             }
         } ?: run {
             logger.warn("getCallState, appInfo is null, return")
-            return JsonUtil.toJson(JSResponse(MiniAppConstants.RESPONSE_FAILED_CODE, MiniAppConstants.RESPONSE_FAILED_MESSAGE, null))
+            return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        val state = miniToParentManager.getCallInfo()?.state
+        val state =  miniAppView.viewModel.callInfo?.state
+        val type = miniAppView.viewModel.callInfo?.telecomCallId?.let { if(NewCallsManager.instance.isVideoCall(it)) 1 else 0 }
         val callStateMap = mutableMapOf<String, Int>()
         callStateMap["callState"] = state ?: -1
+        callStateMap["callType"] = type ?: 0
         val response = JSResponse("0", "success", callStateMap)
         return JsonUtil.toJson(response)
     }
 
     override fun getMiniAppInfo(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.debug("getMiniAppInfo")
-        val miniAppInfo = miniToParentManager.getMiniAppInfo()
+        val miniAppInfo = miniAppView.viewModel.miniAppInfo
         val jsResponse = JSResponse("0", "success", mutableMapOf(
             "appId" to miniAppInfo?.appId,
             "appName" to miniAppInfo?.appName,
@@ -416,53 +376,36 @@ class AppMiniUseCase(
     }
 
     override fun startApp(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        logger.debug("startApp")
+        logger.debug("startApp $params")
         params["appType"]?.let { appType ->
             params["extra"]?.let { extra ->
                 when (appType as String) {
                     MiniAppStartParam.MINIAPP_APPTYPE_MINIAPP -> {
-                        val request = AppRequest(
-                            CommonConstants.COMMON_APP_EVENT,
-                            CommonConstants.ACTION_START_APP,
-                            mapOf(
-                                "telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId,
-                                "appId" to extra as String
-                            )
-                        )
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
-                                    override fun reply(message: String?) {
-                                        try {
-                                            if (message != null) {
-                                                logger.info("miniapp reply${message}")
-                                                val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                                                val map = appResponse?.data as? Map<*, *>
-                                                map?.let {
-                                                    val response = JSResponse("0", "success", mutableMapOf(
-                                                        MiniAppConstants.IS_STARTED to map[MiniAppConstants.IS_STARTED]))
-                                                    scope.launch(Dispatchers.Main) {
-                                                        handler.complete(JsonUtil.toJson(response))
-                                                    }
-                                                }
-                                            }
-                                        } catch (e:Exception){
-                                            e.printStackTrace()
-                                        }
+                        MiniAppManager.getAppPackageManager( miniAppView.viewModel.callInfo?.telecomCallId)
+                            ?.startMiniApp(extra.toString(), object :IStartAppCallback() {
+                                override fun onStartResult(
+                                    appId: String,
+                                    isSuccess: Boolean,
+                                    reason: Reason?
+                                ) {
+                                    val response = JSResponse("0", "success", mutableMapOf(MiniAppConstants.IS_STARTED to isSuccess))
+                                    scope.launch(Dispatchers.Main) {
+                                        handler.complete(JsonUtil.toJson(response))
                                     }
-                                })
-                            }
-                        }
-                        val response = JSResponse("0", "success", "")
-                        handler.complete(JsonUtil.toJson(response))
+                                }
+
+                                override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
+                                }
+                            },isStartByOthers = true)
                     }
 
                     MiniAppStartParam.MINIAPP_APPTYPE_FILE -> {
-                        miniToParentManager.getMiniAppInfo()?.let {
+                        miniAppView.viewModel.miniAppInfo?.let {
                             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(
                                     MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                                 logger.warn("startApp, MINIAPP_APPTYPE_FILE, permission not granted, return")
@@ -488,7 +431,7 @@ class AppMiniUseCase(
                                     }
 
                                 if (mimeType == null) {
-                                    val contentResolver = context.contentResolver
+                                    val contentResolver = miniAppView.context.contentResolver
                                     mimeType = contentResolver.getType(Uri.parse(path))
                                 }
 
@@ -496,7 +439,7 @@ class AppMiniUseCase(
                                     mimeType = "*/*"
                                 }
                                 var fileUri =
-                                    UriUtils.file2Uri(context, File(path))
+                                    UriUtils.file2Uri(miniAppView.context, File(path))
                                 fileUri?.let {
                                     if (UriUtils.isFileContentUri(it)) {
                                         val filename =
@@ -511,12 +454,12 @@ class AppMiniUseCase(
                                             cacheFile!!.absolutePath
                                         )
                                         fileUri =
-                                            UriUtils.file2Uri(context, cacheFile)
+                                            UriUtils.file2Uri(miniAppView.context, cacheFile)
                                     }
                                 }
 
                                 if (extension!=null && (extension.lowercase() == "png" || extension.lowercase() == "jpg" || extension.lowercase() == "jpeg")){
-                                    context.startImagePreview(path)
+                                    miniAppView.context.startImagePreview(path)
                                 } else {
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
                                         addCategory(Intent.CATEGORY_DEFAULT)
@@ -524,7 +467,7 @@ class AppMiniUseCase(
                                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                         setDataAndType(fileUri, mimeType)
                                     }
-                                    context.startActivity(intent)
+                                    miniAppView.context.startActivity(intent)
                                 }
                                 val jsResponse = JSResponse("0", "open file success", null)
                                 handler.complete(JsonUtil.toJson(jsResponse))
@@ -533,14 +476,16 @@ class AppMiniUseCase(
                             }
                         } catch (e: Exception) {
                             logger.error(e.message, e)
-                            ToastUtils.showShortToast(context, "不支持打开此文件")
+                            ToastUtils.showShortToast(miniAppView.context, "不支持打开此文件")
                             val jsResponse = JSResponse("1", "fail to open file", null)
-                            handler.complete(JsonUtil.toJson(jsResponse))
+                            scope.launch(Dispatchers.Main) {
+                                handler.complete(JsonUtil.toJson(jsResponse))
+                            }
                         }
                     }
 
                     MiniAppStartParam.MINIAPP_APPTYPE_CAMERA -> {
-                        miniToParentManager.getMiniAppInfo()?.let {
+                        miniAppView.viewModel.miniAppInfo?.let {
                             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(
                                     MiniAppPermissions.MINIAPP_CAMERA))) {
                                 logger.warn("startApp, MINIAPP_APPTYPE_CAMERA, permission not granted, return")
@@ -550,9 +495,9 @@ class AppMiniUseCase(
                             }
                         }
                         val extraStr = extra as String
-                        context.pickCamera(
+                        miniAppView.context.pickCamera(
                             extraStr == "picture",
-                            miniAppFilePath(context, "outer") + "camera/",
+                            miniAppFilePath(miniAppView, "outer") + "camera/",
                             object : OnPickMediaCallbackListener {
                                 override fun onCancel() {
 
@@ -563,7 +508,9 @@ class AppMiniUseCase(
                                     result[0].let {
                                         val jsResponse =
                                             JSResponse("0", "success", it.absolutePath)
-                                        handler.complete(JsonUtil.toJson(jsResponse))
+                                        scope.launch(Dispatchers.Main) {
+                                            handler.complete(JsonUtil.toJson(jsResponse))
+                                        }
                                     }
                                 }
                             })
@@ -591,7 +538,7 @@ class AppMiniUseCase(
                         val lng = extraMap["lng"]
                         val title = extraMap["title"]
                         if (type != null && lat != null && lng != null && title != null){
-                            val result = NativeApp.openMap(context, type,lat.toDouble(), lng.toDouble(), title)
+                            val result = NativeApp.openMap(miniAppView.context, type,lat.toDouble(), lng.toDouble(), title)
                             if (result == 0){
                                 val jsResponse =
                                     JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
@@ -600,6 +547,7 @@ class AppMiniUseCase(
                                 val jsResponse =
                                     JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
                                 handler.complete(JsonUtil.toJson(jsResponse))
+
                             }
                         } else {
                             val jsResponse =
@@ -609,7 +557,7 @@ class AppMiniUseCase(
                     }
                     MiniAppStartParam.MINIAPP_APPTYPE_BROWSER -> {
                         val url = extra as String
-                        val result = NativeApp.openBrowser(context,url)
+                        val result = NativeApp.openBrowser(miniAppView.context,url)
                         if (result == 0){
                             val jsResponse =
                                 JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
@@ -638,39 +586,24 @@ class AppMiniUseCase(
                                 extraMap[key] = value
                             }
                         }
-                        val request = AppRequest(
-                            CommonConstants.COMMON_APP_EVENT,
-                            CommonConstants.ACTION_START_APP,
-                            mapOf(
-                                "telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId,
-                                "appId" to extraMap["appId"],
-                                "params" to extraMap["params"],
-                            )
-                        )
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                miniToParentManager.sendMessageToParent(request.toJson(), object : IMessageCallback.Stub(){
-                                    override fun reply(message: String?) {
-                                        try {
-                                            if (message != null) {
-                                                logger.info("miniappWithParams reply${message}")
-                                                val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                                                val map = appResponse?.data as? Map<*, *>
-                                                map?.let {
-                                                    val response = JSResponse("0", "success", mutableMapOf(
-                                                        MiniAppConstants.IS_STARTED to map[MiniAppConstants.IS_STARTED]))
-                                                    scope.launch(Dispatchers.Main) {
-                                                        handler.complete(JsonUtil.toJson(response))
-                                                    }
-                                                }
-                                            }
-                                        } catch (e:Exception){
-                                            e.printStackTrace()
-                                        }
+
+                        MiniAppManager.getAppPackageManager( miniAppView.viewModel.callInfo?.telecomCallId)
+                            ?.startMiniApp(extraMap["appId"].toString(), object :IStartAppCallback() {
+                                override fun onStartResult(
+                                    appId: String,
+                                    isSuccess: Boolean,
+                                    reason: Reason?
+                                ) {
+                                    val response = JSResponse("0", "success", mutableMapOf(MiniAppConstants.IS_STARTED to isSuccess))
+                                    scope.launch(Dispatchers.Main) {
+                                        handler.complete(JsonUtil.toJson(response))
                                     }
-                                })
-                            }
-                        }
+                                }
+
+                                override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
+                                }
+                            },isStartByOthers = true, startByOthersParams = extraMap["params"])
                     }
                     else -> {}
                 }
@@ -679,21 +612,22 @@ class AppMiniUseCase(
     }
 
     override fun setWindow(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("setWindow params:${params}")
-        val activity = context as? Activity
-        activity?.let { activity ->
+        miniAppView.let {
             params["hidden"]?.let { hidden ->
                 when (hidden) {
                     is Boolean -> {
                         logger.debug("setWindow hidden $hidden")
-                        if (hidden) {
-                            activity.moveTaskToBack(true)
-                        } else {
-                            moveToFront()
+                        scope.launch(Dispatchers.Main) {
+                            if (hidden) {
+                                miniAppView.minimize()
+                            } else {
+                                miniAppView.show()
+                            }
                         }
                     }
                     else -> logger.error("setWindow hidden param wrong")
@@ -702,9 +636,10 @@ class AppMiniUseCase(
             params["isFullScreen"]?.let { value ->
                 when (value) {
                     is Boolean -> {
-                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.isFullScreen = value
+                        miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle?.isFullScreen = value
                         logger.debug("setWindow isFullScreen: $value")
                     }
+
                     else -> logger.error("setWindow isFullScreen param wrong: expected Boolean, got ${value::class.simpleName}")
                 }
             }
@@ -713,20 +648,17 @@ class AppMiniUseCase(
                     val colorString = colorValue.toString()
 
                     // 使用正则表达式进行校验
-                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString)) {
+                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString) || Pattern.matches("^#[0-9a-fA-F]{8}$", colorString)) {
                         // 格式正确，执行赋值操作
-                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarColor = colorString
+                        miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle?.statusBarColor = colorString
                         logger.debug("setWindowStyle statusBarColor:$colorString")
                     } else {
                         // 格式不正确，抛出异常或记录错误
                         val errorMsg = "Invalid statusBarColor format: $colorString. Must be #RRGGBB."
                         logger.error(errorMsg)
-                        // 如果希望 onFailure 捕获此错误，可以抛出 IllegalArgumentException
-                        throw IllegalArgumentException(errorMsg)
                     }
 
                 }.onFailure { e ->
-                    // 捕获 runCatching 内部抛出的异常（包括上面的 IllegalArgumentException）
                     logger.error("set statusBarColor failed: ${e.message}", e)
                 }
             }
@@ -740,7 +672,7 @@ class AppMiniUseCase(
                 }
 
                 if (color != null) {
-                    miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.statusBarTitleColor = color
+                    miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle?.statusBarTitleColor = color
                     logger.debug("setWindowStyle statusBarTitleColor: $color")
                 } else {
                     logger.error("set statusBarTitleColor failed: invalid param type or value, got: $value (${value::class.simpleName})")
@@ -750,16 +682,14 @@ class AppMiniUseCase(
                 kotlin.runCatching {
                     val colorString = colorValue.toString()
                     // 使用正则表达式进行校验
-                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString)) {
+                    if (Pattern.matches("^#[0-9a-fA-F]{6}$", colorString) || Pattern.matches("^#[0-9a-fA-F]{8}$", colorString)) {
                         // 格式正确，执行赋值操作
-                        miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle?.navigationBarColor = colorString
+                        miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle?.navigationBarColor = colorString
                         logger.debug("setWindowStyle navigationBarColor:${colorString}")
                     } else {
                         // 格式不正确，抛出异常或记录错误
                         val errorMsg = "Invalid navigationBarColor format: $colorString. Must be #RRGGBB."
                         logger.error(errorMsg)
-                        // 如果希望 onFailure 捕获此错误，可以抛出 IllegalArgumentException
-                        throw IllegalArgumentException(errorMsg)
                     }
 
                 }.onFailure {
@@ -770,17 +700,17 @@ class AppMiniUseCase(
                 kotlin.runCatching {
                     scope.launch {
                         withContext(Dispatchers.Main) {
-                            miniToParentManager.miniAppInterface?.setPageName(it.toString())
+                            miniAppView.viewModel.notifyPageNameChanged(it.toString())
                         }
                     }
                 }.onFailure {
                     logger.error("set pageName, param wrong")
                 }
             }
-            logger.debug("setWindowStyle navigationBarColor:${miniToParentManager.getMiniAppInfo()?.appProperties?.windowStyle}")
+            logger.debug("setWindowStyle navigationBarColor:${miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle}")
             scope.launch {
                 withContext(Dispatchers.Main) {
-                    miniToParentManager.miniAppInterface?.setWindowStyle()
+                    miniAppView.viewModel.setWindowStyle()
                 }
             }
 
@@ -789,7 +719,7 @@ class AppMiniUseCase(
         handler.complete(JsonUtil.toJson(jsResponse))
     }
 
-    override fun getRemoteNumber(context: Context, handler: CompletionHandler<String?>) {
+    override fun getRemoteNumber(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
 //        scope.launch(Dispatchers.Main) {
 //            val builder = AlertDialog.Builder(context)
 //            builder.setTitle(context.getString(R.string.request_dialog_title))
@@ -812,35 +742,34 @@ class AppMiniUseCase(
 //            val dialog = builder.create()
 //            dialog.show()
 //        }
-        val callInfo = miniToParentManager.getCallInfo()
+        val callInfo =  miniAppView.viewModel.callInfo
         val jsResponse = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, hashMapOf("remoteNumber" to callInfo?.remoteNumber?.filter { !it.isWhitespace() }))
         logger.debug("getRemoteNumber: ${callInfo?.remoteNumber}")
         handler.complete(JsonUtil.toJson(jsResponse))
     }
 
     override fun requestStartAdverseAppAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(requestStartAdverseApp(context))
+        handler.complete(requestStartAdverseApp(miniAppView))
     }
 
-    override fun requestStartAdverseApp(context: Context): String {
-        val appRequestJson = AppRequest(COMMON_APP_EVENT, ACTION_REQUEST_START_ADVERSE_APP, mapOf()).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun requestStartAdverseApp(miniAppView: MiniAppView): String {
+        miniAppView.viewModel.miniAppInfo?.appId?.let { MiniAppManager.getAppPackageManager( miniAppView.viewModel.callInfo?.telecomCallId)?.requestStartAdverseApp(it) }
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
 
     override fun addOrEditContactAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(addOrEditContact(context, params))
+        handler.complete(addOrEditContact(miniAppView, params))
     }
 
-    override fun addOrEditContact(context: Context, params: Map<String, Any>): String {
+    override fun addOrEditContact(miniAppView: MiniAppView, params: Map<String, Any>): String {
         val mode = params[ADD_CONTACT_MODE]?.toString()
         val name = params[ADD_CONTACT_NAME_PARAM]?.toString() ?: ""
         val number = params[ADD_CONTACT_NUMBER_PARAM]?.toString() ?: ""
@@ -848,10 +777,10 @@ class AppMiniUseCase(
         scope.launch(Dispatchers.Main) {
             when (mode) {
                 CONTACT_EDIT_MODE -> {
-                    context.startEditContactActivity(number)
+                    miniAppView.context.startEditContactActivity(number)
                 }
                 else -> {
-                    context.startAddContactActivity(name, number)
+                    miniAppView.context.startAddContactActivity(name, number)
                 }
             }
         }
@@ -859,16 +788,16 @@ class AppMiniUseCase(
     }
 
     override fun getContactNameAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getContactName(context, params))
+        handler.complete(getContactName(miniAppView, params))
     }
 
-    override fun getContactName(context: Context, params: Map<String, Any>): String {
+    override fun getContactName(miniAppView: MiniAppView, params: Map<String, Any>): String {
         logger.info("getContactName")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
                 logger.warn("getContactName, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -883,7 +812,7 @@ class AppMiniUseCase(
             logger.warn("getContactName, param number is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        val name = CallUtils.getContactName(context,number)
+        val name = CallUtils.getContactName(miniAppView.context,number)
         if (name.isNullOrEmpty()){
             logger.warn("getContactName, failed, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -894,9 +823,9 @@ class AppMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
-    override fun getContactList(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>) {
+    override fun getContactList(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>) {
         logger.info("getContactList")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_READ_CONTACTS))) {
                 logger.warn("getContactList, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
@@ -916,8 +845,8 @@ class AppMiniUseCase(
             return
         }
         scope.launch(Dispatchers.IO) {
-            val list = CallUtils.getContactList(context,offset,limit)
-            val total = CallUtils.getContactCount(context)
+            val list = CallUtils.getContactList(miniAppView.context,offset,limit)
+            val total = CallUtils.getContactCount(miniAppView.context)
             val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, hashMapOf("list" to list, "total" to total))
             scope.launch(Dispatchers.Main) {
                 handler.complete(JsonUtil.toJson(response))
@@ -927,32 +856,32 @@ class AppMiniUseCase(
     }
 
     override fun setSystemApiLicenseAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(setSystemApiLicense(context, params))
+        handler.complete(setSystemApiLicense(miniAppView, params))
     }
 
-    override fun setSystemApiLicense(context: Context, params: Map<String, Any>): String {
+    override fun setSystemApiLicense(miniAppView: MiniAppView, params: Map<String, Any>): String {
         val license = params[LICENSE]?.toString() ?: ""
         val api = params[API]?.toString() ?: ""
-        miniToParentManager.systemApiLicenseMap[api] = license
+        miniAppView.viewModel.systemApiLicenseMap[api] = license
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
     override fun openWebAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(openWeb(context, params))
+        handler.complete(openWeb(miniAppView, params))
     }
 
-    override fun openWeb(context: Context, params: Map<String, Any>): String {
+    override fun openWeb(miniAppView: MiniAppView, params: Map<String, Any>): String {
         val url = params[URL]?.toString() ?: ""
         val title = params[TITLE]?.toString() ?: ""
-        WebActivity.startActivity(context,url, title,miniToParentManager.getCallInfo()?.telecomCallId)
+        WebActivity.startActivity(miniAppView.context,url, title, miniAppView.viewModel.callInfo?.telecomCallId)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
     
@@ -1037,73 +966,72 @@ class AppMiniUseCase(
         }
     }
 
-    override fun moveToFrontAsync(handler: CompletionHandler<String?>) {
-        handler.complete(moveToFront())
+    override fun moveToFrontAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>) {
+        handler.complete(moveToFront(miniAppView))
     }
 
-    override fun moveToFront(): String {
-        val appRequestJson = AppRequest(COMMON_APP_EVENT, ACTION_MOVE_TO_FRONT, mapOf()).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun moveToFront(miniAppView: MiniAppView): String {
+        miniAppView.show()
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
 
-    override fun stopAppAsync(handler: CompletionHandler<String?>) {
-        handler.complete(stopApp())
+    override fun stopAppAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>) {
+        handler.complete(stopApp(miniAppView))
     }
 
-    override fun stopApp(): String {
-        miniToParentManager.stopApp()
+    override fun stopApp(miniAppView: MiniAppView): String {
+        miniAppView.finishAndKillMiniApp()
         val response = JSResponse("0", "success", "")
         return JsonUtil.toJson(response)
     }
 
     override fun getSDKInfoAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getSDKInfo(context, params))
+        handler.complete(getSDKInfo(miniAppView, params))
     }
 
     // 获取SDK版本号等信息
     override fun getSDKInfo(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
     ) :String{
         logger.debug("getSDKInfo")
-        val response = JSResponse("0", "success", hashMapOf("version" to PkgUtils.getAppVersion(context)))
+        val response = JSResponse("0", "success", hashMapOf("version" to PkgUtils.getAppVersion(miniAppView.context)))
         return JsonUtil.toJson(response)
     }
 
     override fun getScreenInfoAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getScreenInfo(context, params))
+        handler.complete(getScreenInfo(miniAppView, params))
     }
     // 获取屏幕宽高px
     override fun getScreenInfo(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
     ): String {
         logger.debug("getScreenInfo")
-        val response = JSResponse("0", "success", hashMapOf("width" to ScreenUtils.getScreenWidth(context),"height" to ScreenUtils.getScreenHeight(context)))
+        val response = JSResponse("0", "success", hashMapOf("width" to ScreenUtils.getScreenWidth(miniAppView.context),"height" to ScreenUtils.getScreenHeight(miniAppView.context)))
         return JsonUtil.toJson(response)
     }
 
     override fun getShareTypeNameAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getShareTypeName(context, params))
+        handler.complete(getShareTypeName(miniAppView, params))
     }
 
     // 获取用户点击的翼分享类型名称
     override fun getShareTypeName(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
     ): String {
         logger.debug("getShareTypeName")
@@ -1112,19 +1040,15 @@ class AppMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
-    private fun miniAppFilePath(context: Context, type:String):String{
-        when(type){
-            "inner" -> miniToParentManager.let {
-                return it.getMiniAppInfo()?.appId?.let { it1 ->
-                    PathManager().getMiniAppInnerSpace(context, it1)
-                } ?: ""
-            }
-            "outer" -> miniToParentManager.let {
-                return it.getMiniAppInfo()?.appId?.let { it1 ->
-                    PathManager().getMiniAppOuterSpace(it1)
-                } ?: ""
-            }
+    private fun miniAppFilePath(miniAppView: MiniAppView, type: String): String {
+        return when (type) {
+            "inner" -> miniAppView.viewModel.miniAppInfo?.appId?.let {
+                PathManager().getMiniAppInnerSpace(miniAppView.context, it)
+            } ?: ""
+            "outer" -> miniAppView.viewModel.miniAppInfo?.appId?.let {
+                PathManager().getMiniAppOuterSpace(it)
+            } ?: ""
+            else -> ""
         }
-        return ""
     }
 }

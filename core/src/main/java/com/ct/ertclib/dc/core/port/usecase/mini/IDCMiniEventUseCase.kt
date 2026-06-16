@@ -16,8 +16,8 @@
 
 package com.ct.ertclib.dc.core.port.usecase.mini
 
-import android.content.Context
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IDCMiniEventUseCase {
 
@@ -26,15 +26,15 @@ interface IDCMiniEventUseCase {
      * @param params: 创建数据通道时需要的参数集合
      * @param handler: 用于返回异步信息结果
      */
-    fun createAppDataChannel(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun createAppDataChannel(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun sendData(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun sendData(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun closeAppDataChannel(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun closeAppDataChannel(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun isPeerSupportDC(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun isPeerSupportDC(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getBufferedAmount(context: Context, params: Map<String, Any>) : String?
+    fun getBufferedAmount(miniAppView: MiniAppView, params: Map<String, Any>) : String?
 
-    fun getBufferedAmountAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getBufferedAmountAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

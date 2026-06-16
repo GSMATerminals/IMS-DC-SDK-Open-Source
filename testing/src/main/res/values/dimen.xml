@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dialog_margin_start_end">20dp</dimen>
+    <dimen name="button_width">240dp</dimen>
+    <dimen name="title_margin_top">20dp</dimen>
+    <dimen name="title_margin_bottom">20dp</dimen>
+    <dimen name="recent_item_padding_start_end">16dp</dimen>
+    <dimen name="item_layout_height">72dp</dimen>
+    <dimen name="number_big_size">40sp</dimen>
+    <dimen name="primary_font_size">20sp</dimen>
+    <dimen name="second_font_size">18sp</dimen>
+
+    <dimen name="recent_item_primary_font_size">20sp</dimen>
+    <dimen name="recent_item_second_font_size">18sp</dimen>
+    <dimen name="recent_item_third_font_size">12sp</dimen>
+
+    <dimen name="local_surface_width">120dp</dimen>
+    <dimen name="local_surface_height">160dp</dimen>
+    <dimen name="local_surface_margin">16dp</dimen>
+    <dimen name="call_button_width_height">72dp</dimen>
+
+    <dimen name="icon_back_width_height">36dp</dimen>
+    <dimen name="top_layout_height">56dp</dimen>
+</resources>

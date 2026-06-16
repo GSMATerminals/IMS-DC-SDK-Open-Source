@@ -44,7 +44,7 @@ dependencyResolutionManagement {
 rootProject.name = "NewCall"
 include(":app")
 include(":core")
-include(":testing")
 include(":base")
 include(":oemec")
 include(":nativelibs")
+include(":testing")

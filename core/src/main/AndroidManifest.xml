@@ -10,6 +10,12 @@
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <!-- 存储权限适配 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -40,17 +46,17 @@
 
     <!-- 给外部查询用的 -->
     <permission
-        android:name="com.ct.ertclib.dc.provider.PERMISSION"
+        android:name="${providerPermissionName}"
         android:protectionLevel="signatureOrSystem"
         tools:ignore="SignatureOrSystemPermissions" />
 
     <!--    定义进入SDK主页面的权限，需要相同签名-->
     <permission
-        android:name="com.ct.ertclib.dc.main_permission"
+        android:name="${mainPermissionName}"
         android:protectionLevel="signatureOrSystem"
         tools:ignore="SignatureOrSystemPermissions" />
 
-    <permission android:name="com.ct.ertclib.dc.GET_FEATURE"/>
+    <permission android:name="${getFeaturePermissionName}"/>
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <application
@@ -60,7 +66,7 @@
         tools:replace="android:supportsRtl,android:allowBackup">
         <activity
             android:name="com.ct.ertclib.dc.core.ui.activity.MainActivity"
-            android:permission="com.ct.ertclib.dc.main_permission"
+            android:permission="${mainPermissionName}"
             android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
@@ -70,111 +76,9 @@
         </activity>
 
         <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity0"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_0"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true"
-            />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity1"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_1"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true"/>
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity2"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_2"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity3"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_3"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity4"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_4"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity5"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_5"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity6"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_6"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity7"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_7"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity8"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_8"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-        <activity
-            android:name="com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity9"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:process=":mini_app_activity_9"
-            android:screenOrientation="portrait"
-            android:taskAffinity=""
-            android:theme="@style/MiniApp"
-            android:excludeFromRecents="true" />
-
-        <activity
             android:name=".ui.activity.PicturePreviewActivity"
             android:theme="@style/ImagePreviewTheme"
-            android:permission="com.ct.ertclib.dc.GET_FEATURE"
+            android:permission="${getFeaturePermissionName}"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.ct.ertclib.dc.PREVIEW_IMAGE" />
@@ -186,7 +90,7 @@
             android:name="com.ct.ertclib.dc.core.ui.activity.MainSettingActivity"
             android:enabled="true"
             android:theme="@style/SettingPreference"
-            android:permission="com.ct.ertclib.dc.GET_FEATURE"
+            android:permission="${getFeaturePermissionName}"
             android:exported="true" >
             <intent-filter>
                 <action android:name="com.ct.ertclib.dc.SETTINGS_ACTIVITY" />
@@ -223,14 +127,15 @@
         <activity
             android:name=".ui.activity.WebActivity"/>
 
-        <service
-            android:name=".service.MiniAppService"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.ct.ertclib.dc.core.service.AppService" />
-            </intent-filter>
-        </service>
+        <activity android:name=".utils.common.ScreenUnlockHelper$UnlockActivity"/>
+
+        <activity android:name=".utils.common.FilePickerHelper$FilePickerActivity"/>
+
+        <activity android:name=".utils.common.MiniAppStateActivity"
+            android:excludeFromRecents="true"
+            android:theme="@style/MiniAppStateActivityStyle"/>
+
+        <activity android:name=".utils.common.MiniAppPermissionHelper$PermissionActivity"/>
 
         <service android:name="com.ct.ertclib.dc.core.service.InCallServiceImpl"
             android:permission="android.permission.BIND_INCALL_SERVICE"
@@ -243,7 +148,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.ct.ertclib.dc.fileprovider"
+            android:authorities="${fileProviderAuthority}"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -253,9 +158,9 @@
 
         <provider
             android:name="com.ct.ertclib.dc.core.providers.CtSDKProvider"
-            android:authorities="com.ct.ertclib.dc.provider"
+            android:authorities="${sdkProviderAuthority}"
             android:exported="true"
-            android:permission="com.ct.ertclib.dc.provider.PERMISSION" />
+            android:permission="${providerPermissionName}" />
 
     </application>
 

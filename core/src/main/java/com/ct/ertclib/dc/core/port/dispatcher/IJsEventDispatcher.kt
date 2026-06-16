@@ -16,9 +16,9 @@
 
 package com.ct.ertclib.dc.core.port.dispatcher
 
-import android.content.Context
 import com.ct.ertclib.dc.core.data.bridge.JSRequest
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IJsEventDispatcher {
 
@@ -28,12 +28,12 @@ interface IJsEventDispatcher {
      * @param request: 小程序传递的详细请求信息
      * @param handler： 用于传递异步的返回结果
      */
-    fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>)
+    fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>)
 
     /**
      * 分发同步消息
      * @param request: 小程序传递的详细请求信息
      * @return 同步消息的返回结果
      */
-    fun dispatchSyncMessage(context: Context, request: JSRequest): String?
+    fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String?
 }

@@ -16,19 +16,15 @@
 
 package com.ct.ertclib.dc.core.usecase.miniapp
 
-import android.content.Context
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_ADD_DRAWING_INFO
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_ADD_REMOTE_SIZE_INFO
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_ADD_REMOTE_WINDOW_SIZE_INFO
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_CLOSE_SKETCH_BOARD
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_OPEN_SKETCH_BOARD
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REQUEST_SCREEN_SHARE_ABILITY
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_SET_SCREEN_SHARE_PRIVACY_MODE
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_START_SCREEN_SHARE
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_STOP_SCREEN_SHARE
-import com.ct.ertclib.dc.core.constants.CommonConstants.SCREEN_SHARE_APP_EVENT
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_COLOR_PARAMS
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_DRAWING_INFO_PARAMS
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_IS_ENABLE
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_LICENSE_PARAM
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_REMOTE_HEIGHT_PARAM
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_REMOTE_WIDTH_PARAM
+import com.ct.ertclib.dc.core.constants.CommonConstants.APP_WIDTH_PARAMS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.REQUEST_ABILITY_PARAMS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_FAILED_MESSAGE
@@ -36,15 +32,18 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_CODE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAGE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.START_SHARE_PARAMS
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
-import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.data.miniapp.AppResponse
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 import com.ct.ertclib.dc.core.port.usecase.mini.IScreenShareMiniUseCase
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
+import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
+import com.ct.ertclib.dc.core.port.usecase.main.ISketchBoardUseCase
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import kotlin.getValue
 
-class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
-    IScreenShareMiniUseCase {
+class ScreenShareMiniUseCase() : IScreenShareMiniUseCase,KoinComponent {
 
     companion object {
         private const val TAG = "ScreenShareMiniUseCase"
@@ -52,38 +51,41 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
 
     private val logger = Logger.getLogger(TAG)
 
-    override fun startScreenShare(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>) {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_START_SCREEN_SHARE, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, object : IMessageCallback.Stub() {
-            override fun reply(message: String?) {
-                message?.let {
-                    logger.info("startScreenShare reply: $message")
-                    val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                    val map = appResponse?.data as? Map<*, *>
-                    val response = map?.let {
-                        JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mutableMapOf(START_SHARE_PARAMS to map[START_SHARE_PARAMS]))
-                    } ?: run {
-                        JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)
+    private val screenShareUseCase: IScreenShareUseCase by inject()
+    private val sketchBoardUseCase: ISketchBoardUseCase by inject()
+
+    override fun startScreenShare(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>) {
+        val license = params[APP_LICENSE_PARAM]
+        miniAppView.viewModel.miniAppInfo?.appId?.let {
+            screenShareUseCase.startScreenShare(it, license.toString(), object : IMessageCallback {
+                override fun reply(message: String?) {
+                    message?.let {
+                        logger.info("startScreenShare reply: $message")
+                        val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
+                        val map = appResponse?.data as? Map<*, *>
+                        val response = map?.let {
+                            JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mutableMapOf(START_SHARE_PARAMS to map[START_SHARE_PARAMS]))
+                        } ?: run {
+                            JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)
+                        }
+                        handler.complete(JsonUtil.toJson(response))
                     }
-                    handler.complete(JsonUtil.toJson(response))
                 }
-            }
-        })
+            })
+        }
     }
 
-    override fun stopScreenShareAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(stopScreenShare(context))
+    override fun stopScreenShareAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(stopScreenShare(miniAppView))
     }
 
-    override fun stopScreenShare(context: Context): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_STOP_SCREEN_SHARE, mapOf()).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun stopScreenShare(miniAppView: MiniAppView): String {
+        screenShareUseCase.stopScreenShare(needNotifyToMini = false)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun requestScreenShareAbility(handler: CompletionHandler<String?>) {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_REQUEST_SCREEN_SHARE_ABILITY, mapOf()).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, object : IMessageCallback.Stub() {
+    override fun requestScreenShareAbility(miniAppView: MiniAppView,handler: CompletionHandler<String?>) {
+        screenShareUseCase.requestScreenShareAbility(object : IMessageCallback{
             override fun reply(message: String?) {
                 message?.let {
                     logger.info("requestScreenShareAbility reply: $message")
@@ -100,74 +102,82 @@ class ScreenShareMiniUseCase(private val miniToParentManager: IMiniToParentManag
         })
     }
 
-    override fun openSketchBoardAsync(params: Map<String, Any>, handler: CompletionHandler<String?>) {
-        handler.complete(openSketchBoard(params))
+    override fun openSketchBoardAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>) {
+        handler.complete(openSketchBoard(miniAppView,params))
     }
 
-    override fun openSketchBoard(params: Map<String, Any>): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_OPEN_SKETCH_BOARD, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun openSketchBoard(miniAppView: MiniAppView,params: Map<String, Any>): String {
+        val paintColor = params[APP_COLOR_PARAMS].toString()
+        val paintWidth = params[APP_WIDTH_PARAMS].toString().toFloat()
+        miniAppView.viewModel.callInfo?.telecomCallId?.let { miniAppView.viewModel.miniAppInfo?.appId?.let { appId -> sketchBoardUseCase.openSketchBoard(it, appId, paintColor, paintWidth) } }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun closeSketchBoardAsync(handler: CompletionHandler<String?>) {
-        handler.complete(closeSketchBoard())
+    override fun closeSketchBoardAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>) {
+        handler.complete(closeSketchBoard(miniAppView))
     }
 
-    override fun closeSketchBoard(): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_CLOSE_SKETCH_BOARD, mapOf()).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun closeSketchBoard(miniAppView: MiniAppView,): String {
+        sketchBoardUseCase.closeSketchBoard(needNotifyToMini = false)
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun addDrawingInfoAsync(
-        params: Map<String, Any>,
-        handler: CompletionHandler<String?>
+    override fun addDrawingInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>
     ) {
-        handler.complete(addDrawingInfo(params))
+        handler.complete(addDrawingInfo(miniAppView,params))
     }
-    override fun addDrawingInfo(params: Map<String, Any>): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_ADD_DRAWING_INFO, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun addDrawingInfo(miniAppView: MiniAppView,params: Map<String, Any>): String {
+        val drawingInfo = params[APP_DRAWING_INFO_PARAMS]
+        drawingInfo?.let {
+            sketchBoardUseCase.addDrawingInfo(JsonUtil.toJson(it))
+        }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun addRemoteSizeInfoAsync(
-        params: Map<String, Any>,
-        handler: CompletionHandler<String?>
+    override fun addRemoteSizeInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>
     ) {
-        handler.complete(addRemoteSizeInfo(params))
+        handler.complete(addRemoteSizeInfo(miniAppView,params))
     }
 
-    override fun addRemoteSizeInfo(params: Map<String, Any>): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_ADD_REMOTE_SIZE_INFO, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun addRemoteSizeInfo(miniAppView: MiniAppView,params: Map<String, Any>): String {
+        kotlin.runCatching {
+            val width = params[APP_REMOTE_WIDTH_PARAM].toString()
+            val height = params[APP_REMOTE_HEIGHT_PARAM] .toString()
+            sketchBoardUseCase.addRemoteSizeInfo(width.toFloat().toInt(), height.toFloat().toInt())
+        }.onFailure {
+            logger.error("remote size convert wrong")
+        }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun setPrivacyModeAsync(
-        params: Map<String, Any>,
-        handler: CompletionHandler<String?>
+    override fun setPrivacyModeAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>
     ) {
-        handler.complete(setPrivacyMode(params))
+        handler.complete(setPrivacyMode(miniAppView,params))
     }
 
-    override fun setPrivacyMode(params: Map<String, Any>): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_SET_SCREEN_SHARE_PRIVACY_MODE, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun setPrivacyMode(miniAppView: MiniAppView,params: Map<String, Any>): String {
+        kotlin.runCatching {
+            val isEnable = params[APP_IS_ENABLE].toString().toBoolean()
+            screenShareUseCase.setPrivacyModeEnabled(isEnable)
+        }.onFailure {
+            logger.error("set privacy mode isEnable wrong")
+        }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 
-    override fun addRemoteWindowSizeInfoAsync(
-        params: Map<String, Any>,
-        handler: CompletionHandler<String?>
+    override fun addRemoteWindowSizeInfoAsync(miniAppView: MiniAppView,params: Map<String, Any>, handler: CompletionHandler<String?>
     ) {
-        handler.complete(addRemoteWindowSizeInfo(params))
+        handler.complete(addRemoteWindowSizeInfo(miniAppView,params))
     }
 
-    override fun addRemoteWindowSizeInfo(params: Map<String, Any>): String {
-        val appRequestJson = AppRequest(SCREEN_SHARE_APP_EVENT, ACTION_ADD_REMOTE_WINDOW_SIZE_INFO, params).toJson()
-        miniToParentManager.sendMessageToParent(appRequestJson, null)
+    override fun addRemoteWindowSizeInfo(miniAppView: MiniAppView,params: Map<String, Any>): String {
+        kotlin.runCatching {
+            val width = params[APP_REMOTE_WIDTH_PARAM].toString()
+            val height = params[APP_REMOTE_HEIGHT_PARAM] .toString()
+            sketchBoardUseCase.addRemoteWindowSizeInfo(width.toFloat().toInt(), height.toFloat().toInt())
+        }.onFailure {
+            logger.error("remote size convert wrong")
+        }
         return JsonUtil.toJson(JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, null))
     }
 }

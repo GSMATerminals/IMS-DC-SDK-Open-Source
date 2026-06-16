@@ -46,7 +46,7 @@
 
     <dimen name="expanded_menu_setting_height">48dp</dimen>
     <dimen name="expanded_divider_width">80dp</dimen>
-    <dimen name="expanded_margin_bottom">8dp</dimen>
+    <dimen name="expanded_margin_bottom">4dp</dimen>
     <integer name="dialog_anim_duration">300</integer>
 
     <dimen name="screen_share_tips_width">160dp</dimen>

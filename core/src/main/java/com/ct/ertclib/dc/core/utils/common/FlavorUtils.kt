@@ -26,6 +26,7 @@ object FlavorUtils {
     const val CHANNEL_NORMAL = "normal"
     const val CHANNEL_DIALER = "dialer"
     const val CHANNEL_SAMSUNG = "samsung"
+    const val CHANNEL_Lab = "lab"
     const val CHANNEL_LOCAL = "local"
 
     /**

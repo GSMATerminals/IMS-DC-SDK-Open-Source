@@ -16,85 +16,87 @@
 
 package com.ct.ertclib.dc.core.port.usecase.mini
 
-import android.content.Context
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IFileMiniEventUseCase {
 
-    fun getLocation(context: Context, handler: CompletionHandler<String?>)
+    fun getLocation(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun selectFile(context: Context, handler: CompletionHandler<String?>)
+    fun selectFile(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun saveFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun selectFiles(miniAppView: MiniAppView,  params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun readFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun saveFile(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun decompressFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun readFile(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getFileList(context: Context, params: Map<String, Any>): String?
+    fun decompressFile(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getPrivateFolder(context: Context, params: Map<String, Any>): String?
+    fun getFileList(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun startSaveFile(context: Context, params: Map<String, Any>): String?
+    fun getPrivateFolder(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun stopSaveFile(context: Context): String?
+    fun startSaveFile(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun startReadFile(context: Context, params: Map<String, Any>): String?
+    fun stopSaveFile(miniAppView: MiniAppView): String?
 
-    fun stopReadFile(context: Context): String?
+    fun startReadFile(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun checkFileOrFolderExists(context: Context, params: Map<String, Any>): String?
+    fun stopReadFile(miniAppView: MiniAppView): String?
 
-    fun getFileInfo(context: Context, params: Map<String, Any>): String?
+    fun checkFileOrFolderExists(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun getFileInfoAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getFileInfo(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun deleteFile(context: Context, params: Map<String, Any>): String?
+    fun getFileInfoAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun saveUpdateKeyValue(context: Context, params: Map<String, Any>): String?
+    fun deleteFile(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String?
+    fun saveUpdateKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun getKeyValue(context: Context, params: Map<String, Any>): String?
+    fun saveUpdateKeyValueWithExpiry(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun deleteKeyValue(context: Context, params: Map<String, Any>): String?
+    fun getKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun playVoice(context: Context, params: Map<String, Any>): String?
+    fun deleteKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun stopPlayVoice(context: Context, params: Map<String, Any>): String?
+    fun playVoice(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun quickSearchFile(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun stopPlayVoice(miniAppView: MiniAppView, params: Map<String, Any>): String?
 
-    fun quickSearchFileWithKeyWords(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun quickSearchFile(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun fileDownload(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun quickSearchFileWithKeyWords(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getFileListAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun fileDownload(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getPrivateFolderAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getFileListAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun startSaveFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getPrivateFolderAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun stopSaveFileAsync(context: Context, handler: CompletionHandler<String?>)
+    fun startSaveFileAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun startReadFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun stopSaveFileAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun stopReadFileAsync(context: Context, handler: CompletionHandler<String?>)
+    fun startReadFileAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun checkFileOrFolderExistsAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun stopReadFileAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun deleteFileAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun checkFileOrFolderExistsAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun saveUpdateKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun deleteFileAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun saveUpdateKeyValueWithExpiryAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun saveUpdateKeyValueAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun saveUpdateKeyValueWithExpiryAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun deleteKeyValueAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getKeyValueAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun playVoiceAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun deleteKeyValueAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun stopPlayVoiceAsync(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun playVoiceAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
+
+    fun stopPlayVoiceAsync(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
 }

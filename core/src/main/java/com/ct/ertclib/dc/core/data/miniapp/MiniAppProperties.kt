@@ -18,6 +18,7 @@ package com.ct.ertclib.dc.core.data.miniapp
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 
 data class MiniAppProperties(
     val appId: String?,

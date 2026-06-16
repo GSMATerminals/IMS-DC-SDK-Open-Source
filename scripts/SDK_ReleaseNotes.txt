@@ -7,6 +7,13 @@
 Auditor: CT
 Publisher: yesh1
 publish Description:
+CtCallSDK_v26.2.0_20260609_FC
+	1.按照标准规范支持引导程序
+	2.接入DCLab，包含VOIP、DC
+	3.SDK共用一个进程
+	4.JS API增加小程序批量文件选择接口
+	5.完善通话等待状态下的逻辑
+	6.修复已知问题
 CtCallSDK_v1.1.8_20260312_FC
 	1.优化调测UI
 	2.增加小程序通话控制组件

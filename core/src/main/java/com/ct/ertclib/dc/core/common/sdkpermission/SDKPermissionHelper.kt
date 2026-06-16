@@ -22,14 +22,13 @@ import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.ui.activity.SDKPermissionActivity
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
-import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SDKPermissionHelper(
@@ -73,23 +72,21 @@ class SDKPermissionHelper(
 
             }
             scope.launch(Dispatchers.Main) {
-                if (FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_LOCAL && type == NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL ){
+                if (FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_Lab && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_LOCAL && type == NewCallAppSdkInterface.PERMISSION_TYPE_BEFORE_CALL ){
                     delay(2000)  // 协程延迟2000毫秒（2秒）
                 }
                 SDKPermissionActivity.startActivity(context,type)
 
-                StateFlowManager.permissionAgreeFlow.distinctUntilChanged().collect { isAgree ->
-                    LogUtils.debug(TAG, "collect permissionAgreeFlow : $isAgree")
-                    if (isAgree) {
-                        callback?.onAgree()
-                        SDKPermissionUtils.setPermissionDidZero()
-                        // 创建桌面图标
-                        PkgUtils.checkAndCreatePinnedShortcuts(context)
-                    } else {
-                        callback?.onDenied()
-                    }
+                val isAgree = StateFlowManager.permissionAgreeFlow
+                    .distinctUntilChanged()
+                    .first()  // 只取第一个值，然后协程自动结束
+                if (isAgree) {
+                    callback?.onAgree()
+                    SDKPermissionUtils.setPermissionDidZero()
+                    PkgUtils.checkAndCreatePinnedShortcuts(context)
+                } else {
+                    callback?.onDenied()
                 }
-                scope.cancel()
             }
         }
     }

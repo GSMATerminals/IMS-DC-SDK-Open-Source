@@ -27,6 +27,7 @@ import android.telecom.InCallService
 import android.telecom.VideoProfile
 import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.Utils
+import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.utils.common.CallUtils
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.data.call.CallInfo
@@ -281,7 +282,7 @@ class NewCallsManager {
         }
         if (state == STATE_ACTIVE) {
             mCurrentTelecomCallId = callInfo.telecomCallId
-        } else if (state == STATE_SELECT_PHONE_ACCOUNT || state == STATE_CONNECTING) {
+        } else if (state == STATE_SELECT_PHONE_ACCOUNT) {
             sLogger.debug("dispatchCallStateChange call state not need change")
             return
         }
@@ -350,6 +351,7 @@ class NewCallsManager {
         mCallInfoMap.clear()
         mCallsMap.clear()
         mCallbackMap.clear()
+        audioControlHelper.clearAudioDevice()
         audioControlHelper.unregisterAudioDeviceCallback()
         inCallService = null
     }
@@ -357,10 +359,10 @@ class NewCallsManager {
     fun hangUp(telecomCallId: String){
         mCallsMap[telecomCallId]?.disconnect()
         sLogger.info("hangUp 1")
-        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_Lab || FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
             scope.launch {
                 mCallInfoMap[telecomCallId]?.let {
-                    it.state = Call.STATE_DISCONNECTED
+                    it.state = Call.STATE_DISCONNECTING
                     testNotifyCallStateChange(it.telecomCallId, it.state)
                 }
             }
@@ -369,11 +371,25 @@ class NewCallsManager {
 
     fun answer(telecomCallId: String){
         mCallsMap[telecomCallId]?.answer(mCallsMap[telecomCallId]?.details?.videoState ?: VideoProfile.STATE_AUDIO_ONLY)
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_Lab || FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
+            scope.launch {
+                mCallInfoMap[telecomCallId]?.let {
+                    it.state = Call.STATE_CONNECTING
+                    testNotifyCallStateChange(it.telecomCallId, it.state)
+                }
+            }
+        }
     }
 
     fun isVideoCall(telecomCallId: String):Boolean{
         val videoState = mCallsMap[telecomCallId]?.details?.videoState
         return videoState == VideoProfile.STATE_BIDIRECTIONAL || videoState == VideoProfile.STATE_TX_ENABLED || videoState == VideoProfile.STATE_RX_ENABLED
+    }
+
+    fun getCallConnectTime(telecomCallId: String): Long {
+        val call = mCallsMap[telecomCallId]
+        val connectTime = call?.details?.connectTimeMillis ?: 0L
+        return connectTime
     }
 
     fun playDtmfTone(telecomCallId: String,digit: Char){
@@ -416,6 +432,49 @@ class NewCallsManager {
         return isMuted
     }
 
+    fun setAudioDevice(name: String?, type: String?): Boolean {
+        sLogger.debug("setAudioDevice name: $name, type: $type")
+        val route = when (type) {
+            "Earpiece" -> CallAudioState.ROUTE_WIRED_OR_EARPIECE
+            "Speaker" -> CallAudioState.ROUTE_SPEAKER
+            "Wired Headset" -> CallAudioState.ROUTE_WIRED_HEADSET
+            "Wired Headphones" -> CallAudioState.ROUTE_WIRED_HEADSET
+            "Bluetooth SCO" -> CallAudioState.ROUTE_BLUETOOTH
+            "Bluetooth A2DP" -> CallAudioState.ROUTE_BLUETOOTH
+            else -> -1
+        }
+        if (route != -1 && Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            inCallService?.setAudioRoute(route)
+        }
+        return audioControlHelper.setAudioDevice(name, type)
+    }
+
+    fun getAudioDevices(): List<Map<String, String>> {
+        return audioControlHelper.getAudioDevices()
+    }
+
+    fun getCurrentAudioDevice(): Map<String, String>? {
+        var device = audioControlHelper.getCurrentAudioDevice()
+        if (device == null) {
+            val route = inCallService?.callAudioState?.route
+            route?.let {
+                val devices = audioControlHelper.getAudioDevices()
+                val typeName = when (it) {
+                    CallAudioState.ROUTE_EARPIECE -> "Earpiece"
+                    CallAudioState.ROUTE_SPEAKER -> "Speaker"
+                    CallAudioState.ROUTE_WIRED_HEADSET -> "Wired Headset"
+                    CallAudioState.ROUTE_BLUETOOTH -> "Bluetooth SCO"
+                    else -> null
+                }
+                if (typeName != null) {
+                    device = devices.firstOrNull { d -> d["type"] == typeName }
+                        ?: mapOf("name" to typeName, "type" to typeName)
+                }
+            }
+        }
+        return device
+    }
+
     private fun handleAudioDeviceChange() {
         // 设备变化时自动调整路由
         mCallStateListMap.forEach { _,list ->
@@ -423,8 +482,7 @@ class NewCallsManager {
                 stateListener.onAudioDeviceChange()
             }
         }
+        NewCallAppSdkInterface.emitAudioDeviceChangeFlow()
     }
 
-    fun setInCallService(service: InCallService?) {
-    }
 }

@@ -18,26 +18,22 @@ package com.ct.ertclib.dc.core.miniapp.bridge
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
-import android.widget.FrameLayout
 import com.blankj.utilcode.util.ArrayUtils
-import com.blankj.utilcode.util.BarUtils
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
-import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import androidx.core.graphics.createBitmap
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
-class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChromeClient(), KoinComponent {
+class CTWebChromeClient(private val miniAppView: MiniAppView) : WebChromeClient(), KoinComponent {
 
     companion object {
         private const val PROGRESS_PERCENT_LOADED = 100
@@ -46,8 +42,6 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
 
     private val sLogger: Logger = Logger.getLogger(TAG)
 
-    private var mCustomView: View? = null
-    private var mCallback : CustomViewCallback?= null
     private val permissionMiniUseCase: IPermissionUseCase by inject()
 
     override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -61,40 +55,7 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
         super.onProgressChanged(view, newProgress)
         if (newProgress >= PROGRESS_PERCENT_LOADED) {
             sLogger.info("onProgressChanged,newProgress: $newProgress ")
-            miniAppActivity.onMiniAppLoaded()
         }
-    }
-
-    override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-        if (sLogger.isDebugActivated) {
-            sLogger.info("onShowCustomView, view:$view, callback:$callback")
-        }
-        if (view == null || callback == null) {
-            return
-        }
-        mCustomView = view
-        mCallback = callback
-
-        val decorView = miniAppActivity.window.decorView
-        (decorView as FrameLayout).addView(mCustomView)
-
-        BarUtils.setStatusBarVisibility(miniAppActivity.window, false)
-        BarUtils.setNavBarVisibility(miniAppActivity.window, false)
-    }
-
-    override fun onHideCustomView() {
-        sLogger.info("onHideCustomView")
-        val decorView = miniAppActivity.window.decorView
-        (decorView as FrameLayout).removeView(mCustomView)
-        mCallback?.onCustomViewHidden()
-
-        mCustomView = null
-        mCallback = null
-
-        BarUtils.setStatusBarVisibility(miniAppActivity.window, true)
-        BarUtils.setNavBarVisibility(miniAppActivity.window, true)
-
-        super.onHideCustomView()
     }
 
     override fun onShowFileChooser(
@@ -110,11 +71,10 @@ class CTWebChromeClient(private val miniAppActivity: MiniAppActivity) : WebChrom
 
     override fun onPermissionRequest(request: PermissionRequest?) {
         // 目前只有获取视频流的接口getUserMedia会在这里申请权限
-        (miniAppActivity as? IMiniApp)?.miniApp?.appId?.let {
+        miniAppView.viewModel.miniAppInfo?.appId?.let {
             if (permissionMiniUseCase.checkPermissionAndRecord(it, listOf(MiniAppPermissions.MINIAPP_CAMERA, MiniAppPermissions.MINIAPP_RECORD_AUDIO))
-                && miniAppActivity.miniApp!=null
-                && miniAppActivity.miniToParentManager.systemApiLicenseMap["getUserMedia"]!=null
-                && LicenseManager.getInstance().verifyLicense(it, LicenseManager.ApiCode.GET_USER_MEDIA.apiCode, miniAppActivity.miniToParentManager.systemApiLicenseMap["getUserMedia"].toString()
+                && miniAppView.viewModel.systemApiLicenseMap["getUserMedia"]!=null
+                && LicenseManager.getInstance().verifyLicense(it, LicenseManager.ApiCode.GET_USER_MEDIA.apiCode, miniAppView.viewModel.systemApiLicenseMap["getUserMedia"].toString()
                 )) {
                 sLogger.info("onPermissionRequest, request:${ArrayUtils.toString(request?.resources)}")
                 request?.grant(request.resources)

@@ -18,10 +18,10 @@ package com.ct.ertclib.dc.core.miniapp
 
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 class MiniAppInfoWrapper(
     var miniApp: MiniAppInfo,
     var callInfo: CallInfo?,
-    var activityClass: Class<out MiniAppActivity>
+    var view: MiniAppView
 )

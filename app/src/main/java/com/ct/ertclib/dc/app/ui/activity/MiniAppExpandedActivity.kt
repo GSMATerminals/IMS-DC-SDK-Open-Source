@@ -19,7 +19,6 @@ package com.ct.ertclib.dc.app.ui.activity
 import android.app.Activity
 import android.app.KeyguardManager
 import android.graphics.Color
-import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -27,11 +26,15 @@ import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.ct.ertclib.dc.app.R
-import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.app.ui.fragment.BaseMiniAppListDialogFragment
+import com.ct.ertclib.dc.app.ui.fragment.BootstrapDialogFragment
 import com.ct.ertclib.dc.app.ui.fragment.MiniAppExpandedDialogFragment
+import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.data.call.CallInfo
-import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.model.AdItem
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.ui.activity.BaseFragmentActivity
+import com.ct.ertclib.dc.core.utils.common.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -44,31 +47,40 @@ class MiniAppExpandedActivity : BaseFragmentActivity() {
         private const val ACTIVITY_ANIMATION_DELAY = 300L
     }
 
-    private lateinit var mDialogFragment: MiniAppExpandedDialogFragment
+    private var mDialogFragment: BaseMiniAppListDialogFragment? = null
     private val handler = Handler(Looper.getMainLooper())
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mini_app_expanded)
-        val point = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("point", Point::class.java)
-        } else {
-            intent.getParcelableExtra("point") as Point?
-        }
-        val miniAppList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("miniAppList", MiniAppList::class.java)
-        } else {
-            intent.getParcelableExtra("miniAppList") as MiniAppList?
-        }
+
         val callInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("callInfo", CallInfo::class.java)
         } else {
             intent.getParcelableExtra("callInfo") as CallInfo?
         }
 
-        mDialogFragment = MiniAppExpandedDialogFragment(point, miniAppList, callInfo)
-        mDialogFragment.setCallback(object : MiniAppExpandedDialogFragment.Callback {
+        val adList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("adList", AdItem::class.java)
+        } else {
+            intent.getParcelableArrayListExtra<AdItem>("adList")
+        }
+
+        val miniAppList = callInfo?.telecomCallId?.let { NewCallAppSdkInterface.getMiniAppListInfo(it) }
+        miniAppList?.let {
+            var checkBootstrapResult = false
+            FileUtils.getLatestInstalledBootstrapPath()?.let { path ->
+                checkBootstrapResult = LicenseManager.getInstance().verifyMiniAppFolder(path)
+                // checkBootstrapResult = true
+            }
+            mDialogFragment = if (!checkBootstrapResult){
+                MiniAppExpandedDialogFragment(it, adList!!, callInfo)
+            } else {
+                BootstrapDialogFragment(it, adList!!, callInfo)
+            }
+        }
+        mDialogFragment?.setCallback(object : BaseMiniAppListDialogFragment.Callback {
             override fun onDismiss() {
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "mDialogFragment onDismiss")
                 handler.postDelayed({
@@ -86,9 +98,9 @@ class MiniAppExpandedActivity : BaseFragmentActivity() {
                 }, ACTIVITY_ANIMATION_DELAY)
             }
         })
-        mDialogFragment.show(
+        mDialogFragment?.show(
             supportFragmentManager,
-            MiniAppExpandedDialogFragment::class.simpleName
+            BootstrapDialogFragment::class.simpleName
         )
         startCollectFlow()
     }
@@ -129,7 +141,7 @@ class MiniAppExpandedActivity : BaseFragmentActivity() {
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "closeExpandedViewFlow collect: $isClose")
                 if (isClose) {
                     try {
-                        mDialogFragment.dismiss()
+                        mDialogFragment?.dismiss()
                     } catch (e: IllegalStateException) {
                         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.ERROR_LEVEL, TAG, "close miniapp fragment failed, message ${e.message}")
                     }
@@ -139,7 +151,31 @@ class MiniAppExpandedActivity : BaseFragmentActivity() {
         lifecycleScope.launch(Dispatchers.Main) {
             NewCallAppSdkInterface.callInfoEventFlow.collect { callInfo ->
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect callInfoEventFlow, event: $callInfo")
-                mDialogFragment.refreshCallInfo(callInfo)
+                mDialogFragment?.refreshCallInfo(callInfo)
+            }
+        }
+        lifecycleScope.launch(Dispatchers.Main){
+            NewCallAppSdkInterface.appStatusFlow.collect { appId ->
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect miniAppStatusChangeFlow, appId: $appId")
+                mDialogFragment?.refreshAppStatus()
+            }
+        }
+        lifecycleScope.launch(Dispatchers.Main) {
+            NewCallAppSdkInterface.bootstrapMessageFlow.collect { (label, message) ->
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect bootstrapMessageFlow, label: $label")
+                mDialogFragment?.onBootstrapMessage(label, message)
+            }
+        }
+        lifecycleScope.launch(Dispatchers.Main) {
+            NewCallAppSdkInterface.bootstrapAppDataChannelStateFlow.collect { (label, state) ->
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect bootstrapDataChannelStateFlow, label: $label")
+                mDialogFragment?.onBootstrapAppDataChannelStateChange(label, state)
+            }
+        }
+        lifecycleScope.launch(Dispatchers.Main) {
+            NewCallAppSdkInterface.audioDeviceChangeFlow.collect {
+                NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "collect audioDeviceChangeFlow")
+                mDialogFragment?.onAudioDeviceChange()
             }
         }
     }

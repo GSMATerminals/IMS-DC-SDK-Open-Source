@@ -60,7 +60,7 @@ object UriUtils {
         val fileUri: Uri? = try {
             FileProvider.getUriForFile(
                 context,
-                "com.ct.ertclib.dc.fileprovider",
+                "${context.packageName}.fileprovider",
                 file
             )
         } catch (e: IllegalArgumentException) {

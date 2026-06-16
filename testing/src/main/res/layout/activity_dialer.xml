@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:orientation="vertical"
+    tools:context=".netdc.ui.activity.DcDialerActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <FrameLayout
+            android:id="@+id/initLoadingView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#F5F5F5"
+            android:visibility="visible">
+
+            <ProgressBar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center" />
+
+        </FrameLayout>
+        <LinearLayout
+            android:id="@+id/mainContainer"
+            android:background="#F5F5F5"
+            android:visibility="gone"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp">
+                <TextView
+                    android:id="@+id/my_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textColor="@color/common_text_neutral_black"
+                    android:textSize="20sp"
+                    android:includeFontPadding="false" />
+                <Button
+                    android:id="@+id/btnUnregister"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="@null"
+                    android:text="@string/unregister"/>
+            </FrameLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#e7e7e7"/>
+            <!-- 内容容器 - 显示不同页面 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <!-- 最近通话页面 -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewRecentCalls"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="visible"
+                    android:clipToPadding="false"
+                    android:paddingBottom="16dp"
+                    tools:listitem="@layout/item_recent_call" />
+
+                <!-- 拨号键盘页面 -->
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:id="@+id/dialpadContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone"
+                    android:padding="20dp"
+                    android:background="#F5F5F5">
+
+                    <!-- 号码显示区域 -->
+                    <TextView
+                        android:id="@+id/tvPhoneNumber"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="40sp"
+                        android:textColor="#000000"
+                        android:textStyle="normal"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:letterSpacing="0.1"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <!-- 拨号键盘网格 -->
+                    <GridLayout
+                        android:id="@+id/keypadGrid"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:columnCount="3"
+                        android:rowCount="5"
+                        android:alignmentMode="alignMargins"
+                        android:columnOrderPreserved="false">
+
+                        <Button
+                            android:id="@+id/btn1"
+                            android:text="1"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn2"
+                            android:text="2"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn3"
+                            android:text="3"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn4"
+                            android:text="4"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn5"
+                            android:text="5"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn6"
+                            android:text="6"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn7"
+                            android:text="7"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn8"
+                            android:text="8"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn9"
+                            android:text="9"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btnStar"
+                            android:text="*"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btn0"
+                            android:text="0"
+                            style="@style/DialButton" />
+
+                        <Button
+                            android:id="@+id/btnHash"
+                            android:text="#"
+                            style="@style/DialButton" />
+                        <ImageView
+                            android:id="@+id/btnVideoCall"
+                            android:src="@drawable/btn_video"
+                            style="@style/DialButton"
+                            android:padding="10dp"
+                            android:background="@null"/>
+                        <ImageView
+                            android:id="@+id/btnCall"
+                            android:src="@drawable/answer"
+                            style="@style/DialButton"
+                            android:padding="8dp"
+                            android:background="@null" />
+                        <ImageView
+                            android:id="@+id/btnDelete"
+                            android:src="@drawable/ic_backspace"
+                            style="@style/DialButton"
+                            android:padding="20dp"
+                            android:background="@null"/>
+                    </GridLayout>
+
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- 底部导航栏 - 两个切换按钮 -->
+            <LinearLayout
+                android:id="@+id/bottomNavigation"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:elevation="8dp">
+
+                <!-- 最近通话按钮 -->
+                <Button
+                    android:id="@+id/btnRecentCalls"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:text="@string/call"
+                    android:textSize="14sp"
+                    android:textColor="@color/green"
+                    android:drawablePadding="4dp"
+                    android:gravity="center"
+                    android:stateListAnimator="@null"
+                    android:elevation="0dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp" />
+                <View
+                    android:layout_width="0.5dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="@color/gray"/>
+
+                <!-- 拨号键盘按钮 -->
+                <Button
+                    android:id="@+id/btnDialpad"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:text="@string/dialpad"
+                    android:textSize="14sp"
+                    android:textColor="#8E8E93"
+                    android:drawablePadding="4dp"
+                    android:gravity="center"
+                    android:stateListAnimator="@null"
+                    android:elevation="0dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 通话界面（默认隐藏） -->
+        <FrameLayout
+            android:id="@+id/callingView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="#CC000000">
+            <com.ct.ertclib.dc.feature.testing.netdc.ui.wedget.AuroraView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+            <!-- 远程视频容器 -->
+            <livekit.org.webrtc.SurfaceViewRenderer
+                android:visibility="invisible"
+                android:id="@+id/remoteSurfaceViewRenderer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <!-- 本地视频容器 -->
+            <livekit.org.webrtc.SurfaceViewRenderer
+                android:visibility="invisible"
+                android:id="@+id/localSurfaceViewRenderer"
+                android:layout_width="120dp"
+                android:layout_height="160dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="16dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- 通话状态 -->
+                <TextView
+                    android:id="@+id/tvCallStatus"
+                    android:visibility="gone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/calling"
+                    android:textSize="18sp"
+                    android:textColor="@color/white"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="20dp"/>
+
+                <!-- 电话号码/联系人 -->
+                <TextView
+                    android:id="@+id/tvCallPhoneNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="32sp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginTop="30dp"
+                    android:maxLines="1"
+                    android:ellipsize="marquee"/>
+
+                <TextView
+                    android:id="@+id/tvCallName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:textColor="@color/white"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp"/>
+
+                <!-- 通话计时器 -->
+                <TextView
+                    android:id="@+id/tvCallDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textSize="24sp"
+                    android:textColor="@color/white"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="40dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <!-- 通话操作按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="30dp">
+
+                    <LinearLayout
+                        android:id="@+id/btnAnswerContainer"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/btnAnswer"
+                            style="@style/CallButton"
+                            android:src="@drawable/icon_answer"/>
+                        <TextView
+                            android:text="@string/answer"
+                            style="@style/CallButtonText"/>
+                    </LinearLayout>
+
+                    <!-- 挂断按钮 -->
+                    <LinearLayout
+                        android:id="@+id/btnHangupContainer"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/btnHangup"
+                            style="@style/CallButton"
+                            android:src="@drawable/icon_hangup"/>
+                        <TextView
+                            android:text="@string/hangup"
+                            style="@style/CallButtonText"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:visibility="gone"
+                        android:id="@+id/btnToggleVideoContainer"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/btnToggleVideo"
+                            style="@style/CallButton"
+                            android:src="@drawable/icon_video_closed"/>
+                        <TextView
+                            android:text="@string/video"
+                            style="@style/CallButtonText"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
+    <ImageView
+        android:visibility="gone"
+        android:id="@+id/back_icon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/icon_back"
+        android:background="@drawable/bg_circle_grey"
+        android:layout_gravity="start"
+        android:layout_margin="10dp"/>
+</FrameLayout>

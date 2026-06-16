@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.utils.common
 
+import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
@@ -29,6 +30,10 @@ import android.text.TextUtils
 import android.util.Base64
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
+import com.blankj.utilcode.util.Utils
+import com.blankj.utilcode.util.ZipUtils
+import com.ct.ertclib.dc.core.common.PathManager
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import okhttp3.internal.closeQuietly
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -89,23 +94,23 @@ object FileUtils {
         if (!file.exists()) {
             return true
         }
-        if (!file.isDirectory) {
-            return false
+        // 如果是文件，直接删除
+        if (file.isFile) {
+            return file.delete()
         }
-
-        val listFiles = file.listFiles()
-        if (!listFiles.isNullOrEmpty()) {
-            listFiles.forEach {
-                if (it.isFile) {
-                    if (!it.delete()) {
+        // 如果是目录，递归删除
+        if (file.isDirectory) {
+            val listFiles = file.listFiles()
+            if (!listFiles.isNullOrEmpty()) {
+                listFiles.forEach {
+                    if (!deleteFile(it)) {
                         return false
                     }
-                } else if (it.isDirectory && !deleteFile(it)) {
-                    return false
                 }
             }
+            return file.delete()
         }
-        return file.delete()
+        return false
     }
 
     fun getPathFiles(path: String): List<File>? {
@@ -588,4 +593,121 @@ object FileUtils {
         val documentFile = DocumentFile.fromSingleUri(context, uri)
         return documentFile?.isDirectory == true
     }
+
+    fun copyUriToCache(context: Context, uri: Uri, fileName: String?): File? {
+        return try {
+            val cacheDir = File("/sdcard/ctnewcall/cache/")
+
+            if (!cacheDir.exists()) {
+                val created = cacheDir.mkdirs()
+                if (!created) {
+                    sLogger.error("Failed to create cache directory: ${cacheDir.absolutePath}")
+                    return null
+                }
+            }
+
+            val cacheFile = File(cacheDir, "temp_${System.currentTimeMillis()}_$fileName")
+
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(cacheFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            cacheFile
+        } catch (e: Exception) {
+            sLogger.error("Failed to copy URI to cache", e)
+            null
+        }
+    }
+
+    fun installBootstrapMiniApp(eTag: String, bytes: ByteArray){
+        val filePathBuilder = StringBuilder()
+        filePathBuilder
+            .append(Utils.getApp().getDir("miniApps", Context.MODE_PRIVATE))
+            .append(File.separator)
+            .append("bootstrap")
+            .append(File.separator)
+            .append(eTag)
+        val filePath = filePathBuilder.toString()
+        if (!isFileExists(filePath)) {
+            //不存在存储小程序
+            try {
+                //将数据写到沙盒cache里面
+                val cacheFile = PathManager().createCacheFile(Utils.getApp(),fileName = "tmp_miniapp.zip")
+                if (cacheFile == null) {
+                    sLogger.debug("installBootstrapMiniApp Failed createCacheFile null")
+                    return
+                }
+                val fileOutputStream = FileOutputStream(cacheFile)
+                fileOutputStream.write(bytes)
+                fileOutputStream.close()
+                //校验小程序签名
+                if(!LicenseManager.getInstance().verifyMiniAppPkg(cacheFile!!.absolutePath)){
+                    deletePath(cacheFile.absolutePath)
+                    sLogger.debug("installBootstrapMiniApp Failed verifyMiniAppPkg false")
+                    return
+                }
+                //解压小程序
+                ZipUtils.unzipFile(cacheFile.absolutePath, filePath)
+                //删除cache
+                deletePath(cacheFile.absolutePath)
+                if (sLogger.isDebugActivated) {
+                    sLogger.debug("installBootstrapMiniApp filePath:$filePath")
+                }
+            } catch (e: IOException) {
+                if (sLogger.isDebugActivated) {
+                    sLogger.error("installBootstrapMiniApp ", e)
+                }
+                return
+            }
+        }
+    }
+
+    /**
+     * 获取已安装的最新版本路径
+     * @return 最新版本的完整路径，如果没有则返回null
+     */
+    fun getLatestInstalledBootstrapPath(): String? {
+        val bootstrapDir = File(Utils.getApp().getDir("miniApps", Context.MODE_PRIVATE), "bootstrap")
+
+        if (!bootstrapDir.exists() || !bootstrapDir.isDirectory) {
+            return null
+        }
+
+        val versionDirs = bootstrapDir.listFiles { file -> file.isDirectory }
+
+        if (versionDirs.isNullOrEmpty()) {
+            return null
+        }
+
+        // 按目录名（eTag）排序，找出最新的版本
+        val latestDir = versionDirs.maxByOrNull { it.name }
+
+        return latestDir?.absolutePath
+    }
+
+    /**
+     * 获取已安装的最新版本号（ETag）
+     * @return 最新版本的ETag，如果没有则返回null
+     */
+    fun getLatestInstalledBootstrapVersion(): String? {
+        val bootstrapDir = File(Utils.getApp().getDir("miniApps", Context.MODE_PRIVATE), "bootstrap")
+
+        if (!bootstrapDir.exists() || !bootstrapDir.isDirectory) {
+            return null
+        }
+
+        val versionDirs = bootstrapDir.listFiles { file -> file.isDirectory }
+
+        if (versionDirs.isNullOrEmpty()) {
+            return null
+        }
+
+        // 按目录名（eTag）排序，找出最新的版本
+        val latestDir = versionDirs.maxByOrNull { it.name }
+
+        return latestDir?.name
+    }
+
+
 }

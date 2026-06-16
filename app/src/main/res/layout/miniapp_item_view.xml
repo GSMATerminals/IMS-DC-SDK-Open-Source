@@ -34,6 +34,16 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:radius="17dp" />
+
+        <View
+            android:id="@+id/running_dot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/green_dot"
+            android:visibility="gone" />
     </FrameLayout>
 
     <TextView

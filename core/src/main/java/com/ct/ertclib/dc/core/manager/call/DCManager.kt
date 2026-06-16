@@ -36,6 +36,7 @@ import com.ct.ertclib.dc.core.manager.common.DialerEntryManager
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.port.dc.IAdverseDcCreateListener
+import com.ct.ertclib.dc.core.port.dc.IBootstrapDcCreateListener
 import com.ct.ertclib.dc.core.utils.common.DCUtils
 import com.ct.ertclib.dc.core.utils.common.XmlUtils
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
@@ -65,11 +66,13 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
     private val mAdcCreateListenerMap = ConcurrentHashMap<String, IDcCreateListener>()
     private val mControlAdcCreateListenerMap = ConcurrentHashMap<String, IControlDcCreateListener>()
     private val mAdverseAdcCreateListenerMap = ConcurrentHashMap<String, IAdverseDcCreateListener>()
+    private val mBootstrapAdcCreateListenerMap = ConcurrentHashMap<String, IBootstrapDcCreateListener>()
     private val mImsDcCallbackMap = ConcurrentHashMap<String, ImsDcCallback>()
     // Adc缓存
     private val mAdcMap = ConcurrentHashMap<String, IImsDataChannel>()
     private val mDcListMap = ConcurrentHashMap<String, ArrayList<IImsDataChannel>>()
     private val mCallInfoList = ArrayList<CallInfo>()
+    private var bootStrapAppIdList: List<String>? = null
     private var mIsDataChannelServiceConnected = false
     private var mIsNetworkManagerInit = false
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -143,6 +146,7 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
         }
         mControlAdcCreateListenerMap.remove(telecomCallId)
         mAdverseAdcCreateListenerMap.remove(telecomCallId)
+        mBootstrapAdcCreateListenerMap.remove(telecomCallId)
         mDcListMap.remove(telecomCallId)
         // 删除本次通话相关的Adc缓存
         mAdcMap.forEach{(key, _) ->
@@ -234,7 +238,19 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
             val adcListenerKey = getAdcListenerKey(callId, appIdFromDcLabel)
 
             // 有些ADC不用回调给小程序
-            if (dc.dcLabel.contains("_${CommonConstants.DC_APPID_OWN}_")) {
+            if (isBootstrapAppId(appIdFromDcLabel)) {
+                // 交给引导小程序处理，加在前面防止SDK先交给小程序或者被当作controlADC处理
+                val bootstrapAdcCreateListener = mBootstrapAdcCreateListenerMap[callId]
+                if (bootstrapAdcCreateListener != null && appIdFromDcLabel != null) {
+                    bootstrapAdcCreateListener.onBootstrapAppDataChannelCreated(
+                        callId,
+                        appIdFromDcLabel,
+                        dc.streamId,
+                        dc
+                    )
+                }
+
+            } else if (dc.dcLabel.contains("_${CommonConstants.DC_APPID_ROOT}_")) {
                 // SDK与AS自有adc
                 val controlAdcCreateListener = mControlAdcCreateListenerMap[callId]
                 if (controlAdcCreateListener != null && appIdFromDcLabel != null) {
@@ -314,6 +330,14 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
         }.add(dc)
     }
 
+    fun setBootstrapAppIdList(appIdList: List<String>?) {
+        bootStrapAppIdList = appIdList
+    }
+
+    fun isBootstrapAppId(appId: String?): Boolean {
+        return bootStrapAppIdList?.contains(appId) ?: false
+    }
+
     fun onCallServiceUnbind(context: Context) {
         sLogger.debug("onCallServiceUnbind")
         job1?.cancel()
@@ -346,6 +370,10 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
 
     fun registerAdverseAppDataChannelCallback(callId: String, dcCreateListener: IAdverseDcCreateListener) {
         mAdverseAdcCreateListenerMap[callId] = dcCreateListener
+    }
+
+    fun registerBootstrapAppDataChannelCallback(callId: String, dcCreateListener: IBootstrapDcCreateListener) {
+        mBootstrapAdcCreateListenerMap[callId] = dcCreateListener
     }
 
     fun registerAppDataChannelCallback(callId: String, appId:String, dcCreateListener: IDcCreateListener) {
@@ -388,6 +416,10 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
 
     fun unregisterControlAppDataChannelCallback(callId: String) {
         mControlAdcCreateListenerMap.remove(callId)
+    }
+
+    fun unregisterBootstrapAppDataChannelCallback(callId: String) {
+        mBootstrapAdcCreateListenerMap.remove(callId)
     }
 
     fun unBindService(context: Context) {

@@ -20,17 +20,11 @@ import android.content.Context
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REFRESH_MINI_PERMISSION
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_REFRESH_PERMISSION
-import com.ct.ertclib.dc.core.constants.CommonConstants.COMMON_APP_EVENT
-import com.ct.ertclib.dc.core.data.event.NotifyEvent
-import com.ct.ertclib.dc.core.data.miniapp.AppRequest
 import com.ct.ertclib.dc.core.data.miniapp.PermissionUsageData
 import com.ct.ertclib.dc.core.data.miniapp.getCombineKey
 import com.ct.ertclib.dc.core.data.model.PermissionModel
 import com.ct.ertclib.dc.core.data.model.PermissionUsageEntity
-import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.port.miniapp.IPermissionDbRepo
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
 import com.ct.ertclib.dc.core.utils.common.DateUtils
@@ -42,13 +36,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.random.Random
 
 class PermissionUseCase(
     private val context: Context,
-    private val permissionDbRepo: IPermissionDbRepo,
-    private val miniToParentManager: IMiniToParentManager,
-    private val parentToMiniNotifier: IParentToMiniNotify
+    private val permissionDbRepo: IPermissionDbRepo
 ): IPermissionUseCase {
 
     companion object {
@@ -114,16 +105,7 @@ class PermissionUseCase(
             val permissionJsonString = JsonUtil.toJson(it)
             permissionDbRepo.insertOrUpdate(PermissionModel(appId, permissionJsonString))
         }
-        if (isMainProcess) {
-            val permissionNotifyEvent = NotifyEvent(
-                ACTION_REFRESH_MINI_PERMISSION,
-                mapOf()
-            )
-            parentToMiniNotifier.notifyEvent(callId, appId, permissionNotifyEvent)
-        } else {
-            val appRequestJson = AppRequest(COMMON_APP_EVENT, ACTION_REFRESH_PERMISSION, mapOf()).toJson()
-            miniToParentManager.sendMessageToParent(appRequestJson, null)
-        }
+        MiniAppStartManager.getRunningMiniApp(callId, appId)?.viewModel?.refreshPermission()
     }
 
     override fun checkPermissionAndRecord(appId: String, permissions: List<String>, needRecord: Boolean): Boolean {
