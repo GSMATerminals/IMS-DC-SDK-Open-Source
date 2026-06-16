@@ -27,7 +27,5 @@ interface IMiniAppStartManager {
 
     fun stopMiniApp(context: Context,callId: String, appId: String)
 
-    fun clearBackgroundTaskList()
-
-    fun moveMiniAppToFront(context:Context, appId: String)
+    fun clearBackgroundTaskListByCall(callId: String)
 }

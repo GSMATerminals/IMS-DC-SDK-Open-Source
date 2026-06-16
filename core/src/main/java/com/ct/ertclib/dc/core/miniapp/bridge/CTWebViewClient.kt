@@ -24,13 +24,12 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import androidx.core.net.toUri
-import com.ct.ertclib.dc.core.port.miniapp.IMiniApp
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 
-class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewClient() {
+class CTWebViewClient(private val miniAppView: MiniAppView) : WebViewClient() {
 
     companion object {
         private const val TAG = "CTWebViewClient"
@@ -45,7 +44,7 @@ class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewCli
 
         // 如果不在allowedUrls中，则拦截
         var pass = false
-        (miniAppActivity as? IMiniApp)?.miniApp?.appProperties?.allowedUrls?.forEach{
+        miniAppView.viewModel.miniAppInfo?.appProperties?.allowedUrls?.forEach{
             if (url.startsWith(it)){
                 pass = true
             }
@@ -65,9 +64,9 @@ class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewCli
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
                 // 检查应用是否存在
-                if (intent.resolveActivity(miniAppActivity.packageManager) != null) {
+                if (intent.resolveActivity(miniAppView.context.packageManager) != null) {
                     sLogger.info("startActivity intent:$intent")
-                    miniAppActivity.startActivity(intent)
+                    miniAppView.context.startActivity(intent)
                 } else {
                     // 应用未安装，跳转到fallback_url
                     sLogger.error("Application not installed, redirecting to fallback URL")
@@ -91,14 +90,14 @@ class CTWebViewClient(private val miniAppActivity: MiniAppActivity) : WebViewCli
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         if (sLogger.isDebugActivated) sLogger.debug("onPageStarted url:$url")
-        miniAppActivity.setPageName("")
+        miniAppView.viewModel.notifyPageNameChanged("")
         super.onPageStarted(view, url, favicon)
 
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {
         if (sLogger.isDebugActivated) sLogger.debug("onPageFinished url:$url")
-        miniAppActivity.updateBack()
+        miniAppView.updateBack()
         super.onPageFinished(view, url)
 
     }

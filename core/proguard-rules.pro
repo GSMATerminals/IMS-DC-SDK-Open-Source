@@ -226,7 +226,8 @@
 }
 
 -keep class com.ct.ertclib.dc.core.utils.common.MimeUtils { *; }
--keep class com.ct.ertclib.dc.core.fileshare.FileTransferManager { *; }
--keep class com.ct.ertclib.dc.core.fileshare.FileTransferService { *; }
--keep class com.ct.ertclib.dc.core.port.file.FileTransferListener { *; }
 -keep class com.ct.ertclib.dc.core.utils.logger.Logger { *; }
+
+# app/proguard-rules.pro
+-keep class com.squareup.picasso.** { *; }
+-dontwarn com.squareup.picasso.**

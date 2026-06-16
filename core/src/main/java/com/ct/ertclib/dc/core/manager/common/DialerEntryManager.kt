@@ -89,15 +89,9 @@ class DialerEntryManager {
                                         return
                                     }
                                     val intent = Intent(INTENT_MINI_EXPANDED)
-                                    intent.putExtra("miniAppList", miniAppList)
+                                    intent.setPackage(context.packageName)
                                     intent.putExtra("callInfo", callInfo)
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    val point = Point(0, ScreenUtils.getScreenHeight(context) / 2)
-//                                        floatLps?.let {
-//                                            point.x = it.x
-//                                            point.y = it.y
-//                                        }
-                                    intent.putExtra("point", point)
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                                     context.startActivity(intent)
                                 }
                             }

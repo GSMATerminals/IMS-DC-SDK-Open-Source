@@ -27,8 +27,8 @@ android {
 
     defaultConfig {
         applicationId = "com.ct.ertclib.dc"
-        versionCode = 10
-        versionName = "1.1.8"
+        versionCode = 12
+        versionName = "26.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk{
@@ -53,11 +53,35 @@ android {
     flavorDimensions += listOf("vendor")
 
     productFlavors {
-        create("normal"){
+        create("normal") {
+            manifestPlaceholders["mainPermissionName"] = "com.ct.ertclib.dc.main_permission"
+            manifestPlaceholders["getFeaturePermissionName"] = "com.ct.ertclib.dc.GET_FEATURE"
+            manifestPlaceholders["fileProviderAuthority"] = "com.ct.ertclib.dc.fileprovider"
+            manifestPlaceholders["sdkProviderAuthority"] = "com.ct.ertclib.dc.provider"
+            manifestPlaceholders["providerPermissionName"] = "com.ct.ertclib.dc.provider.PERMISSION"
         }
-        create("dialer"){
+        create("dialer") {
+            manifestPlaceholders["mainPermissionName"] = "com.ct.ertclib.dc.main_permission"
+            manifestPlaceholders["getFeaturePermissionName"] = "com.ct.ertclib.dc.GET_FEATURE"
+            manifestPlaceholders["fileProviderAuthority"] = "com.ct.ertclib.dc.fileprovider"
+            manifestPlaceholders["sdkProviderAuthority"] = "com.ct.ertclib.dc.provider"
+            manifestPlaceholders["providerPermissionName"] = "com.ct.ertclib.dc.provider.PERMISSION"
         }
-        create("local"){
+        create("lab") {
+            applicationId = "com.ct.ertclib.dc.lab"
+            manifestPlaceholders["mainPermissionName"] = "com.ct.ertclib.dc.lab.main_permission"
+            manifestPlaceholders["getFeaturePermissionName"] = "com.ct.ertclib.dc.lab.GET_FEATURE"
+            manifestPlaceholders["fileProviderAuthority"] = "com.ct.ertclib.dc.lab.fileprovider"
+            manifestPlaceholders["sdkProviderAuthority"] = "com.ct.ertclib.dc.lab.provider"
+            manifestPlaceholders["providerPermissionName"] = "com.ct.ertclib.dc.lab.provider.PERMISSION"
+        }
+        create("local") {
+            applicationId = "com.ct.ertclib.dc.local"
+            manifestPlaceholders["mainPermissionName"] = "com.ct.ertclib.dc.local.main_permission"
+            manifestPlaceholders["getFeaturePermissionName"] = "com.ct.ertclib.dc.local.GET_FEATURE"
+            manifestPlaceholders["fileProviderAuthority"] = "com.ct.ertclib.dc.local.fileprovider"
+            manifestPlaceholders["sdkProviderAuthority"] = "com.ct.ertclib.dc.local.provider"
+            manifestPlaceholders["providerPermissionName"] = "com.ct.ertclib.dc.local.provider.PERMISSION"
         }
     }
     productFlavors.all {
@@ -65,6 +89,9 @@ android {
     }
 
     sourceSets {
+        getByName("lab") {
+            manifest.srcFile("src/desk/AndroidManifest.xml")
+        }
         getByName("local") {
             manifest.srcFile("src/desk/AndroidManifest.xml")
         }
@@ -126,7 +153,7 @@ dependencies {
     implementation(fileTree("${rootProject.projectDir}\\libs") {
         include("*.aar")  // 只匹配 .aar 文件
     })
-    implementation(project(":testing"))
+
     implementation(project(":core"))
 
     implementation(libs.apache.compress)
@@ -166,4 +193,22 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(libs.gms.safetynet)
 
+}
+
+afterEvaluate {
+    android.applicationVariants.forEach { variant ->
+        val flavorName = variant.flavorName
+
+        if (flavorName == "lab" || flavorName == "local") {
+            // 获取该 variant 的 implementation 配置
+            val configurationName = "${variant.name}Implementation"
+
+            // 动态添加依赖
+            project.dependencies.add(configurationName, project(":testing"))
+
+            println("✓ Added testing to ${variant.name}")
+        } else {
+            println("✗ Skipped testing for ${variant.name}")
+        }
+    }
 }

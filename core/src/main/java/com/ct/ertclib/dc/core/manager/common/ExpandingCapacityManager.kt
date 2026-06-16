@@ -79,8 +79,10 @@ class ExpandingCapacityManager {
         appId:String
     ) {
         sLogger.info("unregisterECCallback callId: $callId,appId: $appId")
-        mProviderMap.forEach { (_, instance) ->
+        mProviderMap.forEach { (key, instance) ->
+            sLogger.debug("unregisterECCallback provider: $key")
             instance.releaseMiniApp(context, callId, appId)
+            sLogger.debug("unregisterECCallback provider: $key releaseMiniApp success")
         }
         mECListenerMap.remove(callId+appId)
         mECModulesMap.remove(callId+appId)

@@ -71,15 +71,56 @@ class AudioControlHelper(private val context: Context) {
 //            setCommunicationDevice(enable)
 //        } else {
 //            @Suppress("DEPRECATION")
-            audioManager.isSpeakerphoneOn = enable
-            // 设置正确的音频模式
-            audioManager.mode = if (enable) {
-                AudioManager.MODE_IN_COMMUNICATION
-            } else {
-                AudioManager.MODE_IN_CALL
-            }
-            return true
+        sLogger.info("setSpeakerphone")
+        audioManager.isSpeakerphoneOn = enable
+        // 设置正确的音频模式
+        audioManager.mode = if (enable) {
+            AudioManager.MODE_IN_COMMUNICATION
+        } else {
+            AudioManager.MODE_IN_CALL
+        }
+        return true
 //        }
+    }
+
+    fun setAudioDevice(name: String?, type: String?): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val devices = audioManager.availableCommunicationDevices
+            val targetDevice = devices.firstOrNull {
+                sLogger.info("deviceName: ${it.productName}, type: ${it.type}")
+                (name == null || it.productName.toString() == name) && (type == null || getDeviceTypeString(it.type) == type)
+            }
+            targetDevice?.let {
+                sLogger.info("type: ${it.type}")
+                if (it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+                    audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                } else if (it.type == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE) {
+                    audioManager.mode = AudioManager.MODE_IN_CALL
+                } else {
+                    audioManager.mode = AudioManager.MODE_IN_CALL
+                    val result = audioManager.setCommunicationDevice(it)
+                    sLogger.info("setAudioDevice result: $result")
+                    return result
+                }
+            } ?: return false
+        } else {
+            sLogger.info("setAudioDevice: Using setSpeakerphone for API < 31, API: ${Build.VERSION.SDK_INT}")
+            if (type == "Speaker") {
+                return setSpeakerphone(true)
+            } else if (type == "Earpiece") {
+                return setSpeakerphone(false)
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+
+    fun clearAudioDevice() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioManager.clearCommunicationDevice()
+        }
+        audioManager.mode = AudioManager.MODE_NORMAL
     }
 
     fun isSpeakerphoneOn(): Boolean {
@@ -100,6 +141,46 @@ class AudioControlHelper(private val context: Context) {
     fun isMuted(): Boolean{
         val isMuted = audioManager.isMicrophoneMute
         return isMuted
+    }
+
+    fun getAudioDevices(): List<Map<String, String>> {
+        val deviceList = mutableListOf<Map<String, String>>()
+        val devices =
+            audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+        for (device in devices) {
+            val deviceMap = mutableMapOf<String, String>()
+            deviceMap["name"] = device.productName.toString()
+            deviceMap["type"] = getDeviceTypeString(device.type)
+            deviceList.add(deviceMap)
+        }
+        return deviceList
+    }
+
+    fun getCurrentAudioDevice(): Map<String, String>? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val device = audioManager.communicationDevice
+            if (device != null) {
+                return mapOf(
+                    "name" to device.productName.toString(),
+                    "type" to getDeviceTypeString(device.type)
+                )
+            }
+        }
+        return null
+    }
+
+    private fun getDeviceTypeString(type: Int): String {
+        return when (type) {
+            AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "Earpiece"
+            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "Speaker"
+            AudioDeviceInfo.TYPE_WIRED_HEADSET -> "Wired Headset"
+            AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "Wired Headphones"
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth SCO"
+            AudioDeviceInfo.TYPE_USB_DEVICE -> "USB Device"
+            AudioDeviceInfo.TYPE_USB_ACCESSORY -> "USB Accessory"
+            AudioDeviceInfo.TYPE_USB_HEADSET -> "USB Headset"
+            else -> "Unknown ($type)"
+        }
     }
 
     fun registerAudioDeviceCallback(listener: OnAudioDeviceChangeListener) {

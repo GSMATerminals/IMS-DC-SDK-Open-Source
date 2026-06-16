@@ -115,6 +115,28 @@
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- 广告位 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ad_layout"
+        android:visibility="gone"
+        android:layout_width="@dimen/expanded_menu_height_width"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/expanded_margin_bottom"
+        android:forceDarkAllowed="false">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/banner_viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="78dp"
+            android:overScrollMode="never"
+            app:layout_constraintDimensionRatio="4:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/miniapp_setting_layout"
         android:background="@drawable/expanded_menu_dialog_bg"

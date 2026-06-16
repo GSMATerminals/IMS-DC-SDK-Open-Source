@@ -16,22 +16,16 @@
 
 package com.ct.ertclib.dc.core.usecase.miniapp
 
-import android.content.Context
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.DCUtils
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_IS_PEER_SUPPORT_DC
-import com.ct.ertclib.dc.core.constants.CommonConstants.CALL_APP_EVENT
 import com.ct.ertclib.dc.core.constants.CommonConstants.DC_SEND_DATA_OK
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.IS_PEER_SUPPORT_DC_PARAMS
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
-import com.ct.ertclib.dc.core.data.miniapp.AppRequest
-import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.data.miniapp.DataChannel
 import com.ct.ertclib.dc.core.data.miniapp.DataChannelApp
 import com.ct.ertclib.dc.core.data.miniapp.DataChannelAppInfo
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IDCMiniEventUseCase
 import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.utils.common.XmlUtils
@@ -41,10 +35,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
-class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
-    IDCMiniEventUseCase {
+class DCMiniUseCase() : IDCMiniEventUseCase {
 
     companion object {
         private const val TAG = "DCMiniUseCase"
@@ -54,7 +48,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     override fun createAppDataChannel(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
@@ -85,13 +79,13 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
 
         dcLabels.forEach {
             // 校验小程序ID
-            if (!miniToParentManager.getMiniAppInfo()?.let { it1 -> it.contains("_${it1.appId}_") }!!) {
+            if (!miniAppView.viewModel.miniAppInfo?.let { it1 -> it.contains("_${it1.appId}_") }!!) {
                 val response = JSResponse("1", "$it appId error", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.info("JSApi asyn dcLabel$it appId error")
                 return
             }
-            if (miniToParentManager.createDCLabelList?.contains(it) == true) {
+            if (miniAppView.viewModel.createDCLabelList.contains(it)) {
                 val response = JSResponse("1", "dcLabel:$it is already created", "")
                 handler.complete(JsonUtil.toJson(response))
                 logger.info("JSApi asyn dcLabel$it already created")
@@ -104,7 +98,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
                 if (!description.contains("StreamId")){
                     description = description.replace("</DcLabel>","</DcLabel><StreamId></StreamId>")
                 }
-                val result = miniToParentManager.createDC(dcLabels, description)
+                val result = miniAppView.viewModel.createDC(dcLabels, description)
                 logger.info("JSApi asyn ,dcIds:$result")
                 val response = JSResponse("0", "${result?.toString()}", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -113,7 +107,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
     }
 
     override fun sendData(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
@@ -130,7 +124,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
         val dcLabelStr = dcLabel as String
         scope.launch(Dispatchers.IO) {
             logger.info("JSApi asyn ,sendData dcLabel:$dcLabelStr, data:$data")
-            val dc = miniToParentManager.openDCList?.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dcLabelStr) }
+            val dc = miniAppView.viewModel.openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dcLabelStr) }
             dc?.send(dataByteArray, dataByteArray.size, object : IDCSendDataCallback.Stub() {
                 override fun onSendDataResult(state: Int) {
                     logger.debug("onSendDataResult state:$state")
@@ -142,7 +136,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
     }
 
     override fun closeAppDataChannel(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
@@ -158,7 +152,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val dcLabelItemStr = dcLabelItem as String
-                    miniToParentManager.closeDC(dcLabelItemStr)
+                    miniAppView.viewModel.closeDC(dcLabelItemStr)
                 }
             }
         }
@@ -167,47 +161,27 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
     }
 
     override fun isPeerSupportDC(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("JSApi asyn ,isPeerSupportDC")
-        val request = AppRequest(CALL_APP_EVENT, ACTION_IS_PEER_SUPPORT_DC, mapOf())
-        scope.launch {
-            withContext(Dispatchers.IO) {
-                miniToParentManager.sendMessageToParent(request.toJson(),object : IMessageCallback.Stub(){
-                    override fun reply(message: String?) {
-                        try {
-                            if (message != null) {
-                                logger.info("isPeerSupportDC reply${message}")
-                                val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
-                                val map = appResponse?.data as? Map<*, *>
-                                map?.let {
-                                    val response = JSResponse("0", "success", mutableMapOf(IS_PEER_SUPPORT_DC_PARAMS to map[IS_PEER_SUPPORT_DC_PARAMS]))
-                                    scope.launch(Dispatchers.Main) {
-                                        handler.complete(JsonUtil.toJson(response))
-                                    }
-                                }
-                            }
-                        } catch (e:Exception){
-                            e.printStackTrace()
-                        }
-                    }
-                })
-            }
+        val response = JSResponse("0", "success", mutableMapOf(IS_PEER_SUPPORT_DC_PARAMS to (MiniAppManager.getAppPackageManager(miniAppView.viewModel.callInfo?.telecomCallId)?.isPeerSupportDc() == true)))
+        scope.launch(Dispatchers.Main) {
+            handler.complete(JsonUtil.toJson(response))
         }
     }
 
     override fun getBufferedAmountAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getBufferedAmount(context, params))
+        handler.complete(getBufferedAmount(miniAppView, params))
     }
 
     override fun getBufferedAmount(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ) : String {
         val dcLabel = params["dcLabel"] as String?
@@ -216,7 +190,7 @@ class DCMiniUseCase(private val miniToParentManager: IMiniToParentManager) :
             val response = JSResponse("1", "getBufferedAmount dcLabel is null", mutableMapOf<String, Long>())
             return JsonUtil.toJson(response)
         }
-        val dc = miniToParentManager.openDCList?.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dcLabel) }
+        val dc = miniAppView.viewModel.openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dcLabel) }
         val bufferedAmount = dc?.let {
             try {
                 it.bufferedAmount()

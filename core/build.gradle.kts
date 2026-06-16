@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.okhttp)
     // room
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.swiperefreshlayout)
     kapt(libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
     // paging
@@ -94,10 +95,10 @@ dependencies {
     api(libs.koin.android)
     implementation (libs.androidx.preference.ktx)
     compileOnly(files("${rootProject.projectDir}\\libs\\XXPermissions-18.2.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\DSBridge-Android-3.0.0.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\Common-4.1.12.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\FilePicker-4.1.12.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\reflect_helper-release.aar"))
+    compileOnly(files("${rootProject.projectDir}\\libs\\AndroidFilePicker-release.aar"))
     api(libs.androidutils)
 
     testImplementation(libs.junit4)
@@ -107,4 +108,5 @@ dependencies {
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(libs.picasso)
 }

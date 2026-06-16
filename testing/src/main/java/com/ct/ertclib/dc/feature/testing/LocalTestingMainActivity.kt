@@ -56,7 +56,6 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
     private lateinit var binding: ActivityLocalTestingMainBinding
     private lateinit var viewModel: TestingViewModel
     private var scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var callState = Call.STATE_DISCONNECTED
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,6 +103,7 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
             dealActiveCall()
         }
         binding.btnDecline.setOnClickListener {
+            DCSocketManager.notifyHangUp()
             dealHangup()
         }
     }
@@ -128,7 +128,6 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
                 context: Context,
                 callInfo: CallInfo
             ) {
-                callState = STATE_RINGING
                 scope.launch(Dispatchers.Main) {
                     binding.contentLayout.background = ContextCompat.getDrawable(this@LocalTestingMainActivity, R.drawable.call_background)
                     binding.btnSetting.visibility = View.GONE
@@ -160,7 +159,6 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
                     binding.btnAccept.visibility = View.VISIBLE
                     binding.contentLayout.background = null
                 }
-                callState = Call.STATE_DISCONNECTED
             }
 
             override fun onCallStateChanged(
@@ -168,23 +166,20 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
                 state: Int
             ) {
                 scope.launch(Dispatchers.Main) {
-                    if (state == Call.STATE_ACTIVE && callState != Call.STATE_ACTIVE){
-                        callState = state
+                    if (state == Call.STATE_ACTIVE){
                         (binding.ivRingingBell.drawable as? Animatable)?.stop()
                         binding.layoutState.visibility = View.VISIBLE
                         binding.ivRingingBell.visibility = View.GONE
                         binding.tvState.text = getString(R.string.active)
                         binding.btnAccept.visibility = View.GONE
-                    } else if (state == Call.STATE_DISCONNECTED && callState != Call.STATE_DISCONNECTED){
-                        callState = state
+                    } else if (state == Call.STATE_DISCONNECTING){
+                        // 小程序挂断
                         DCSocketManager.notifyHangUp()
-                        TestImsDataChannelManager.closeBdc(0, CALL_ID)
-
-                        InCallServiceManager.instance.onCallRemoved(CALL_ID)
-                        InCallServiceManager.instance.onUnbind()
-                        onCallRemoved(this@LocalTestingMainActivity,callInfo)
-                    } else {
-                        callState = state
+                        dealHangup()
+                    } else if (state == Call.STATE_CONNECTING){
+                        // 小程序接听
+                        DCSocketManager.notifyCallActive()
+                        dealActiveCall()
                     }
                 }
             }
@@ -223,7 +218,10 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
         scope.launch {
             // 处理挂断
             NewCallsManager.instance.testNotifyCallStateChange(CALL_ID, Call.STATE_DISCONNECTED)
+            TestImsDataChannelManager.closeBdc(0, CALL_ID)
 
+            InCallServiceManager.instance.onCallRemoved(CALL_ID)
+            InCallServiceManager.instance.onUnbind()
         }
     }
     override fun onResume() {
@@ -232,6 +230,7 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
 
     override fun onDestroy() {
         super.onDestroy()
+        DCSocketManager.notifyHangUp()
         dealHangup()
         DCSocketManager.unRegisterCallObserver()
     }

@@ -32,14 +32,14 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.START_SHARE_FAILED_OCCU
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.START_SHARE_LICENSE_ERROR
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.START_SHARE_PARAMS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.START_SHARE_SUCCESS
-import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
-import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
+import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
 import com.ct.ertclib.dc.core.port.manager.IScreenShareManager
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
+import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -47,8 +47,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 
 class ScreenShareUseCase(
-    private val screenShareManager: IScreenShareManager,
-    private val parentToMiniNotifier: IParentToMiniNotify
+    private val screenShareManager: IScreenShareManager
 ) : IScreenShareUseCase, KoinComponent {
 
     companion object {
@@ -89,11 +88,7 @@ class ScreenShareUseCase(
         LogUtils.info(TAG, "stopScreenShare, needNotifyToMini: $needNotifyToMini")
         screenShareManager.stopShareScreen()
         if (needNotifyToMini) {
-            val stopScreenNotifyEvent = NotifyEvent(
-                FUNCTION_SCREEN_SHARE_NOTIFY,
-                mapOf(NOTIFY_STATUS_PARAM to STATUS_CLOSE)
-            )
-            parentToMiniNotifier.notifyEvent(callId, appId, stopScreenNotifyEvent)
+            MiniAppStartManager.getRunningMiniApp(callId,appId)?.viewModel?.callHandler(FUNCTION_SCREEN_SHARE_NOTIFY, arrayOf(JsonUtil.toJson(mapOf(NOTIFY_STATUS_PARAM to STATUS_CLOSE))))
         }
         this.callId = ""
         this.appId = ""

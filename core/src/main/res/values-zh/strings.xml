@@ -89,7 +89,9 @@
 
     <string name="open_switch_title">开启/关闭5G增强通话</string>
     <string name="local_debug_entry">本地调试入口</string>
+    <string name="net_debug_entry">互联网模拟入口</string>
     <string name="local_debug_entry_summary">点击后进入调试页面，可进行本地调试</string>
+    <string name="net_debug_entry_summary">点击后进入调试页面，可进行互联网模拟调试</string>
     <string name="please_open">请先开启5G增强通话</string>
     <string name="open_switch_tips">开启表明您已经同意《隐私政策》和《用户协议》</string>
     <string name="close_switch_tips">关闭表明您不同意或撤回同意《隐私政策》和《用户协议》</string>
@@ -115,4 +117,5 @@
     <string name="mic_mute">静音</string>
     <string name="speaker_on">扬声器</string>
     <string name="new_call_close_tips">已关闭，将在下次通话时生效</string>
+    <string name="screen_share_not_in_top_tips">将通话应用拉到前台后,您可继续观看涂鸦轨迹</string>
 </resources>

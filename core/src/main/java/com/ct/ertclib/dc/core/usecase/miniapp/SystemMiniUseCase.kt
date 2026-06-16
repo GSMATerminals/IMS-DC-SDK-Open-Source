@@ -1,8 +1,5 @@
 package com.ct.ertclib.dc.core.usecase.miniapp
 
-import android.content.Context
-import com.blankj.utilcode.util.ZipUtils
-import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.AVAILABLE_MEMORY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.BATTERY
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.CPU_CORE_NUM
@@ -17,7 +14,6 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.RESPONSE_SUCCESS_MESSAG
 import com.ct.ertclib.dc.core.data.bridge.JSResponse
 import com.ct.ertclib.dc.core.data.miniapp.ModelInfo
 import com.ct.ertclib.dc.core.data.miniapp.PluginMiniAppInfo
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.usecase.mini.ISystemMiniUseCase
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
@@ -27,12 +23,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
-class SystemMiniUseCase(
-    private val miniToParentManager: IMiniToParentManager,
-    private val modelManager: IModelManager
-) : ISystemMiniUseCase {
+class SystemMiniUseCase(private val modelManager: IModelManager) : ISystemMiniUseCase {
 
     companion object {
         private const val TAG = "SystemMiniUseCase"
@@ -42,7 +36,7 @@ class SystemMiniUseCase(
 
 
     override fun getInformationList(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
@@ -62,8 +56,8 @@ class SystemMiniUseCase(
                 scope.launch(Dispatchers.Default) {
                     val response = JSResponse(
                         RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, mutableMapOf(
-                            BATTERY to SystemUtils.getBatteryPercentage(context),
-                            AVAILABLE_MEMORY to SystemUtils.getAvailableMemory(context) / 1000000000,
+                            BATTERY to SystemUtils.getBatteryPercentage(miniAppView.context),
+                            AVAILABLE_MEMORY to SystemUtils.getAvailableMemory(miniAppView.context) / 1000000000,
                             CPU_CORE_NUM to SystemUtils.getCpuCoreNum()
                         )
                     )
@@ -74,7 +68,7 @@ class SystemMiniUseCase(
             }
 
             PARAMS_INFORMATION_APPLICATION -> {
-                miniToParentManager.getMiniAppList()?.let { appList ->
+                miniAppView.viewModel.miniAppListInfo?.let { appList ->
                     val pluginMiniAppList = mutableListOf<PluginMiniAppInfo>()
                     appList.applications?.forEach {
                         pluginMiniAppList.add(PluginMiniAppInfo(it.appId, it.appName, it.eTag))

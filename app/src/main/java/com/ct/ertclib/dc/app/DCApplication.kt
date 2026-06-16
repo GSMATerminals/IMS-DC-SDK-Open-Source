@@ -1,18 +1,21 @@
 package com.ct.ertclib.dc.app
 
+import android.app.Activity
 import android.app.Application
+import android.os.Bundle
 import android.util.Log
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
-import com.ct.ertclib.dc.app.manager.CallStateManager
+import com.ct.ertclib.dc.app.manager.CallServiceStateManager
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.coreModule
-import com.ct.ertclib.dc.core.utils.common.WebViewUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.ct.ertclib.dc.core.utils.common.ActivityTracker
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+
+/**
+ * 这里不一定能执行，不要放核心逻辑
+ */
 
 class DCApplication : Application(), CameraXConfig.Provider {
 
@@ -34,11 +37,22 @@ class DCApplication : Application(), CameraXConfig.Provider {
             modules(coreModule)
         }
 
-        CallStateManager.startListenCallState(this)
+        CallServiceStateManager.startListenCallServiceState(this)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            WebViewUtil.handleWebViewDir(this@DCApplication)
-        }
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityResumed(activity: Activity) {
+                ActivityTracker.onActivityResumed(activity)
+            }
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityPaused(activity: Activity) {
+                ActivityTracker.onActivityPaused(activity)
+            }
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
     }
 
     override fun getCameraXConfig(): CameraXConfig {

@@ -64,7 +64,9 @@ data class MiniAppInfo(
     @Ignore
     var isStartByOthers: Boolean?,//是否是被本地第三方拉起
     @Ignore
-    var startByOthersParams: String?//本地第三方拉起参数
+    var startByOthersParams: String?,//本地第三方拉起参数
+    @Ignore
+    var startTime: Long = 0
 ) : Parcelable {
     constructor(
         appId: String,
@@ -84,8 +86,8 @@ data class MiniAppInfo(
         slotId: Int,
         supportScene: Int,
         isStartAfterInstalled: Boolean = false,
-        lastUseTime:Long
-    ) :this(appId, appName, appIcon, autoLaunch, autoLoad, callId, eTag, ifWorkWithoutPeerDc, isOutgoingCall, myNumber, path, phase, qosHint, remoteNumber, slotId, supportScene, appStatus = MiniAppStatus.UNINSTALLED, isStartAfterInstalled, appProperties = null,lastUseTime,isFromBDC100 = false, isActiveStart = true,isStartByOthers = false,startByOthersParams = null)
+        lastUseTime:Long,
+    ) :this(appId, appName, appIcon, autoLaunch, autoLoad, callId, eTag, ifWorkWithoutPeerDc, isOutgoingCall, myNumber, path, phase, qosHint, remoteNumber, slotId, supportScene, appStatus = MiniAppStatus.UNINSTALLED, isStartAfterInstalled, appProperties = null,lastUseTime,isFromBDC100 = false, isActiveStart = true,isStartByOthers = false,startByOthersParams = null, startTime = 0)
 
     @Ignore
     constructor(
@@ -107,8 +109,8 @@ data class MiniAppInfo(
         supportScene: Int,
         appStatus: MiniAppStatus?,
         isStartAfterInstalled: Boolean = false,
-        appProperties: MiniAppProperties?,
-    ) :this(appId, appName, appIcon, autoLaunch, autoLoad, callId, eTag, ifWorkWithoutPeerDc, isOutgoingCall, myNumber, path, phase, qosHint, remoteNumber, slotId, supportScene, appStatus, isStartAfterInstalled, appProperties,lastUseTime = 0,isFromBDC100 = false, isActiveStart = true,isStartByOthers = false,startByOthersParams = null)
+        appProperties: MiniAppProperties?
+    ) :this(appId, appName, appIcon, autoLaunch, autoLoad, callId, eTag, ifWorkWithoutPeerDc, isOutgoingCall, myNumber, path, phase, qosHint, remoteNumber, slotId, supportScene, appStatus, isStartAfterInstalled, appProperties,lastUseTime = 0,isFromBDC100 = false, isActiveStart = true,isStartByOthers = false,startByOthersParams = null, startTime = 0)
 
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
@@ -135,6 +137,7 @@ data class MiniAppInfo(
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readString(),
+        parcel.readLong(),
     ){}
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -162,6 +165,7 @@ data class MiniAppInfo(
         parcel.writeByte(if (isActiveStart) 1 else 0)
         parcel.writeByte(if (isStartByOthers == true) 1 else 0)
         parcel.writeString(startByOthersParams)
+        parcel.writeLong(startTime)
     }
 
     override fun describeContents(): Int {
@@ -170,7 +174,7 @@ data class MiniAppInfo(
 
     override fun toString(): String {
         return "MiniAppInfo(appId: $appId, appName: $appName, autoLaunch: $autoLaunch, autoLoad: $autoLoad, callId: $callId, ifWorkWithoutPeerDc: $ifWorkWithoutPeerDc, isOutgoingCall: $isOutgoingCall, myNumber: $myNumber, " +
-                "path: $path, qosHint: $qosHint, remoteNumber: $remoteNumber, slotId: $slotId, supportScene: $supportScene, isFromBDC100: $isFromBDC100, isActiveStart: $isActiveStart, isStartByOthers: $isStartByOthers, startByOthersParams: $startByOthersParams)"
+                "path: $path, qosHint: $qosHint, remoteNumber: $remoteNumber, slotId: $slotId, supportScene: $supportScene, isFromBDC100: $isFromBDC100, isActiveStart: $isActiveStart, isStartByOthers: $isStartByOthers, startByOthersParams: $startByOthersParams, startTime: $startTime)"
     }
 
     companion object CREATOR : Parcelable.Creator<MiniAppInfo> {

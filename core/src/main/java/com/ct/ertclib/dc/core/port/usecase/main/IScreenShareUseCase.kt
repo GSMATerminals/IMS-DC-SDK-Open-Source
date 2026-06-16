@@ -16,7 +16,7 @@
 
 package com.ct.ertclib.dc.core.port.usecase.main
 
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 
 interface IScreenShareUseCase {
 

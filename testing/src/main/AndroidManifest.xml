@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ct.ertclib.dc.feature.testing">
 
-    <permission android:name="com.ct.ertclib.dc.GET_FEATURE" />
+    <permission android:name="${getFeaturePermissionName}" />
 
     <application
         android:allowBackup="false"
@@ -14,9 +14,19 @@
             android:name=".LocalTestMiniAppWarehouseActivity"
             android:exported="false" />
         <activity
+            android:name=".netdc.ui.activity.DcDialerActivity"
+            android:exported="true"
+            android:permission="${getFeaturePermissionName}"
+            tools:targetApi="29">
+            <intent-filter>
+                <action android:name="com.ct.ertclib.dc.DIALER_ACTIVITY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".LocalTestingMainActivity"
             android:exported="true"
-            android:permission="com.ct.ertclib.dc.GET_FEATURE">
+            android:permission="${getFeaturePermissionName}">
             <intent-filter>
                 <action android:name="com.ct.ertclib.dc.TEST_ACTIVITY" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -25,12 +35,22 @@
         <activity
             android:name=".LocalTestMiniAppEditActivity"
             android:exported="false" />
+        <activity android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"/>
 
         <service
             android:name=".TestImsDataChannelService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.newcalllib.datachannel.V1_0.ImsDataChannelService" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".netdc.service.NetImsDataChannelService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.newcalllib.datachannel.V1_0.NetImsDataChannelService" />
             </intent-filter>
         </service>
     </application>

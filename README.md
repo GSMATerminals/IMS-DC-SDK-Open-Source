@@ -1,4 +1,11 @@
+![logo.png](images/logo.png)   
 Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
+
+## News[2026/06/16] 🔥
+- Support Bootstrap ( The bootstrap program is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
+  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
+- Access DCLab (New! A DC environment fully equivalent to the IMS commercial network for IMS Data Channel Application and AS development, testing, and service experience.)
+  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
 
 # 5G New Calling Terminal SDK
 - 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.
@@ -30,13 +37,15 @@ Note: This document aims to help developers understand the architectural design 
 
 While complying with international standards such as 3GPP and GSMA, the SDK also implements the following features：
 
-- Closely associated with call state, manages the lifecycle of IMS Data Channel Application, providing a stable runtime environment;
+- Closely associated with call state, manages the lifecycle of IMS Data Channel Bootstrap and Application, providing a stable runtime environment;
 
 - Isolated storage space for IMS Data Channel Application, ensuring data security;
 
 - Provides interfaces for IMS Data Channel Application to operate the IMS Data Channel and other terminal capabilities;
 
-- Supports running multiple IMS Data Channel Application simultaneously, each in an independent process;
+- Sign and authenticate the IMS Data Channel Application package;  
+
+- Supports running multiple IMS Data Channel Application simultaneously;
 
 - Supports opening and using IMS Data Channel Application after a call is established;
 
@@ -46,7 +55,9 @@ While complying with international standards such as 3GPP and GSMA, the SDK also
 
 - Manages sensitive JS APIs (related to permissions, data privacy, etc.) through a license verification mechanism;
 
-- Supports simulated calls and loading local IMS Data Channel Application packages for offline debugging.
+- Supports simulated calls and loading local IMS Data Channel Application packages for offline debugging;  
+
+- Access DCLab to provide developers with a DC business development and debugging environment that is fully aligned with the live network interface capabilities.
 
 ## II. Architecture Design
 ![SDK架构.png](images/SDK架构.png)
@@ -117,7 +128,7 @@ NewCall
 - Recommended Development Tool: AndroidStudio
 
 ## VI. Quick Start(Build & Release)
-- Packaging: Currently configured for three distribution channels: Normal (Floating Ball entry version), Dialer (Dialer entry version), Local (Local debugging version, for local debugging only)
+- Packaging: Currently configured for four distribution channels: Normal (Floating Ball entry version), Dialer (Dialer entry version), Local (Local debugging version, for local debugging only), Lab (Integrated DCLab for debugging and business experience)
    ```bash
    ./gradlew assembleRelease 
 
@@ -138,8 +149,9 @@ Using the Local (Local debugging version) SDK, developers can debug IMS Data Cha
 
 - IMS Data Channel Application Packaging: Package the web project into an offline zip format compressed package, i.e., the IMS Data Channel Application package. The index.html and properties.json files must be in the root directory of the zip package. Refer to the example IMS Data Channel Application package: [miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip).  
 
-- IMS Data Channel Application Local Debugging: Install the Local version SDK onto the phone like a regular APK. Push the IMS Data Channel Application zip package to the phone's sdcard. Then launch the "Telecom Enhanced Calling" app from the phone's home screen. After granting permissions as guided, open Settings -> Local Debugging Entry to configure and debug the IMS Data Channel Application.  
-<img src="images/localtest.png" alt="Description" width="200" />
+- IMS Data Channel Application Local Debugging: Install the Local version SDK onto the phone like a regular APK. Push the IMS Data Channel Application zip package to the phone's sdcard. Then launch the "Telecom Enhanced Calling" app from the phone's home screen. After granting permissions as guided, you can configure and debug the IMS Data Channel Application.
+
+- DCLab Integration Testing: To begin, contact our team to deploy the IMS Data Channel Application and AS on DCLab. An experience number will be allocated by DCLab. Please install the Lab-version SDK APK onto your device via the standard APK installation process. Once installed, launch the "China Telecom Enhanced Calling" app from the home screen to place test calls and explore the functionalities.
 
 ## VIII. License
 This project is licensed under the Apache 2.0 License.
@@ -157,15 +169,15 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 ### How to experience IMS Data Channel Application using the Local version SDK?
 
-1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-1.1).
+1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-26.2.0).
 
-<div align="center"><img src=".\images\image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
+<div align="center"><img src="images/image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
 
 2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
 
 3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
 
-4. **Enable Features:** Find and open the **"5G Enhanced Call"** app on the home screen. Tap the **Settings** button in the top-right corner and toggle the **"Open/Close 5G Enhanced Call"** switch to **ON**. Once authorized, tap **Local debug entry** to enter the **Local debug** page.
+4. **Enable Features:** Find and open the **"5G Enhanced Call"** app on the home screen. 
 
 5. **Configure MiniApp:**
 
@@ -174,7 +186,7 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 - Tap **Create** (top-right) to enter the **Edit MiniApp** page.
 - Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
 - Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
-<div align="center"><img src=".\images\Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
+<div align="center"><img src="images/Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
 
 **Establish Connection:**
 
@@ -184,7 +196,16 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 **Experience the Feature:** Tap **SIMULATE CALL**. Floating ball will appear. Once the "call" is connected, tap the **floating ball** to display the MiniApp list. Open a MiniApp to experience interactive features like real-time doodling.
 
+### How to use the Lab version SDK?
+1. **Download Files:** Download the **lab_release APK** from the open-source website and install them on your phone. Ensure the phone has internet access.
 
+2. **Get number:** Contact us to obtain the QR code for the experience number.
+
+3. **Start App:** Find the "5G Enhanced Calling" app on your phone's home screen, open it, and scan the QR code.
+
+4. **Dial:** Dial the experience number to use the existing DC services available on DCLab.
+
+5. **Deploy:** Alternatively, you can also contact us to deploy IMS DC Application and business AS on DCLab for debugging and testing purposes.
 
 ##   X. Contact
 xuq17@chinatelecom.cn

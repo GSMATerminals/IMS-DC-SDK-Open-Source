@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.core.miniapp.bridge
 
-import android.content.Context
 import android.os.Build
 import android.webkit.JavascriptInterface
 import androidx.annotation.RequiresApi
@@ -24,11 +23,10 @@ import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.data.bridge.JSRequest
 import com.ct.ertclib.dc.core.factory.JsEventDispatcherFactory
-import wendu.dsbridge.CompletionHandler
-import java.io.InputStream
-import java.io.OutputStream
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
-class JSApi(private val context: Context) {
+class JSApi(private val miniAppView: MiniAppView) {
 
     companion object {
         private const val TAG = "JSApi"
@@ -42,7 +40,7 @@ class JSApi(private val context: Context) {
             sLogger.info("JSApi asyn ,msg:$msg, handler:$handler")
             val jsRequest = JsonUtil.fromJson(msg.toString(), JSRequest::class.java)
             jsRequest?.let {
-                JsEventDispatcherFactory.getEventDispatcher(jsRequest.event).dispatchAsyncMessage(context, jsRequest, handler)
+                JsEventDispatcherFactory.getEventDispatcher(jsRequest.event).dispatchAsyncMessage(miniAppView, jsRequest, handler)
             }
         }catch (e:java.lang.Exception){
             e.printStackTrace()
@@ -62,7 +60,7 @@ class JSApi(private val context: Context) {
             sLogger.info("JSApi sync ,msg:$msg")
             val jsRequest = JsonUtil.fromJson(msg.toString(), JSRequest::class.java)
             jsRequest?.let {
-                return JsEventDispatcherFactory.getEventDispatcher(jsRequest.event).dispatchSyncMessage(context, jsRequest)
+                return JsEventDispatcherFactory.getEventDispatcher(jsRequest.event).dispatchSyncMessage(miniAppView, jsRequest)
             }
         }catch (e: Exception){
             e.printStackTrace()

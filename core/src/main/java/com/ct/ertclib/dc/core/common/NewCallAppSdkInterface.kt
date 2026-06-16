@@ -19,9 +19,7 @@ package com.ct.ertclib.dc.core.common
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.MutableLiveData
 import com.blankj.utilcode.util.SPUtils
-import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.constants.CommonConstants.FLOATING_DISPLAY
 import com.ct.ertclib.dc.core.constants.CommonConstants.MINI_APP_LIST_PAGE_SIZE
@@ -35,25 +33,23 @@ import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.common.FloatingBallData
 import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.event.MiniAppListGetEvent
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
+import com.ct.ertclib.dc.core.manager.call.NewCallsManager
 import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
-import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
 import com.ct.ertclib.dc.core.ui.activity.StyleSettingActivity
 import com.ct.ertclib.dc.core.utils.common.LogUtils
-import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import com.ct.ertclib.dc.core.utils.extension.startSettingsActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
 
 @SuppressLint("StaticFieldLeak")
 object NewCallAppSdkInterface {
@@ -63,8 +59,8 @@ object NewCallAppSdkInterface {
     const val PERMISSION_TYPE_AFTER_CALL = 2
     const val PERMISSION_TYPE_IN_APP = 3
 
-    const val CALL_START = 1
-    const val CALL_STOP = 2
+    const val CALL_SERVICE_START = 1
+    const val CALL_SERVICE_STOP = 2
 
     const val SDK_PERCENT_CONSTANTS = PERCENT_CONSTANTS
     const val SDK_MINI_APP_LIST_PAGE_SIZE = MINI_APP_LIST_PAGE_SIZE
@@ -92,11 +88,19 @@ object NewCallAppSdkInterface {
 
     val floatingBallStatusFlow = MutableSharedFlow<FloatingBallData>()
 
-    val callStateFlow = MutableSharedFlow<Int>()
+    val bootstrapMessageFlow = MutableSharedFlow<Pair<String, String>>()
+
+    val bootstrapAppDataChannelStateFlow = MutableSharedFlow<Pair<String, Int>>()
+
+    val callServiceStateFlow = MutableSharedFlow<Int>()
+
+    val appStatusFlow = MutableSharedFlow<String?>()
+
+    val callAPPStatusOnFront = MutableSharedFlow<Boolean>()
+
+    val audioDeviceChangeFlow = MutableSharedFlow<Unit>()
 
     private var androidContext: Context? = null
-    var floatPositionX: Int = 0
-    var floatPositionY: Int = 0
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
 
@@ -113,6 +117,10 @@ object NewCallAppSdkInterface {
         return mutableListOf<MiniAppInfo>().apply {
             LogUtils.debug(TAG, "getHistoryMiniAppList, list is empty")
         }
+    }
+
+    fun getMiniAppListInfo(telecomId: String): MiniAppList?{
+        return MiniAppManager.getAppPackageManager(telecomId)?.getMiniAppList()
     }
 
     /**
@@ -174,7 +182,7 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun isVideoCall(callId: String): Boolean {
-        return MiniAppManager.isVideoCall(callId).apply {
+        return NewCallsManager.instance.isVideoCall(callId).apply {
             LogUtils.debug(TAG, "isVideoCall, callId: $callId, result: $this")
         }
     }
@@ -194,9 +202,7 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun supportScene(data: MiniAppInfo): Boolean {
-        return MiniAppManager.supportScene(data).apply {
-            LogUtils.debug(TAG, "supportScene: $this, appName: ${data.appName}")
-        }
+        return MiniAppManager.supportScene(data)
     }
 
     /**
@@ -204,9 +210,7 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun supportPhase(data: MiniAppInfo): Boolean {
-        return MiniAppManager.supportPhase(data).apply {
-            LogUtils.debug(TAG, "supportPhase: $this, appName: ${data.appName}")
-        }
+        return MiniAppManager.supportPhase(data)
     }
 
     /**
@@ -214,9 +218,12 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun supportDC(data: MiniAppInfo): Boolean {
-        return MiniAppManager.supportDC(data).apply {
-            LogUtils.debug(TAG, "supportDC: $this, appName: ${data.appName}")
-        }
+        return MiniAppManager.supportDC(data)
+    }
+
+    @JvmStatic
+    fun appStatus(data: MiniAppInfo): MiniAppStatus? {
+        return MiniAppManager.appStatus(data)
     }
 
     /**
@@ -224,9 +231,7 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun getCallState(callId: String?): Int? {
-        return MiniAppManager.getAppPackageManager(callId)?.callState().apply {
-            LogUtils.debug(TAG, "getCallState, callId: $callId, state: $this")
-        }
+        return MiniAppManager.getAppPackageManager(callId)?.callState()
     }
 
     /**
@@ -235,18 +240,39 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun emitCallInfoEventFlow(callInfo: CallInfo) {
-        LogUtils.debug(TAG, "emitCallInfoEventFlow, callInfo: $callInfo")
         scope.launch {
             callInfoEventFlow.emit(callInfo)
         }
     }
+
+    @JvmStatic
+    fun emitAppStatusEventFlow(appId: String?) {
+        scope.launch {
+            appStatusFlow.emit(appId)
+        }
+    }
+
+
+    @JvmStatic
+    fun emitCallAppStatusFlow(isOnFront: Boolean) {
+        scope.launch {
+            callAPPStatusOnFront.emit(isOnFront)
+        }
+    }
+
+    @JvmStatic
+    fun emitAudioDeviceChangeFlow() {
+        scope.launch {
+            audioDeviceChangeFlow.emit(Unit)
+        }
+    }
+
 
     /**
      * 发送关闭小程序面板事件
      */
     @JvmStatic
     fun emitCloseExpandedViewFlow(isClose: Boolean) {
-        LogUtils.debug(TAG, "emitCloseExpandedViewFlow, isClose: $isClose")
         scope.launch {
             closeExpandedViewFlow.emit(isClose)
         }
@@ -260,25 +286,35 @@ object NewCallAppSdkInterface {
      */
     @JvmStatic
     fun emitAppListEvent(event: MiniAppListGetEvent) {
-        LogUtils.debug(TAG, "emitAppListEvent, message: ${event.message}")
         scope.launch {
             miniAppListEventFlow.emit(event)
         }
     }
 
     @JvmStatic
-    fun emitCallState(callState: Int) {
-        LogUtils.debug(TAG, "emitCallState, callState: $callState")
+    fun emitCallServiceState(callServiceState: Int) {
         scope.launch {
-            callStateFlow.emit(callState)
+            callServiceStateFlow.emit(callServiceState)
         }
     }
 
     @JvmStatic
+    fun emitBootstrapMessage(label: String, message: String) {
+        scope.launch {
+            bootstrapMessageFlow.emit(label to message)
+        }
+    }
+
+    @JvmStatic
+    fun emitBootstrapDataChannelState(label: String, state: Int) {
+        scope.launch {
+            bootstrapAppDataChannelStateFlow.emit(label to state)
+        }
+    }
+
     fun init(applicationContext: Context) {
         LogUtils.debug(TAG, "init")
         androidContext = applicationContext
-        floatPositionY = ScreenUtils.getScreenHeight(applicationContext) / 2
         scope.launch(Dispatchers.IO) {
             androidContext?.let {
                 val sharePreference =

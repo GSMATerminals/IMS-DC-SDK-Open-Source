@@ -138,7 +138,6 @@ class MiniAppAdapter(
     }
 
     private fun bindHeader(holder: MiniAppViewHolder, position: Int) {
-        NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "bindHeader position: $position, item: ${stableItemList[position]}")
         if (position < stableItemList.size) {
             stableItemList[position].let { item ->
                 itemViewMap[item.name] = holder.itemview
@@ -155,11 +154,6 @@ class MiniAppAdapter(
 
     private fun bindContent(holder: MiniAppViewHolder, position: Int) {
         val miniAppInfo = miniAppList[position]
-        NewCallAppSdkInterface.printLog(
-            NewCallAppSdkInterface.INFO_LEVEL,
-            TAG,
-            "bindContent miniAppInfo isVideoCall: ${NewCallAppSdkInterface.isVideoCall(miniAppInfo.callId)},  miniAppInfo: ${miniAppInfo.appName} ${miniAppInfo.supportScene},SupportScene.VIDEO.ordinal: ${SupportScene.VIDEO.value}"
-        )
         itemViewMap[miniAppInfo.appId] = holder.itemview
         if (callInfo != null) {
             holder.itemview.bindData(miniAppInfo, callInfo, NewCallAppSdkInterface.floatingBallStyle.value.let { viewModel.getTextColor(context, it) })

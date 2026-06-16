@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.core.dispatcher.js
 
-import android.content.Context
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_CHECK_FILE_EXISTS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DECOMPRESS_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DELETE_FILE
@@ -36,6 +35,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SAVE_UPDATE_KE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_QUICK_SEARCH_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_QUICK_SEARCH_KEY_WORDS
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SELECT_FILE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SELECT_FILES
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_START_READ_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_START_SAVE_FILE
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_STOP_PLAY_VOICE
@@ -46,59 +46,61 @@ import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 class FileJsEventDispatcher : IJsEventDispatcher, KoinComponent {
 
     private val fileEventUseCase: IFileMiniEventUseCase by inject()
 
-    override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
+    override fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
-            FUNCTION_GET_LOCATION -> { fileEventUseCase.getLocation(context, handler) }
-            FUNCTION_SELECT_FILE -> { fileEventUseCase.selectFile(context, handler) }
-            FUNCTION_SAVE_FILE -> { fileEventUseCase.saveFile(context, request.params, handler) }
-            FUNCTION_READ_FILE -> { fileEventUseCase.readFile(context, request.params, handler) }
-            FUNCTION_DECOMPRESS_FILE -> { fileEventUseCase.decompressFile(context, request.params, handler) }
-            FUNCTION_GET_FILE_INFO_ASYNC -> { fileEventUseCase.getFileInfoAsync(context, request.params, handler) }
-            FUNCTION_QUICK_SEARCH_FILE -> { fileEventUseCase.quickSearchFile(context,request.params,  handler) }
-            FUNCTION_QUICK_SEARCH_KEY_WORDS -> { fileEventUseCase.quickSearchFileWithKeyWords(context, request.params, handler) }
-            FUNCTION_FILE_DOWNLOAD -> { fileEventUseCase.fileDownload(context, request.params, handler) }
+            FUNCTION_GET_LOCATION -> { fileEventUseCase.getLocation(miniAppView, handler) }
+            FUNCTION_SELECT_FILE -> { fileEventUseCase.selectFile(miniAppView, handler) }
+            FUNCTION_SELECT_FILES -> { fileEventUseCase.selectFiles(miniAppView, request.params, handler) }
+            FUNCTION_SAVE_FILE -> { fileEventUseCase.saveFile(miniAppView, request.params, handler) }
+            FUNCTION_READ_FILE -> { fileEventUseCase.readFile(miniAppView, request.params, handler) }
+            FUNCTION_DECOMPRESS_FILE -> { fileEventUseCase.decompressFile(miniAppView, request.params, handler) }
+            FUNCTION_GET_FILE_INFO_ASYNC -> { fileEventUseCase.getFileInfoAsync(miniAppView, request.params, handler) }
+            FUNCTION_QUICK_SEARCH_FILE -> { fileEventUseCase.quickSearchFile(miniAppView,request.params,  handler) }
+            FUNCTION_QUICK_SEARCH_KEY_WORDS -> { fileEventUseCase.quickSearchFileWithKeyWords(miniAppView, request.params, handler) }
+            FUNCTION_FILE_DOWNLOAD -> { fileEventUseCase.fileDownload(miniAppView, request.params, handler) }
 
-            FUNCTION_GET_FILE_LIST -> { fileEventUseCase.getFileListAsync(context, request.params, handler) }
-            FUNCTION_GET_PRIVATE_FOLDER -> { fileEventUseCase.getPrivateFolderAsync(context, request.params, handler) }
-            FUNCTION_START_SAVE_FILE -> { fileEventUseCase.startSaveFileAsync(context, request.params, handler) }
-            FUNCTION_STOP_SAVE_FILE -> { fileEventUseCase.stopSaveFileAsync(context, handler) }
-            FUNCTION_DELETE_FILE -> { fileEventUseCase.deleteFileAsync(context, request.params, handler) }
-            FUNCTION_START_READ_FILE -> { fileEventUseCase.startReadFileAsync(context, request.params, handler) }
-            FUNCTION_STOP_READ_FILE -> { fileEventUseCase.stopReadFileAsync(context, handler) }
-            FUNCTION_CHECK_FILE_EXISTS -> { fileEventUseCase.checkFileOrFolderExistsAsync(context, request.params, handler) }
-            FUNCTION_GET_FILE_INFO -> { fileEventUseCase.getFileInfoAsync(context, request.params, handler) }
-            FUNCTION_SAVE_UPDATE_KEY_VALUE -> { fileEventUseCase.saveUpdateKeyValueAsync(context, request.params, handler) }
-            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { fileEventUseCase.saveUpdateKeyValueWithExpiryAsync(context, request.params, handler) }
-            FUNCTION_GET_KEY_VALUE -> { fileEventUseCase.getKeyValueAsync(context, request.params, handler) }
-            FUNCTION_DELETE_KEY_VALUE -> { fileEventUseCase.deleteKeyValueAsync(context, request.params, handler) }
-            FUNCTION_PLAY_VOICE -> { fileEventUseCase.playVoiceAsync(context, request.params, handler) }
-            FUNCTION_STOP_PLAY_VOICE -> { fileEventUseCase.stopPlayVoiceAsync(context, request.params, handler) }
+            FUNCTION_GET_FILE_LIST -> { fileEventUseCase.getFileListAsync(miniAppView, request.params, handler) }
+            FUNCTION_GET_PRIVATE_FOLDER -> { fileEventUseCase.getPrivateFolderAsync(miniAppView, request.params, handler) }
+            FUNCTION_START_SAVE_FILE -> { fileEventUseCase.startSaveFileAsync(miniAppView, request.params, handler) }
+            FUNCTION_STOP_SAVE_FILE -> { fileEventUseCase.stopSaveFileAsync(miniAppView, handler) }
+            FUNCTION_DELETE_FILE -> { fileEventUseCase.deleteFileAsync(miniAppView, request.params, handler) }
+            FUNCTION_START_READ_FILE -> { fileEventUseCase.startReadFileAsync(miniAppView, request.params, handler) }
+            FUNCTION_STOP_READ_FILE -> { fileEventUseCase.stopReadFileAsync(miniAppView, handler) }
+            FUNCTION_CHECK_FILE_EXISTS -> { fileEventUseCase.checkFileOrFolderExistsAsync(miniAppView, request.params, handler) }
+            FUNCTION_GET_FILE_INFO -> { fileEventUseCase.getFileInfoAsync(miniAppView, request.params, handler) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE -> { fileEventUseCase.saveUpdateKeyValueAsync(miniAppView, request.params, handler) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { fileEventUseCase.saveUpdateKeyValueWithExpiryAsync(miniAppView, request.params, handler) }
+            FUNCTION_GET_KEY_VALUE -> { fileEventUseCase.getKeyValueAsync(miniAppView, request.params, handler) }
+            FUNCTION_DELETE_KEY_VALUE -> { fileEventUseCase.deleteKeyValueAsync(miniAppView, request.params, handler) }
+            FUNCTION_PLAY_VOICE -> { fileEventUseCase.playVoiceAsync(miniAppView, request.params, handler) }
+            FUNCTION_STOP_PLAY_VOICE -> { fileEventUseCase.stopPlayVoiceAsync(miniAppView, request.params, handler) }
         }
     }
 
-    override fun dispatchSyncMessage(context: Context, request: JSRequest): String? {
+    override fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String? {
         when (request.function) {
-            FUNCTION_GET_FILE_LIST -> { return fileEventUseCase.getFileList(context, request.params) }
-            FUNCTION_GET_PRIVATE_FOLDER -> { return fileEventUseCase.getPrivateFolder(context, request.params) }
-            FUNCTION_START_SAVE_FILE -> { return fileEventUseCase.startSaveFile(context, request.params) }
-            FUNCTION_STOP_SAVE_FILE -> { return fileEventUseCase.stopSaveFile(context) }
-            FUNCTION_DELETE_FILE -> { return fileEventUseCase.deleteFile(context, request.params) }
-            FUNCTION_START_READ_FILE -> { return fileEventUseCase.startReadFile(context, request.params) }
-            FUNCTION_STOP_READ_FILE -> { return fileEventUseCase.stopReadFile(context) }
-            FUNCTION_CHECK_FILE_EXISTS -> { return fileEventUseCase.checkFileOrFolderExists(context, request.params) }
-            FUNCTION_GET_FILE_INFO -> { return fileEventUseCase.getFileInfo(context, request.params) }
-            FUNCTION_SAVE_UPDATE_KEY_VALUE -> { return fileEventUseCase.saveUpdateKeyValue(context, request.params) }
-            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { return fileEventUseCase.saveUpdateKeyValueWithExpiry(context, request.params) }
-            FUNCTION_GET_KEY_VALUE -> { return fileEventUseCase.getKeyValue(context, request.params) }
-            FUNCTION_DELETE_KEY_VALUE -> { return fileEventUseCase.deleteKeyValue(context, request.params) }
-            FUNCTION_PLAY_VOICE -> { return fileEventUseCase.playVoice(context, request.params) }
-            FUNCTION_STOP_PLAY_VOICE -> { return fileEventUseCase.stopPlayVoice(context, request.params) }
+            FUNCTION_GET_FILE_LIST -> { return fileEventUseCase.getFileList(miniAppView, request.params) }
+            FUNCTION_GET_PRIVATE_FOLDER -> { return fileEventUseCase.getPrivateFolder(miniAppView, request.params) }
+            FUNCTION_START_SAVE_FILE -> { return fileEventUseCase.startSaveFile(miniAppView, request.params) }
+            FUNCTION_STOP_SAVE_FILE -> { return fileEventUseCase.stopSaveFile(miniAppView) }
+            FUNCTION_DELETE_FILE -> { return fileEventUseCase.deleteFile(miniAppView, request.params) }
+            FUNCTION_START_READ_FILE -> { return fileEventUseCase.startReadFile(miniAppView, request.params) }
+            FUNCTION_STOP_READ_FILE -> { return fileEventUseCase.stopReadFile(miniAppView) }
+            FUNCTION_CHECK_FILE_EXISTS -> { return fileEventUseCase.checkFileOrFolderExists(miniAppView, request.params) }
+            FUNCTION_GET_FILE_INFO -> { return fileEventUseCase.getFileInfo(miniAppView, request.params) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE -> { return fileEventUseCase.saveUpdateKeyValue(miniAppView, request.params) }
+            FUNCTION_SAVE_UPDATE_KEY_VALUE_WITH_EXPIRY -> { return fileEventUseCase.saveUpdateKeyValueWithExpiry(miniAppView, request.params) }
+            FUNCTION_GET_KEY_VALUE -> { return fileEventUseCase.getKeyValue(miniAppView, request.params) }
+            FUNCTION_DELETE_KEY_VALUE -> { return fileEventUseCase.deleteKeyValue(miniAppView, request.params) }
+            FUNCTION_PLAY_VOICE -> { return fileEventUseCase.playVoice(miniAppView, request.params) }
+            FUNCTION_STOP_PLAY_VOICE -> { return fileEventUseCase.stopPlayVoice(miniAppView, request.params) }
         }
         return ""
     }

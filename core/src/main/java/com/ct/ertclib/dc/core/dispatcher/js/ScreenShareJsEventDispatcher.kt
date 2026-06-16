@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.core.dispatcher.js
 
-import android.content.Context
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_CLOSE_SKETCH_BOARD
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_DRAWING_INFO
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_OPEN_SKETCH_BOARD
@@ -31,36 +30,38 @@ import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
 import com.ct.ertclib.dc.core.port.usecase.mini.IScreenShareMiniUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
+import kotlin.math.min
 
 class ScreenShareJsEventDispatcher : IJsEventDispatcher, KoinComponent {
 
     private val screenShareUseCase : IScreenShareMiniUseCase by inject()
 
-    override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
+    override fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
-            FUNCTION_START_SCREEN_SHARE -> screenShareUseCase.startScreenShare(context, request.params,handler)
-            FUNCTION_REQUEST_SCREEN_SHARE_ABILITY -> screenShareUseCase.requestScreenShareAbility(handler)
+            FUNCTION_START_SCREEN_SHARE -> screenShareUseCase.startScreenShare(miniAppView, request.params,handler)
+            FUNCTION_REQUEST_SCREEN_SHARE_ABILITY -> screenShareUseCase.requestScreenShareAbility(miniAppView,handler)
 
-            FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShareAsync(context,handler)
-            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoardAsync(request.params,handler)
-            FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoardAsync(handler)
-            FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfoAsync(request.params,handler)
-            FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfoAsync(request.params,handler)
-            FUNCTION_SET_PRIVACY_MODE -> screenShareUseCase.setPrivacyModeAsync(request.params,handler)
-            FUNCTION_REMOTE_WINDOW_SIZE_INFO -> screenShareUseCase.addRemoteWindowSizeInfoAsync(request.params,handler)
+            FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShareAsync(miniAppView,handler)
+            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoardAsync(miniAppView,request.params,handler)
+            FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoardAsync(miniAppView,handler)
+            FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfoAsync(miniAppView,request.params,handler)
+            FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfoAsync(miniAppView,request.params,handler)
+            FUNCTION_SET_PRIVACY_MODE -> screenShareUseCase.setPrivacyModeAsync(miniAppView,request.params,handler)
+            FUNCTION_REMOTE_WINDOW_SIZE_INFO -> screenShareUseCase.addRemoteWindowSizeInfoAsync(miniAppView,request.params,handler)
         }
     }
 
-    override fun dispatchSyncMessage(context: Context, request: JSRequest): String {
+    override fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String {
         return when (request.function) {
-            FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShare(context)
-            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoard(request.params)
-            FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoard()
-            FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfo(request.params)
-            FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfo(request.params)
-            FUNCTION_SET_PRIVACY_MODE -> screenShareUseCase.setPrivacyMode(request.params)
-            FUNCTION_REMOTE_WINDOW_SIZE_INFO -> screenShareUseCase.addRemoteWindowSizeInfo(request.params)
+            FUNCTION_STOP_SCREEN_SHARE -> screenShareUseCase.stopScreenShare(miniAppView)
+            FUNCTION_OPEN_SKETCH_BOARD -> screenShareUseCase.openSketchBoard(miniAppView,request.params)
+            FUNCTION_CLOSE_SKETCH_BOARD -> screenShareUseCase.closeSketchBoard(miniAppView,)
+            FUNCTION_DRAWING_INFO -> screenShareUseCase.addDrawingInfo(miniAppView,request.params)
+            FUNCTION_REMOTE_SIZE_INFO -> screenShareUseCase.addRemoteSizeInfo(miniAppView,request.params)
+            FUNCTION_SET_PRIVACY_MODE -> screenShareUseCase.setPrivacyMode(miniAppView,request.params)
+            FUNCTION_REMOTE_WINDOW_SIZE_INFO -> screenShareUseCase.addRemoteWindowSizeInfo(miniAppView,request.params)
             else -> ""
         }
 

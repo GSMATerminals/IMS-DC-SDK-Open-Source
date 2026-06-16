@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.core.miniapp
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -38,7 +37,7 @@ import com.ct.ertclib.dc.core.manager.call.NewCallsManager
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.constants.CommonConstants
-import com.ct.ertclib.dc.core.constants.CommonConstants.ACTION_START_APP_RESPONSE
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_START_ADVERSE_APP_RESPONSE_NOTIFY
 import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.port.dc.IDcCreateListener
@@ -51,17 +50,15 @@ import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.data.model.SupportScene
 import com.ct.ertclib.dc.core.port.dc.IControlDcCreateListener
 import com.ct.ertclib.dc.core.data.event.MiniAppListGetEvent
-import com.ct.ertclib.dc.core.data.event.NotifyEvent
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppDownloadResult
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
 import com.ct.ertclib.dc.core.manager.common.ConfirmOverlayManager
+import com.ct.ertclib.dc.core.data.miniapp.Module
 import com.ct.ertclib.dc.core.manager.common.LicenseManager
-import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.Model
-import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnADCListener
-import com.ct.ertclib.dc.core.miniapp.MiniAppOwnADCImpl.OnSendCallback
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 import com.ct.ertclib.dc.core.port.dc.IAdverseDcCreateListener
+import com.ct.ertclib.dc.core.port.dc.IBootstrapDcCreateListener
 import com.ct.ertclib.dc.core.utils.common.XmlUtils
 import com.ct.ertclib.dc.core.port.miniapp.IDownloadMiniApp
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppListLoadedCallback
@@ -69,6 +66,8 @@ import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartCallback
 import com.ct.ertclib.dc.core.port.miniapp.IStartAppCallback
 import com.ct.ertclib.dc.core.ui.widget.ConfirmOverlayWindow
+import com.ct.ertclib.dc.core.port.usecase.main.IAsInfoUseCase
+import com.ct.ertclib.dc.core.port.usecase.main.IBootstrapMiniAppUseCase
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
@@ -78,13 +77,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.MutableList
 
 class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartManager: IMiniAppStartManager) :
-    ICallStateListener, IControlDcCreateListener ,IAdverseDcCreateListener{
+    ICallStateListener, IControlDcCreateListener ,IAdverseDcCreateListener, IBootstrapDcCreateListener, KoinComponent {
 
     companion object {
         private const val TAG = "MiniAppManager"
@@ -113,33 +115,9 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             return pm
         }
 
-        fun hangUp(telecomCallId: String){
-            NewCallsManager.instance.hangUp(telecomCallId)
-        }
-        fun answer(telecomCallId: String){
-            NewCallsManager.instance.answer(telecomCallId)
-        }
-        fun playDtmfTone(telecomCallId: String,digit: Char){
-            NewCallsManager.instance.playDtmfTone(telecomCallId,digit)
-        }
-        fun setSpeakerphone(on: Boolean){
-            NewCallsManager.instance.setSpeakerphone(on)
-        }
-        fun isSpeakerphoneOn(): Boolean{
-            return NewCallsManager.instance.isSpeakerphoneOn() == true
-        }
-        fun setMuted(muted: Boolean){
-            NewCallsManager.instance.setMuted(muted)
-        }
-        fun isMuted(): Boolean{
-            return NewCallsManager.instance.isMuted() == true
-        }
-        fun isVideoCall(telecomCallId: String):Boolean{
-            return NewCallsManager.instance.isVideoCall(telecomCallId)
-        }
         fun supportScene(data: MiniAppInfo):Boolean{
-            return !((data.supportScene == SupportScene.VIDEO.value && !isVideoCall(data.callId))//配置只能视频但当前非视频
-                    || (data.supportScene == SupportScene.AUDIO.value && isVideoCall(data.callId)))//配置只能音频但当前非音频
+            return !((data.supportScene == SupportScene.VIDEO.value && !NewCallsManager.instance.isVideoCall(data.callId))//配置只能视频但当前非视频
+                    || (data.supportScene == SupportScene.AUDIO.value && NewCallsManager.instance.isVideoCall(data.callId)))//配置只能音频但当前非音频
         }
 
         fun supportPhase(data: MiniAppInfo):Boolean{
@@ -154,6 +132,10 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
                 isSupportedByPeerDC = false
             }
             return data.ifWorkWithoutPeerDc || isSupportedByPeerDC //小程序不支持单边DC，且对端不支持DC，会返回false
+        }
+
+        fun appStatus(data: MiniAppInfo): MiniAppStatus?{
+            return getAppPackageManager(data.callId)?.getMiniAppInfo(data.appId)?.appStatus ?: data.appStatus
         }
     }
 
@@ -173,6 +155,7 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
     private var mDownloadMiniApp: IDownloadMiniApp? = null
     private val mStartAppCallback = ConcurrentHashMap<String, IStartAppCallback>()
     private val mStartAppMap = ConcurrentHashMap<String, MiniAppInfo>()//本次通话中，打开过的应用
+    private val mRunningAppMap = ConcurrentHashMap<String, MiniAppInfo>() // 本次通话中，正在使用的应用
     private val mMiniAppConsultControlImplMap = ConcurrentHashMap<String, MiniAppConsultControlImpl>()
     private var didInCallAutoLoad = false
     private var didPreCallAutoLoad = false
@@ -181,8 +164,8 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
     @Volatile
     private var mCallState: Int = 0
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-    private var mMiniAppOwnADCImpl:MiniAppOwnADCImpl? = null
+    private val asInfoUseCase: IAsInfoUseCase by inject()
+    private val bootstrapMiniAppUseCase: IBootstrapMiniAppUseCase by inject()
 
     init {
         val telecomCallId = callInfo.telecomCallId
@@ -194,16 +177,6 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag init")
         }
-
-        mMiniAppOwnADCImpl = MiniAppOwnADCImpl(object :MiniAppOwnADCImpl.OnADCParamsOk{
-            override fun onCreateADCParams(
-                appId: String,
-                toTypedArray: Array<String>,
-                description: String
-            ): Int {
-                return createApplicationDataChannelsInternal(appId, toTypedArray, description)
-            }
-        })
     }
 
     fun getMiniAppInfo(appId: String?): MiniAppInfo? {
@@ -226,6 +199,10 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             }
         }
         return null
+    }
+
+    fun getStartingAppList(): List<MiniAppInfo> {
+        return mRunningAppMap.values.toList()
     }
 
     fun isPeerSupportDc(): Boolean {
@@ -288,8 +265,9 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         mStartAppMap.clear()
         mStartAppCallback.clear()
         mMiniAppConsultControlImplMap.clear()
-        mMiniAppOwnADCImpl?.release()
-        mMiniAppOwnADCImpl = null
+        mRunningAppMap.clear()
+        asInfoUseCase.release()
+        bootstrapMiniAppUseCase.release()
         mAutoloadInCallMiniApp = null
         mAutoloadPreCallMiniApp = null
         didInCallAutoLoad = false
@@ -394,7 +372,7 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         val iterator = applications.iterator()
         while (iterator.hasNext()){
             val miniAppInfo = iterator.next()
-            if (miniAppInfo.appId == CommonConstants.DC_APPID_OWN){
+            if (miniAppInfo.appId == CommonConstants.DC_APPID_ROOT){
                 iterator.remove()
             }
         }
@@ -437,7 +415,8 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             mMiniAppListInfo?.applications?.addAll(applications)
             mMiniAppListInfo?.beginIndex = miniAppList.beginIndex
         }
-        NewCallAppSdkInterface.emitAppListEvent(MiniAppListGetEvent(0,MiniAppListGetEvent.ON_DOWNLOAD, mMiniAppListInfo))
+        NewCallAppSdkInterface.emitAppListEvent(MiniAppListGetEvent(0,MiniAppListGetEvent.ON_DOWNLOAD, callId,miniAppList.beginIndex,
+            CommonConstants.MINI_APP_LIST_PAGE_SIZE,mMiniAppListInfo,miniAppList))
     }
 
     // 区分接通前和接通后
@@ -555,7 +534,7 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
                     return false
                 }
                 //解压小程序
-                ZipUtils.unzipFile(cacheFile!!.absolutePath, filePath)
+                ZipUtils.unzipFile(cacheFile.absolutePath, filePath)
                 //删除cache
                 FileUtils.deletePath(cacheFile.absolutePath)
                 val path = miniAppInfo.path
@@ -603,9 +582,12 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             return
         }
         miniAppInfo.appStatus = MiniAppStatus.STARTED
+        NewCallAppSdkInterface.emitAppStatusEventFlow(appId)
 
         appId?.let {
+            miniAppInfo.startTime = System.currentTimeMillis()
             mStartAppMap[it] = miniAppInfo
+            mRunningAppMap[it] = miniAppInfo
             if (miniAppInfo.isActiveStart){
                 historyStartAppList.removeIf { miniAppInfo -> miniAppInfo.appId == it }
                 historyStartAppList.add(0, miniAppInfo)
@@ -640,7 +622,7 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
     private fun stopMiniApps() {
         mMiniAppListInfo = null
         mStartAppMap.forEach { (_, value) ->
-            miniAppStartManager?.stopMiniApp(Utils.getApp(), value.callId,value.appId)
+            miniAppStartManager.stopMiniApp(Utils.getApp(), value.callId,value.appId)
         }
     }
 
@@ -661,6 +643,15 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
 
     fun onImsBDCOpen() {
         mIsBDCOpen = true
+        asInfoUseCase.init( object :MiniAppRootADCImpl.OnADCParamsOk{
+            override fun onCreateADCParams(
+                appId: String,
+                toTypedArray: Array<String>,
+                description: String
+            ): Int {
+                return createApplicationDataChannelsInternal(appId, toTypedArray, description)
+            }
+        })
     }
 
     fun onImsBDCClose() {
@@ -713,21 +704,32 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         return FileUtils.getLastPathName(path)
     }
 
+    fun containsBootstrapDCLabel(label: String): Boolean {
+        return bootstrapMiniAppUseCase.containsDCLabel(label)
+    }
+
+    fun getBootstrapDC(label: String): IImsDataChannel? {
+        return bootstrapMiniAppUseCase.getBootstrapDC(label)
+    }
+
     override fun onCallAdded(context: Context, callInfo: CallInfo) {
         if (sLogger.isDebugActivated) sLogger.debug("$mTag onCallAdded")
         val telecomCallId = callInfo.telecomCallId
         onCallStateChanged(callInfo, callInfo.state)
         DCManager.instance.registerControlAppDataChannelCallback(telecomCallId,this)
         DCManager.instance.registerAdverseAppDataChannelCallback(telecomCallId,this)
+        DCManager.instance.registerBootstrapAppDataChannelCallback(telecomCallId,this)
     }
 
     override fun onCallRemoved(context: Context, callInfo: CallInfo) {
         if (sLogger.isDebugActivated) sLogger.debug("$mTag onCallRemoved")
         mCallState = callInfo.state
-        miniAppStartManager.clearBackgroundTaskList()
+        miniAppStartManager.clearBackgroundTaskListByCall(callInfo.telecomCallId)
         mMiniAppPMMap.remove(callInfo.telecomCallId)
         DCManager.instance.unregisterAdverseAppDataChannelCallback(callInfo.telecomCallId)
         DCManager.instance.unregisterControlAppDataChannelCallback(callInfo.telecomCallId)
+        DCManager.instance.unregisterBootstrapAppDataChannelCallback(callInfo.telecomCallId)
+        ConfirmOverlayManager.dismiss()
     }
 
     override fun onCallStateChanged(callInfo: CallInfo, state: Int) {
@@ -741,6 +743,9 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             stopMiniApps()
         } else if (state == Call.STATE_HOLDING && mCallState == Call.STATE_ACTIVE){
             //在呼叫保持状态下，不做任何处理
+        } else if (state == Call.STATE_ACTIVE) {
+            // asInfoUseCase.createDC()
+            startAutoLoadInCallApp()
         } else {
             startAutoLoadInCallApp()
         }
@@ -916,6 +921,9 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         }
         DCManager.instance.unregisterAppDataChannelCallback(startedApp.callId, appId)
         startedApp.appStatus = MiniAppStatus.STOPPED
+        mRunningAppMap.remove(appId)
+        NewCallAppSdkInterface.emitAppStatusEventFlow(appId)
+
     }
 
     fun unregisterCallStateListenerInternal(
@@ -975,26 +983,16 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
             }
 
             override fun onRequestStartApp(appInfo:MiniAppInfo) {
-                startMiniAppByAdverse(telecomCallId,appInfo,false)
+                startMiniAppByAdverse(telecomCallId,appInfo)
             }
 
             override fun onResponseStartApp(option:String) {
-                val event = NotifyEvent(
-                    ACTION_START_APP_RESPONSE,
-                    mutableMapOf("option" to option)
-                )
-                MiniAppStartManager.sendMessageToMiniApp(telecomCallId,appId,JsonUtil.toJson(event),object : IMessageCallback.Stub() {
-                    override fun reply(message: String?) {
-                        if (sLogger.isDebugActivated) {
-                            sLogger.debug("onResponseStartApp sendMessageToMiniApp:$message")
-                        }
-                    }
-                })
+                MiniAppStartManager.getRunningMiniApp(telecomCallId,appId)?.viewModel?.callHandler(FUNCTION_START_ADVERSE_APP_RESPONSE_NOTIFY,arrayOf(JsonUtil.toJson(mutableMapOf("option" to option))))
             }
         })
     }
 
-    private fun startMiniAppByAdverse(telecomCallId: String, appInfo: MiniAppInfo, isFromBDC100: Boolean){
+    private fun startMiniAppByAdverse(telecomCallId: String, appInfo: MiniAppInfo,showDialog: Boolean = true){
         var rejectCount = mRejectPassivelyMiniAppCountMap[appInfo.appId]
         // 最多拒绝3次，本次通话中就不再提示
         if (rejectCount != null && rejectCount >= 2) {
@@ -1006,18 +1004,16 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         sLogger.info("startMiniAppByAdverse miniApp:${miniApp},rejectCount:${rejectCount}")
         if (miniApp == null || miniApp.appStatus == MiniAppStatus.UNINSTALLED || miniApp.appStatus == MiniAppStatus.STOPPED){
             // 振动
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val vibratorManager =
-                        Utils.getApp().getSystemService(VibratorManager::class.java)
-                    vibratorManager.defaultVibrator
-                } else {
-                    Utils.getApp().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                }
-                val pattern = longArrayOf(500, 300)
-                val effect = VibrationEffect.createWaveform(pattern, -1)
-                vibrator.vibrate(effect)
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager =
+                    Utils.getApp().getSystemService(VibratorManager::class.java)
+                vibratorManager.defaultVibrator
+            } else {
+                Utils.getApp().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
+            val pattern = longArrayOf(500, 300)
+            val effect = VibrationEffect.createWaveform(pattern, -1)
+            vibrator.vibrate(effect)
             if (miniApp == null){
                 miniApp = MiniAppInfo(appInfo.appId,
                     appInfo.appName+"",
@@ -1039,45 +1035,62 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
                     true,
                     null,
                     0,
-                    isFromBDC100,
-                    false,
-                    false,
-                    null)
-            }
-            scope.launch(Dispatchers.Main){
-                ConfirmOverlayManager.startConfirm(
-                    Utils.getApp(),
-                    Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
-                    object : ConfirmOverlayWindow.ConfirmCallback{
-                        override fun onAccept() {
-                            sLogger.debug("onAccept miniapp path: $miniApp")
-                            startMiniApp(appInfo.appId, object : IStartAppCallback() {
-                                override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
-                                    if (sLogger.isDebugActivated) {
-                                        sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
-                                    }
-                                    mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
-                                }
-
-                                override fun onDownloadProgressUpdated(appId: String, progress: Int) {
-
-                                }
-                            }, startType = PASSIVE_START_TYPE)
-                        }
-
-                        override fun onCancel() {
-                            if (rejectCount == null){
-                                mRejectPassivelyMiniAppCountMap[appInfo.appId] = 0
-                            } else {
-                                mRejectPassivelyMiniAppCountMap[appInfo.appId] = ++rejectCount
-                            }
-                            mMiniAppConsultControlImplMap[appInfo.appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_REJECT)
-                        }
-                    },
-                    Utils.getApp().resources.getString(R.string.btn_agree),
-                    Utils.getApp().resources.getString(R.string.btn_refuse)
+                    appInfo.isFromBDC100,
+                    isActiveStart = false,
+                    isStartByOthers = false,
+                    startByOthersParams = null
                 )
             }
+            if (showDialog) {
+                scope.launch(Dispatchers.Main){
+                    ConfirmOverlayManager.startConfirm(
+                        Utils.getApp(),
+                        Utils.getApp().resources.getString(R.string.start_miniapp_tips, miniApp.appName),
+                        object : ConfirmOverlayWindow.ConfirmCallback{
+                            override fun onAccept() {
+                                sLogger.debug("onAccept miniapp path: $miniApp")
+                                startMiniApp(appInfo.appId, object : IStartAppCallback() {
+                                    override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
+                                        if (sLogger.isDebugActivated) {
+                                            sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
+                                        }
+                                        mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
+                                    }
+
+                                    override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
+                                    }
+                                }, startType = PASSIVE_START_TYPE)
+                            }
+
+                            override fun onCancel() {
+                                if (rejectCount == null){
+                                    mRejectPassivelyMiniAppCountMap[appInfo.appId] = 0
+                                } else {
+                                    mRejectPassivelyMiniAppCountMap[appInfo.appId] = ++rejectCount
+                                }
+                                mMiniAppConsultControlImplMap[appInfo.appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_REJECT)
+                            }
+                        },
+                        Utils.getApp().resources.getString(R.string.btn_agree),
+                        Utils.getApp().resources.getString(R.string.btn_refuse)
+                    )
+                }
+            } else {
+                startMiniApp(appInfo.appId, object : IStartAppCallback() {
+                    override fun onStartResult(appId: String, isSuccess: Boolean, reason: Reason?) {
+                        if (sLogger.isDebugActivated) {
+                            sLogger.debug("$mTag startMiniAppByAdverse $appId isSuccess $isSuccess reason $reason")
+                        }
+                        mMiniAppConsultControlImplMap[appId]?.responseStartAppResult(MiniAppConsultControlImpl.START_APP_OPTION_AGREE)
+                    }
+
+                    override fun onDownloadProgressUpdated(appId: String, progress: Int) {
+
+                    }
+                }, startType = PASSIVE_START_TYPE)
+            }
+
         }
     }
 
@@ -1105,29 +1118,31 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
                 miniAppInfo = MiniAppInfo(appId,
                     "",
                     null,
-                    false,
-                    false,
-                    telecomCallId,
-                    "99.99.99",
-                    false,
-                    false,
-                    callInfo.myNumber,
-                    null,
-                    "",
-                    "",
-                    callInfo.remoteNumber,
-                    callInfo.slotId,
-                    2,
-                    MiniAppStatus.UNINSTALLED,
-                    true,
-                    null,
-                    0,
-                    imsDataChannel.dcLabel.startsWith("remote_"),
-                    false,
-                    false,
-                    null)
+                    autoLaunch = false,
+                    autoLoad = false,
+                    callId = telecomCallId,
+                    eTag = "99.99.99",
+                    ifWorkWithoutPeerDc = false,
+                    isOutgoingCall = false,
+                    myNumber = callInfo.myNumber,
+                    path = null,
+                    phase = "",
+                    qosHint = "",
+                    remoteNumber = callInfo.remoteNumber,
+                    slotId = callInfo.slotId,
+                    supportScene = 2,
+                    appStatus = MiniAppStatus.UNINSTALLED,
+                    isStartAfterInstalled = true,
+                    appProperties = null,
+                    lastUseTime = 0,
+                    isFromBDC100 = imsDataChannel.dcLabel.startsWith("remote_"),
+                    isActiveStart = false,
+                    isStartByOthers = false,
+                    startByOthersParams = null
+                )
             }
-            startMiniAppByAdverse(telecomCallId, miniAppInfo,imsDataChannel.dcLabel.startsWith("remote_"))
+            // TODO: 交互式智铃希望不要弹窗
+            startMiniAppByAdverse(telecomCallId, miniAppInfo,!imsDataChannel.dcLabel.contains("_${CommonConstants.DC_APPID_RING}_"))
         }
 
     }
@@ -1138,22 +1153,47 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         streamId: String,
         imsDataChannel: IImsDataChannel
     ) {
-        mMiniAppOwnADCImpl?.onDCCreated(imsDataChannel)
+        asInfoUseCase.onDCCreated(imsDataChannel)
+    }
+
+    override fun onBootstrapAppDataChannelCreated(
+        telecomCallId: String,
+        appId: String,
+        streamId: String,
+        imsDataChannel: IImsDataChannel
+    ) {
+        sLogger.info("onBootstrapAppDataChannelCreated appId:$appId")
+        bootstrapMiniAppUseCase.onDataChannelCreated(imsDataChannel)
     }
 
     fun callState():Int{
         return mCallState
     }
 
-    fun sendOwnData(model: Model, originData:ByteArray, onSendCallback: OnSendCallback){
-        mMiniAppOwnADCImpl?.sendData(model, originData, onSendCallback)
+    fun sendData(
+        module: Module,
+        event: String,
+        originData: ByteArray,
+        onSendCallback: MiniAppRootADCImpl.OnSendCallback
+    ) {
+        asInfoUseCase.sendData(module, event, originData, onSendCallback)
     }
 
-    fun registerOwnListener(model: Model, listener: OnADCListener){
-        mMiniAppOwnADCImpl?.registerListener(model, listener)
+    fun registerRootListener(
+        module: Module,
+        listener: MiniAppRootADCImpl.OnADCListener
+    ) {
+        asInfoUseCase.registerRootListener(module, listener)
     }
 
-    fun unRegisterOwnListener(model: Model){
-        mMiniAppOwnADCImpl?.unRegisterListener(model)
+    fun unRegisterRootListener(module: Module) {
+        asInfoUseCase.unRegisterRootListener(module)
+    }
+    fun dispatchASEvent(
+        event: String,
+        params: Map<String, Any>,
+        iMessageCallback: IMessageCallback?
+    ) {
+        asInfoUseCase.dispatchEvent(event, params, iMessageCallback)
     }
 }
