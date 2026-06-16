@@ -19,10 +19,12 @@ package com.ct.ertclib.dc.core.data.common
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.STYLE_DEFAULT
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.model.AdItem
 
 data class FloatingBallData(
     val showStatus: Int,
     val callInfo: CallInfo,
+    val adList: ArrayList<AdItem>,
     val miniAppList: MiniAppList?,
     val style: Int = STYLE_DEFAULT,
     var uniqueId: Long = System.nanoTime() // 确保每次都更新

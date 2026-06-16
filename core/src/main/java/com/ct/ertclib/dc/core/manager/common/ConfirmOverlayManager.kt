@@ -3,10 +3,13 @@ package com.ct.ertclib.dc.core.manager.common
 import android.content.Context
 import com.ct.ertclib.dc.core.ui.widget.ConfirmOverlayWindow
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ConfirmOverlayManager {
     private var currentWindow: WeakReference<ConfirmOverlayWindow>? = null
+    private val isShowingFlag = AtomicBoolean(false)
 
+    @Synchronized
     fun startConfirm(
         context: Context,
         message: String,
@@ -14,22 +17,55 @@ object ConfirmOverlayManager {
         accept: String? = null,
         cancel: String? = null
     ) {
-        // 检查是否已有显示的窗口
+        // 使用标志位和同步锁双重检查
+        if (isShowingFlag.get()) {
+            return
+        }
+
+        // 检查现有窗口
         if (isShowing()) {
             return
         }
 
-        val window = ConfirmOverlayWindow(context.applicationContext) // 使用ApplicationContext避免泄漏
-        window.show(message, callback, accept, cancel)
-        currentWindow = WeakReference(window)
+        isShowingFlag.set(true)
+
+        try {
+            val window = ConfirmOverlayWindow(context.applicationContext)
+
+            // 包装回调，在窗口关闭时重置标志
+            val wrappedCallback = object : ConfirmOverlayWindow.ConfirmCallback {
+                override fun onAccept() {
+                    callback?.onAccept()
+                    resetState()
+                }
+
+                override fun onCancel() {
+                    callback?.onCancel()
+                    resetState()
+                }
+            }
+
+            window.show(message, wrappedCallback, accept, cancel)
+            currentWindow = WeakReference(window)
+
+        } catch (e: Exception) {
+            // 如果显示失败，重置标志
+            resetState()
+        }
     }
 
+    @Synchronized
     fun dismiss() {
         currentWindow?.get()?.dismiss()
-        currentWindow = null
+        resetState()
     }
 
     fun isShowing(): Boolean {
-        return currentWindow?.get()?.isShowing == true
+        return currentWindow?.get()?.isShowing == true || isShowingFlag.get()
+    }
+
+    private fun resetState() {
+        currentWindow = null
+        isShowingFlag.set(false)
     }
 }

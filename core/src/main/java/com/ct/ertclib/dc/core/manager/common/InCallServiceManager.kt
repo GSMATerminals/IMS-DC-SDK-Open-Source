@@ -32,6 +32,7 @@ import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.port.common.IActivityManager
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
+import com.ct.ertclib.dc.core.utils.common.WebViewUtil
 import com.ct.ertclib.dc.core.utils.logger.LogConfig
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -60,6 +61,10 @@ class InCallServiceManager: KoinComponent {
     private var isInit = false
 
     fun onBind(context: Context,inCallService: InCallService?){
+        if (isInit){
+            sLogger.info("onBind was init")
+            return
+        }
         isInit = true
         LogConfig.upDateLogEnabled()
         sLogger.info("onBind")
@@ -73,7 +78,14 @@ class InCallServiceManager: KoinComponent {
             FileManager.instance.updateFiles(context)
         }
         scope.launch(Dispatchers.IO) {
-            NewCallAppSdkInterface.emitCallState(NewCallAppSdkInterface.CALL_START)
+            NewCallAppSdkInterface.emitCallServiceState(NewCallAppSdkInterface.CALL_SERVICE_START)
+        }
+        scope.launch(Dispatchers.IO) {
+            try {
+                WebViewUtil.handleWebViewDir(context)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         ScreenUtils.registerListener()
         NewCallAppSdkInterface.init(context)
@@ -89,9 +101,9 @@ class InCallServiceManager: KoinComponent {
         isInit = false
         scope.launch {
             // 这里不要立即执行，等onCallRemoved回调都执行完毕再执行这里,这里的所有操作必须允许重复执行
-            delay(1000)
+            delay(700)
             DCManager.instance.onCallServiceUnbind(Utils.getApp())
-            NewCallAppSdkInterface.emitCallState(NewCallAppSdkInterface.CALL_STOP)
+            NewCallAppSdkInterface.emitCallServiceState(NewCallAppSdkInterface.CALL_SERVICE_STOP)
             MiniAppManager.release()
 
             NewCallsManager.instance.onCallServiceUnBind()
@@ -115,6 +127,7 @@ class InCallServiceManager: KoinComponent {
             val miniAppManager = MiniAppManager(callInfo,MiniAppStartManager)
             NewCallsManager.instance.addCallStateListener(callInfo.telecomCallId,miniAppManager)
 
+
             // 初始化本次通话bdc管理，并监听通话状态
             val bdcManager = BDCManager(callInfo, miniAppManager)
             NewCallsManager.instance.addCallStateListener(callInfo.telecomCallId,bdcManager)
@@ -124,7 +137,7 @@ class InCallServiceManager: KoinComponent {
 
             // 触发本次通话的dc业务逻辑，去看上面三个模块的onCallAdded
             NewCallsManager.instance.onCallAdded(callInfo,call)
-        } catch (e:Exception){
+        } catch (e:Exception) {
             e.printStackTrace()
         }
     }
@@ -136,9 +149,12 @@ class InCallServiceManager: KoinComponent {
                 NewCallsManager.instance.onCallRemoved(it)
             }
 
-            // 防止系统没有回调onUnbind
-            if (NewCallsManager.instance.isCallEmpty()){
-                onUnbind()
+            // 防止系统没有回调onUnbind。参照MTK，延迟2秒
+            scope.launch(Dispatchers.IO) {
+                delay(2000)
+                if (NewCallsManager.instance.isCallEmpty()){
+                    onUnbind()
+                }
             }
         }catch (e:Exception){
             e.printStackTrace()

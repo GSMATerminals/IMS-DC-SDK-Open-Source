@@ -23,17 +23,30 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.FrameLayout
+import androidx.core.view.isVisible
+import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.databinding.ScreenShareCtrlPanelLayoutBinding
+import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import kotlin.math.absoluteValue
 
-class ScreenShareCtrlPanel : FrameLayout {
+class ScreenShareCtrlPanel : FrameLayout, KoinComponent {
 
     companion object {
         private const val TAG = "ScreenShareCtrlPanel"
     }
 
     private var listener: OnCtrlPanelListener? = null
+    private val screenShareUseCase: IScreenShareUseCase by inject()
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var viewBinding: ScreenShareCtrlPanelLayoutBinding =
         ScreenShareCtrlPanelLayoutBinding.inflate(LayoutInflater.from(context), this, true)
     private var isMove = false
@@ -61,6 +74,19 @@ class ScreenShareCtrlPanel : FrameLayout {
         }
         setMoveListener()
         LogUtils.debug(TAG, "init")
+        scope.launch {
+            NewCallAppSdkInterface.callAPPStatusOnFront.collect { isOnFront ->
+                withContext(Dispatchers.Main) {
+                    if (!screenShareUseCase.isInSharing() && !isOnFront) {
+                        viewBinding.controlLayout.isVisible = false
+                        viewBinding.tipsLayout.isVisible = true
+                    } else {
+                        viewBinding.controlLayout.isVisible = true
+                        viewBinding.tipsLayout.isVisible = false
+                    }
+                }
+            }
+        }
     }
 
     fun setListener(listener: OnCtrlPanelListener) {

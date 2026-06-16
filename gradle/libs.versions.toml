@@ -2,6 +2,8 @@
 agp = "8.9.0"
 androidDesugarJdkLibs = "1.2.2"
 koinAndroid = "3.2.0"
+ktorClientWebrtc = "2.3.12"
+ktorClientCio = "2.3.12"
 org-jetbrains-kotlin-android = "1.8.0"
 core-ktx = "1.8.0"
 junit4 = "4.13.2"
@@ -26,6 +28,7 @@ androidxLifecycle = "2.6.1"
 gms-safetynet = "18.0.1"
 
 #third party
+picasso = "2.8"
 preferenceKtx = "1.2.0"
 okhttp = "4.11.0"
 localbroadcastmanager = "1.0.0"
@@ -40,8 +43,10 @@ workRuntimeKtx = "2.9.0"
 androidxSqliteFramework = "2.3.0"
 activity = "1.8.0"
 refresh-layout = "2.1.0"
+swiperefreshlayout = "1.1.0"
 
 [libraries]
+androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtx" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -50,6 +55,8 @@ androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }#https://github.com/InsertKoinIO/koin/blob/main/LICENSE
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClientCio" }
+ktor-client-webrtc = { module = "io.ktor:ktor-client-webrtc", version.ref = "ktorClientWebrtc" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 android-desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
@@ -78,6 +85,7 @@ androidx-room-compiler = {group = "androidx.room", name = "room-compiler", versi
 #PictureSelector basic
 lucksiege-pictureselector = { group = "io.github.lucksiege", name = "pictureselector", version.ref = "lucksiege-pictureselector" }#https://github.com/LuckSiege/PictureSelector/blob/version_component/LICENSE
 lucksiege-camerax = { group = "io.github.lucksiege", name = "camerax", version.ref = "lucksiege-camerax" }#https://github.com/LuckSiege/PictureSelector/blob/version_component/LICENSE
+picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 zelory-compressor = { group = "id.zelory", name = "compressor", version.ref = "zelory-compressor" }#https://github.com/zetbaitsu/Compressor
 #paging3
 room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }

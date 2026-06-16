@@ -21,9 +21,10 @@ import android.os.Parcelable
 
 data class WindowStyle(
     var isFullScreen:Boolean,//是否全屏
-    var navigationBarColor:String?,//导航栏背景色，isFullScreen为false时有效
-    var statusBarColor:String?,//状态栏背景色，isFullScreen为false时有效
-    var statusBarTitleColor: Int = 0//状态栏字体和图标颜色，0:黑色，1:白色
+    @Deprecated("")
+    var navigationBarColor:String?,//导航栏
+    var statusBarColor:String?,//胶囊栏背景颜色
+    var statusBarTitleColor: Int = 0//胶囊栏字体和图标颜色，0:黑色，1:白色
 )  : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readByte() != 0.toByte(),

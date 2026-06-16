@@ -18,13 +18,20 @@ package com.ct.ertclib.dc.core.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import com.ct.ertclib.dc.core.utils.common.FlavorUtils
+import com.ct.ertclib.dc.core.utils.extension.startLocalTestActivity
+import com.ct.ertclib.dc.core.utils.extension.startNetDCDialerActivity
 
 class LauncherActivity : BaseAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startActivity(Intent(this, MainActivity::class.java))
-        finish();
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL) {
+            startLocalTestActivity()
+        } else {
+            startNetDCDialerActivity()
+        }
+        finish()
     }
 }
 

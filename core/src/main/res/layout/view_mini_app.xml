@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#00000000">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constrainedHeight="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <View
+                android:id="@+id/top_view"
+                android:background="#00000000"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+
+            <com.ct.ertclib.dc.core.miniapp.ui.webview.DWebView
+                android:id="@+id/web_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/phone_operation_layout"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:background="@color/white"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_mic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="48dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/icon_mic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/icon_mute_mic"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/text_mic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mic_mute"
+                        android:textColor="@color/common_text_black"
+                        android:textSize="12sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/icon_mic" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/icon_hang_up"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_hangup"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_speaker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="48dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/icon_speaker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/icon_speaker_off"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/text_speaker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/speaker_on"
+                        android:textColor="@color/common_text_black"
+                        android:textSize="12sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/icon_speaker" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/phone_operation_layout_ringing"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:background="@color/white"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/icon_answer_ringing"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_answer"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.3"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/icon_hang_up_ringing"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_hangup"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.7"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        </LinearLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:background="#00000000"
+            android:id="@+id/ll_title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:background="#00000000"
+                android:id="@+id/tv_page_name"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:lines="1"
+                android:maxLines="1"
+                android:textColor="@android:color/black"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_back"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="12dp"
+                android:src="@drawable/icon_mini_back"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/setting_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="6dp"
+                android:layout_marginBottom="7dp"
+                android:background="@drawable/mini_app_set_bar_background"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/iv_background"
+                    android:layout_width="40dp"
+                    android:layout_height="32dp"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:paddingRight="10dp"
+                    android:src="@drawable/icon_mini_to_background" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:background="#2c2c2c"/>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/iv_setting"
+                    android:layout_width="40dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:paddingRight="10dp"
+                    android:src="@drawable/icon_setting_black" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:background="#2c2c2c"/>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/iv_close"
+                    android:layout_width="40dp"
+                    android:layout_height="32dp"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:paddingRight="10dp"
+                    android:src="@drawable/icon_mini_close" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/cover_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#9F000000"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/holder_call_state_tips"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

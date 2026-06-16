@@ -66,7 +66,10 @@ object HttpStackHelper {
                 if (sLogger.isDebugActivated) {
                     sLogger.debug("verify-contentLengthValue is null, return true")
                 }
-                result
+                result.apply {
+                    isComplete = true
+                    downloadProgress = 1.0F
+                }
             } else {
                 sLogger.info("verify-bufferBodyByteLength:$bufferBodyByteLength,contentLengthValue:$contentLengthValue")
                 result.apply {
@@ -155,6 +158,9 @@ object HttpStackHelper {
         }
         if (requestLine.contains("applications/?")) {
             requestLine = requestLine.replaceFirst("applications/?", "applications?")
+        }
+        if (requestLine.contains("bootstrap/?")) {
+            requestLine = requestLine.replaceFirst("bootstrap/?", "?")
         }
         sLogger.debug("getRequestData requestLine:$requestLine")
         httpRequestDecode.writeRequest(request.headers, requestLine)

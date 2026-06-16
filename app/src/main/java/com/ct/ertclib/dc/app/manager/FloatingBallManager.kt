@@ -24,6 +24,7 @@ import com.ct.ertclib.dc.app.ui.view.MiniAppEntryHolder
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_FLOATING_DISPLAY
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.model.AdItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -53,7 +54,7 @@ object FloatingBallManager: KoinComponent {
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "floatingBallStatusFlow floatingBallData: $floatingBallData")
                 if (floatingBallData.showStatus == SDK_FLOATING_DISPLAY) {
                     floatingBallData.miniAppList?.let {
-                        show(floatingBallData.callInfo, it, floatingBallData.style)
+                        show(floatingBallData.callInfo, floatingBallData.adList,it, floatingBallData.style)
                     }
                 } else {
                     dismiss()
@@ -73,18 +74,17 @@ object FloatingBallManager: KoinComponent {
         scope?.launch(Dispatchers.Main) {
             entryHolder?.dismiss()
             entryHolder = null
-        }?.invokeOnCompletion {
-            scope?.cancel()
-            scope = null
         }
+        scope = null
     }
 
-    private fun show(callInfo: CallInfo, miniAppList: MiniAppList, style: Int) {
+    private fun show(callInfo: CallInfo, adList: ArrayList<AdItem>, miniAppList: MiniAppList, style: Int) {
         scope?.launch(Dispatchers.Main) {
             if (entryHolder == null){
                 entryHolder = MiniAppEntryHolder(context)
             }
             entryHolder?.callInfo = callInfo
+            entryHolder?.adList = adList
             entryHolder?.miniAppList = miniAppList
             entryHolder?.show(style)
         }

@@ -23,29 +23,30 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_BUFFER_AMO
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_IS_PEER_SUPPORT_DC
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_SEND_DATA
 import com.ct.ertclib.dc.core.data.bridge.JSRequest
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
 import com.ct.ertclib.dc.core.port.usecase.mini.IDCMiniEventUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import wendu.dsbridge.CompletionHandler
 
 class DCJsEventDispatcher : IJsEventDispatcher, KoinComponent {
 
     private val dcEventUseCase : IDCMiniEventUseCase by inject()
 
-    override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
+    override fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
-            FUNCTION_CREATE_DATA_CHANNEL -> { dcEventUseCase.createAppDataChannel(context, request.params, handler) }
-            FUNCTION_CLOSE_DATA_CHANNEL -> { dcEventUseCase.closeAppDataChannel(context, request.params, handler) }
-            FUNCTION_SEND_DATA -> { dcEventUseCase.sendData(context, request.params, handler) }
-            FUNCTION_IS_PEER_SUPPORT_DC -> { dcEventUseCase.isPeerSupportDC(context, request.params, handler) }
-            FUNCTION_GET_BUFFER_AMOUNT -> { dcEventUseCase.getBufferedAmountAsync(context, request.params,handler) }
+            FUNCTION_CREATE_DATA_CHANNEL -> { dcEventUseCase.createAppDataChannel(miniAppView, request.params, handler) }
+            FUNCTION_CLOSE_DATA_CHANNEL -> { dcEventUseCase.closeAppDataChannel(miniAppView, request.params, handler) }
+            FUNCTION_SEND_DATA -> { dcEventUseCase.sendData(miniAppView, request.params, handler) }
+            FUNCTION_IS_PEER_SUPPORT_DC -> { dcEventUseCase.isPeerSupportDC(miniAppView, request.params, handler) }
+            FUNCTION_GET_BUFFER_AMOUNT -> { dcEventUseCase.getBufferedAmountAsync(miniAppView, request.params,handler) }
         }
     }
 
-    override fun dispatchSyncMessage(context: Context, request: JSRequest): String? {
+    override fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String? {
         return when (request.function) {
-            FUNCTION_GET_BUFFER_AMOUNT -> dcEventUseCase.getBufferedAmount(context, request.params)
+            FUNCTION_GET_BUFFER_AMOUNT -> dcEventUseCase.getBufferedAmount(miniAppView, request.params)
             else -> ""
         }
     }

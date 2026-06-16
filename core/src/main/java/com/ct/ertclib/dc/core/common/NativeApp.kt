@@ -35,6 +35,7 @@ object NativeApp {
     fun openMap(context: Context, type: String,lat: Double, lon: Double,title:String):Int{
         try {
             val intent = getIntent(context,type,lat, lon,title)
+            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             if (intent != null){
                 context.startActivity(intent)
                 return 0
@@ -72,6 +73,7 @@ object NativeApp {
         }
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
             return 0
         } catch (e:ActivityNotFoundException){

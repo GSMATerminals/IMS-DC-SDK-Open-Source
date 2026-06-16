@@ -33,6 +33,7 @@ import com.ct.ertclib.dc.app.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_PERCENT_CONSTANTS
 import com.ct.ertclib.dc.core.data.call.CallInfo
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppStatus
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 
 class MiniAppItemView : LinearLayout {
@@ -66,6 +67,7 @@ class MiniAppItemView : LinearLayout {
     lateinit var titleTv: TextView
     private lateinit var progressBar: CircleProgressBar
     private lateinit var disableView: View
+    private lateinit var runningDot: View
 
     constructor(context: Context?) : super(context) {
         init()
@@ -89,9 +91,11 @@ class MiniAppItemView : LinearLayout {
         titleTv = inflate.findViewById(R.id.miniapp_title)
         progressBar = inflate.findViewById(R.id.progress_bar)
         disableView = inflate.findViewById(R.id.disable_view)
+        runningDot = inflate.findViewById(R.id.running_dot)
     }
 
     fun bindData(data: MiniAppInfo, callInfo: CallInfo, textColor: Int?) {
+        NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, "MiniAppItemView", "BindData: ${data.appStatus}")
         this.data = data
         Glide.with(context)
             .load(data.appIcon)
@@ -105,6 +109,7 @@ class MiniAppItemView : LinearLayout {
             disableView.visibility = GONE
             titleTv.alpha = 1.0F
         }
+        runningDot.visibility = if (NewCallAppSdkInterface.appStatus(data) == MiniAppStatus.STARTED) VISIBLE else GONE
         textColor?.let {
             titleTv.setTextColor(it)
         }

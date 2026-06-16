@@ -16,6 +16,7 @@
 
 package com.ct.ertclib.dc.core.ui.activity
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -28,7 +29,11 @@ class WebActivity: BaseAppCompatActivity() {
         const val PARAMS_WEB_TITLE= "params_web_title"
         const val PARAMS_CALL_ID= "params_web_call_id"
         fun startActivity(context:Context,url:String,title:String,callId:String?){
-            context.startActivity(getIntent(context, url, title, callId))
+            val intent = getIntent(context, url, title, callId)
+            if (context !is Activity) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
         }
         fun getIntent(context:Context, url:String, title:String, callId:String? = null): Intent {
             val intent = Intent(context,WebActivity::class.java)
@@ -60,6 +65,13 @@ class WebActivity: BaseAppCompatActivity() {
         mBinding.webView.loadUrl(url)
         mBinding.title.text = title
         mBinding.backIcon.setOnClickListener {
+            if (mBinding.webView.canGoBack()){
+                mBinding.webView.goBack()
+            } else {
+                finish()
+            }
+        }
+        mBinding.closeIcon.setOnClickListener {
             finish()
         }
     }

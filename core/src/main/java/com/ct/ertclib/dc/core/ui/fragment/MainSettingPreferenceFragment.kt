@@ -16,6 +16,7 @@ import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
 import com.ct.ertclib.dc.core.utils.extension.startLocalTestActivity
+import com.ct.ertclib.dc.core.utils.extension.startNetDCDialerActivity
 
 class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
 
@@ -23,7 +24,6 @@ class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnP
         private const val TAG = "MainSettingPreferenceFragment"
         private const val KEY_OPEN_NEW_CALL = "new_call_open_switch_preference"
         private const val KEY_OPEN_FOLLOW = "follow_open_switch_preference"
-        private const val KEY_DEBUG = "debug_preference"
         private const val KEY_PRIVACY = "privacy_preference"
         private const val KEY_USER = "user_preference"
         private const val KEY_VERSION = "permission_version"
@@ -31,7 +31,6 @@ class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnP
 
     private var newCallPreference: SwitchPreference? = null
     private var followPreference: SwitchPreference? = null
-    private var debugPreference: SettingPreference? = null
     private var privacyPreference: SettingPreference? = null
     private var userPreference: SettingPreference? = null
     private var versionPreference: VersionPreference? = null
@@ -42,20 +41,14 @@ class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnP
         setPreferencesFromResource(R.xml.main_setting_fragment, rootKey)
         newCallPreference = findPreference(KEY_OPEN_NEW_CALL)
         followPreference = findPreference(KEY_OPEN_FOLLOW)
-        debugPreference = findPreference(KEY_DEBUG)
         privacyPreference = findPreference(KEY_PRIVACY)
         userPreference = findPreference(KEY_USER)
         versionPreference = findPreference(KEY_VERSION)
 
-        debugPreference?.let { it.onPreferenceClickListener = this }
         privacyPreference?.let { it.onPreferenceClickListener = this }
         userPreference?.let { it.onPreferenceClickListener = this }
 
         viewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
-
-        if (FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_LOCAL) {
-            debugPreference?.isVisible = false
-        }
 
         activity?.let { activity ->
             versionPreference?.setVersion("V ${PkgUtils.getAppVersion(activity)}")
@@ -87,11 +80,6 @@ class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnP
 
     override fun onPreferenceClick(preference: Preference): Boolean {
         when (preference.key) {
-            KEY_DEBUG -> {
-                LogUtils.info(TAG, "onPreferenceClick KEY_DEBUG")
-                activity?.startLocalTestActivity()
-                return true
-            }
             KEY_PRIVACY -> {
                 LogUtils.info(TAG, "onPreferenceClick KEY_PRIVACY")
                 activity?.let {

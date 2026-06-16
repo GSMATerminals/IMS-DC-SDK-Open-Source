@@ -17,8 +17,6 @@
 package com.ct.ertclib.dc.core.usecase.miniapp
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.location.Criteria
 import android.location.LocationListener
@@ -27,7 +25,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.Settings
 import android.text.TextUtils
-import androidx.appcompat.app.AlertDialog
 import com.blankj.utilcode.util.SPUtils
 import com.blankj.utilcode.util.ZipUtils
 import com.ct.ertclib.dc.core.R
@@ -59,7 +56,6 @@ import com.ct.ertclib.dc.core.manager.common.SPManager
 import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
 import com.ct.ertclib.dc.core.port.listener.IDownloadListener
 import com.ct.ertclib.dc.core.port.manager.IFileDownloadManager
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
 import com.ct.ertclib.dc.core.port.manager.IModelManager
 import com.ct.ertclib.dc.core.port.usecase.mini.IFileMiniEventUseCase
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
@@ -73,7 +69,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 import java.io.File
 import java.io.FileFilter
 import java.io.FileInputStream
@@ -83,7 +80,6 @@ import java.io.OutputStream
 import java.util.Collections
 
 class FileMiniUseCase(
-    private val miniToParentManager: IMiniToParentManager,
     private val permissionMiniUseCase: IPermissionUseCase,
     private val modelManager: IModelManager,
     private val fileDownloadManager: IFileDownloadManager
@@ -101,11 +97,11 @@ class FileMiniUseCase(
 
 
     override fun getLocation(
-        context: Context,
+        miniAppView: MiniAppView,
         handler: CompletionHandler<String?>
     ) {
         logger.info("getLocation")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_LOCATION))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -120,14 +116,14 @@ class FileMiniUseCase(
         }
         scope.launch {
             withContext(Dispatchers.Main) {
-                requestLocation(context, handler)
+                requestLocation(miniAppView, handler)
             }
         }
     }
 
-    override fun selectFile(context: Context, handler: CompletionHandler<String?>) {
+    override fun selectFile(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
         logger.info("selectFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -140,7 +136,8 @@ class FileMiniUseCase(
             logger.warn("selectFile, appInfo is null, return")
             return
         }
-        miniToParentManager.selectFile(object : OnPickMediaCallbackListener {
+        val fileTypes = null
+        miniAppView.viewModel.selectFiles(1, fileTypes, object : OnPickMediaCallbackListener {
             override fun onCancel() {
                 logger.info("selectFile, cancel")
             }
@@ -165,13 +162,63 @@ class FileMiniUseCase(
         })
     }
 
+    override fun selectFiles(
+        miniAppView: MiniAppView,
+        params: Map<String, Any>,
+        handler: CompletionHandler<String?>
+    ) {
+        logger.info("selectFiles")
+        miniAppView.viewModel.miniAppInfo?.let {
+            if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
+                val response = JSResponse("1", "permission not granted", "")
+                handler.complete(JsonUtil.toJson(response))
+                logger.warn("selectFiles, permission not granted, return")
+                return
+            }
+        } ?: run {
+            val response = JSResponse("1", "appInfo is null", "")
+            handler.complete(JsonUtil.toJson(response))
+            logger.warn("selectFiles, appInfo is null, return")
+            return
+        }
+        val maxSelectable = (params["maxSelectable"] as? Number)?.toInt() ?: 9
+        val fileTypes = params["fileTypes"] as List<String>?
+        miniAppView.viewModel.selectFiles(maxSelectable, fileTypes, object : OnPickMediaCallbackListener {
+            override fun onCancel() {
+                logger.info("selectFiles, cancel")
+            }
+
+            override fun onResult(result: List<MediaInfo>) {
+                logger.info("selectFiles success")
+                val resultList = ArrayList<Map<String, Any?>>()
+                for (mediaInfo in result) {
+                    resultList.add(
+                        mutableMapOf(
+                            "path" to mediaInfo.path,
+                            "size" to mediaInfo.size,
+                            "lastModified" to mediaInfo.lastModified,
+                            "name" to mediaInfo.displayName
+                        )
+                    )
+                }
+                val jsResponse = JSResponse(
+                    "0",
+                    "success",
+                    resultList
+                )
+                handler.complete(JsonUtil.toJson(jsResponse))
+            }
+
+        })
+    }
+
     override fun saveFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("saveFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -208,12 +255,12 @@ class FileMiniUseCase(
     }
 
     override fun readFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("readFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -274,12 +321,12 @@ class FileMiniUseCase(
     }
 
     override fun decompressFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("decompressFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -309,7 +356,7 @@ class FileMiniUseCase(
         var srcPathStr = srcPath as String
         val desPathStr = desPath as String
         val compressTypeStr = compressType as String
-        if (!isMiniAppPrivatePath(context, desPathStr)) {//严格判断只能是path，所以用startsWith
+        if (!isMiniAppPrivatePath(miniAppView, desPathStr)) {//严格判断只能是path，所以用startsWith
             logger.debug("JSApi sync decompressFile desPathStr path not in privateFolder")
             response.code = "1"
             response.message = "desPathStr not in privateFolder"
@@ -356,16 +403,16 @@ class FileMiniUseCase(
     }
 
     override fun getFileListAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getFileList(context,params))
+        handler.complete(getFileList(miniAppView,params))
     }
 
-    override fun getFileList(context: Context, params: Map<String, Any>): String? {
+    override fun getFileList(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         logger.info("getFileList")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileList, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -524,19 +571,19 @@ class FileMiniUseCase(
     }
 
     override fun getPrivateFolderAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getPrivateFolder(context,params))
+        handler.complete(getPrivateFolder(miniAppView,params))
     }
 
     override fun getPrivateFolder(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.info("getPrivateFolder")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getPrivateFolder, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -556,24 +603,24 @@ class FileMiniUseCase(
         val typeStr = type as String
         response.code = "0"
         response.message = "success"
-        response.data = mutableMapOf("privateFolder" to miniAppFilePath(context, typeStr))
+        response.data = mutableMapOf("privateFolder" to miniAppFilePath(miniAppView, typeStr))
         return JsonUtil.toJson(response)
     }
 
     override fun startSaveFileAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(startSaveFile(context,params))
+        handler.complete(startSaveFile(miniAppView,params))
     }
 
     override fun startSaveFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.debug("startSaveFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("startSaveFile, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -596,7 +643,7 @@ class FileMiniUseCase(
         }
         val pathStr = path as String
         val appendBoolean = append as Boolean
-        if (!isMiniAppPrivatePath(context, pathStr)) {//严格判断只能是path，所以用startsWith
+        if (!isMiniAppPrivatePath(miniAppView, pathStr)) {//严格判断只能是path，所以用startsWith
             if (logger.isDebugActivated) {
                 logger.debug("JSApi sync startSaveFile path not in privateFolder")
             }
@@ -638,13 +685,13 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
-    override fun stopSaveFileAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(stopSaveFile(context))
+    override fun stopSaveFileAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(stopSaveFile(miniAppView))
     }
 
-    override fun stopSaveFile(context: Context): String? {
+    override fun stopSaveFile(miniAppView: MiniAppView): String? {
         logger.debug("stopSaveFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("stopSaveFile, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -666,19 +713,19 @@ class FileMiniUseCase(
     }
 
     override fun startReadFileAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(startReadFile(context,params))
+        handler.complete(startReadFile(miniAppView,params))
     }
 
     override fun startReadFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.debug("startReadFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("startReadFile, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -708,7 +755,7 @@ class FileMiniUseCase(
         try {
             // 路径有可能是uri也可能是path
             mFileInputStream = if (FileUtils.isUri(pathStr)){
-                context.contentResolver.openInputStream(Uri.parse(pathStr))
+                miniAppView.context.contentResolver.openInputStream(Uri.parse(pathStr))
             } else {
                 val file = File(pathStr)
                 FileInputStream(file)
@@ -724,11 +771,11 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
-    override fun stopReadFileAsync(context: Context, handler: CompletionHandler<String?>) {
-        handler.complete(stopReadFile(context))
+    override fun stopReadFileAsync(miniAppView: MiniAppView, handler: CompletionHandler<String?>) {
+        handler.complete(stopReadFile(miniAppView))
     }
 
-    override fun stopReadFile(context: Context): String? {
+    override fun stopReadFile(miniAppView: MiniAppView): String? {
         logger.debug("stopReadFile")
 
         val response = JSResponse("0", "stopReadFile", "")
@@ -744,19 +791,19 @@ class FileMiniUseCase(
     }
 
     override fun checkFileOrFolderExistsAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(checkFileOrFolderExists(context,params))
+        handler.complete(checkFileOrFolderExists(miniAppView,params))
     }
 
     override fun checkFileOrFolderExists(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.debug("checkFileOrFolderExists")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("checkFileOrFolderExists, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -789,13 +836,13 @@ class FileMiniUseCase(
     }
 
     @Deprecated(
-        message = "This function is deprecated. Use getFileInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>) instead.",
+        message = "This function is deprecated. Use getFileInfoAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>) instead.",
         replaceWith = ReplaceWith("getFileInfoAsync"),
         level = DeprecationLevel.WARNING
     )
-    override fun getFileInfo(context: Context, params: Map<String, Any>): String? {
+    override fun getFileInfo(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         logger.debug("getFileInfo")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileInfo, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -820,7 +867,7 @@ class FileMiniUseCase(
             val uri = Uri.parse(pathStr)
             response.code = "0"
             response.message = "success"
-            val name = FileUtils.getFileNameFromUri(context,uri)
+            val name = FileUtils.getFileNameFromUri(miniAppView.context,uri)
             if (TextUtils.isEmpty(name)){
                 response.code = "1"
                 response.message = "fail"
@@ -829,8 +876,8 @@ class FileMiniUseCase(
                 val isDirectory = !name!!.contains(".")//这个判断不够严谨
                 response.data = hashMapOf(
                     "path" to pathStr,
-                    "size" to FileUtils.getFileSizeFromUri(context,uri),
-                    "lastModified" to FileUtils.getFileLastModifiedFromUri(context,uri),
+                    "size" to FileUtils.getFileSizeFromUri(miniAppView.context,uri),
+                    "lastModified" to FileUtils.getFileLastModifiedFromUri(miniAppView.context,uri),
                     "isDirectory" to isDirectory,
                     "name" to name)
             }
@@ -854,9 +901,9 @@ class FileMiniUseCase(
         return JsonUtil.toJson(response)
     }
 
-    override fun getFileInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>) {
-        logger.debug("getFileInfo")
-        miniToParentManager.getMiniAppInfo()?.let {
+    override fun getFileInfoAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>) {
+        logger.debug("getFileInfoAsync")
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("getFileInfo, permission not granted, return")
                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
@@ -885,22 +932,22 @@ class FileMiniUseCase(
                 val uri = Uri.parse(pathStr)
                 response.code = "0"
                 response.message = "success"
-                val name = FileUtils.getFileNameFromUri(context,uri)
+                val name = FileUtils.getFileNameFromUri(miniAppView.context,uri)
                 if (TextUtils.isEmpty(name)){
                     response.code = "1"
                     response.message = "fail"
                     response.data = hashMapOf()
                 } else {
                     val isDirectory = !name!!.contains(".")//这个判断不够严谨
-                    val md5 = if (FileUtils.isUriFolder(context,uri)){
+                    val md5 = if (FileUtils.isUriFolder(miniAppView.context,uri)){
                         ""
                     } else {
-                        FileUtils.getFileMD5FromUri(context,uri)
+                        FileUtils.getFileMD5FromUri(miniAppView.context,uri)
                     }
                     response.data = hashMapOf(
                         "path" to pathStr,
-                        "size" to FileUtils.getFileSizeFromUri(context,uri),
-                        "lastModified" to FileUtils.getFileLastModifiedFromUri(context,uri),
+                        "size" to FileUtils.getFileSizeFromUri(miniAppView.context,uri),
+                        "lastModified" to FileUtils.getFileLastModifiedFromUri(miniAppView.context,uri),
                         "isDirectory" to isDirectory,
                         "name" to name,
                         "md5" to (md5 ?: "")
@@ -930,6 +977,7 @@ class FileMiniUseCase(
                     )
                 }
             }
+            logger.debug("getFileInfoAsync, response: $response")
             scope.launch(Dispatchers.Main) {
                 handler.complete(JsonUtil.toJson(response))
             }
@@ -937,16 +985,16 @@ class FileMiniUseCase(
     }
 
     override fun deleteFileAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(deleteFile(context,params))
+        handler.complete(deleteFile(miniAppView,params))
     }
 
-    override fun deleteFile(context: Context, params: Map<String, Any>): String? {
+    override fun deleteFile(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         logger.debug("deleteFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("deleteFile, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -967,7 +1015,7 @@ class FileMiniUseCase(
             return JsonUtil.toJson(response)
         }
         val pathStr = path as String
-        if (!isMiniAppPrivatePath(context, pathStr)) {// 有可能小程序拿到的是uri，所以用contains
+        if (!isMiniAppPrivatePath(miniAppView, pathStr)) {// 有可能小程序拿到的是uri，所以用contains
             if (logger.isDebugActivated) {
                 logger.debug("JSApi sync deleteFile path not in privateFolder")
             }
@@ -977,7 +1025,7 @@ class FileMiniUseCase(
             return JsonUtil.toJson(response)
         }
         if (FileUtils.isUri(pathStr)){
-            FileUtils.deleteFileFromUri(context, Uri.parse(pathStr))
+            FileUtils.deleteFileFromUri(miniAppView.context, Uri.parse(pathStr))
         } else {
             FileUtils.deletePath(pathStr)
         }
@@ -987,19 +1035,19 @@ class FileMiniUseCase(
     }
 
     override fun saveUpdateKeyValueAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(saveUpdateKeyValue(context,params))
+        handler.complete(saveUpdateKeyValue(miniAppView,params))
     }
 
     @Deprecated(
-        message = "This function is deprecated. Use saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? instead.",
+        message = "This function is deprecated. Use saveUpdateKeyValueWithExpiry(miniAppView: MiniAppView, params: Map<String, Any>): String? instead.",
         replaceWith = ReplaceWith("saveUpdateKeyValueWithExpiry"),
         level = DeprecationLevel.WARNING
     )
-    override fun saveUpdateKeyValue(context: Context, params: Map<String, Any>): String? {
+    override fun saveUpdateKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         val value = params[VALUE_PARAM]?.toString()
         if (key.isNullOrEmpty()){
@@ -1010,7 +1058,7 @@ class FileMiniUseCase(
             logger.warn("saveKeyValue, param value is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        miniToParentManager.getMiniAppInfo()?.let{
+        miniAppView.viewModel.miniAppInfo?.let{
             SPUtils.getInstance().put(it.appId+key,value)
         }
         val response = JSResponse("0", "success", null)
@@ -1018,14 +1066,14 @@ class FileMiniUseCase(
     }
 
     override fun saveUpdateKeyValueWithExpiryAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(saveUpdateKeyValueWithExpiry(context,params))
+        handler.complete(saveUpdateKeyValueWithExpiry(miniAppView,params))
     }
 
-    override fun saveUpdateKeyValueWithExpiry(context: Context, params: Map<String, Any>): String? {
+    override fun saveUpdateKeyValueWithExpiry(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         val value = params[VALUE_PARAM]?.toString()
         val ttl = params[TTL]?.toString()
@@ -1047,7 +1095,7 @@ class FileMiniUseCase(
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
 
-        miniToParentManager.getMiniAppInfo()?.let{
+        miniAppView.viewModel.miniAppInfo?.let{
             SPManager.instance.saveUpdateKeyValueWithExpiry(it.appId+key,value,ttl.toLong())
         }
         val response = JSResponse("0", "success", null)
@@ -1055,20 +1103,20 @@ class FileMiniUseCase(
     }
 
     override fun deleteKeyValueAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(deleteKeyValue(context,params))
+        handler.complete(deleteKeyValue(miniAppView,params))
     }
 
-    override fun deleteKeyValue(context: Context, params: Map<String, Any>): String? {
+    override fun deleteKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         if (key.isNullOrEmpty()){
             logger.warn("saveKeyValue, param key is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        miniToParentManager.getMiniAppInfo()?.let{ appInfo ->
+        miniAppView.viewModel.miniAppInfo?.let{ appInfo ->
             scope.launch(Dispatchers.IO) {
                 SPManager.instance.deleteKeyValue(appInfo.appId+key)
             }
@@ -1078,19 +1126,19 @@ class FileMiniUseCase(
     }
 
     override fun playVoiceAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(playVoice(context,params))
+        handler.complete(playVoice(miniAppView,params))
     }
 
     override fun playVoice(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.info("playVoice")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("playVoice, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -1115,24 +1163,24 @@ class FileMiniUseCase(
             response.message = "file not exists"
             return JsonUtil.toJson(response)
         }
-        miniToParentManager.miniAppInterface?.playVoice(pathStr)
+        miniAppView.viewModel.playVoice(pathStr)
         return JsonUtil.toJson(response)
     }
 
     override fun stopPlayVoiceAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(stopPlayVoice(context,params))
+        handler.complete(stopPlayVoice(miniAppView,params))
     }
 
     override fun stopPlayVoice(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>
     ): String? {
         logger.info("stopPlayVoice")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 logger.warn("playVoice, permission not granted, return")
                 return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
@@ -1141,26 +1189,26 @@ class FileMiniUseCase(
             logger.warn("stopPlayVoice, appInfo is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        miniToParentManager.miniAppInterface?.stopPlayVoice()
+        miniAppView.viewModel.stopPlayVoice()
         val response = JSResponse(RESPONSE_SUCCESS_CODE, RESPONSE_SUCCESS_MESSAGE, "")
         return JsonUtil.toJson(response)
     }
 
     override fun getKeyValueAsync(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        handler.complete(getKeyValue(context,params))
+        handler.complete(getKeyValue(miniAppView,params))
     }
 
-    override fun getKeyValue(context: Context, params: Map<String, Any>): String? {
+    override fun getKeyValue(miniAppView: MiniAppView, params: Map<String, Any>): String? {
         val key = params[KEY_PARAM]?.toString()
         if (key.isNullOrEmpty()){
             logger.warn("getKeyValue, param key is null, return")
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
-        miniToParentManager.getMiniAppInfo()?.let{
+        miniAppView.viewModel.miniAppInfo?.let{
             val value = SPManager.instance.getKeyValue(it.appId+key)
             val valueMap = mutableMapOf<String, String>()
             valueMap["value"] = value
@@ -1172,12 +1220,12 @@ class FileMiniUseCase(
     }
 
     override fun quickSearchFile(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
         logger.info("searchFile")
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -1200,7 +1248,7 @@ class FileMiniUseCase(
         scope.launch {
             withContext(Dispatchers.IO) {
                 if (!FileManager.instance.hasFileIndex()){// 没有扫描过，第一次扫描；后面将在InCallService中每次bind的时候更新，是在另一个进程中，不共享变量，但共享数据库。
-                    FileManager.instance.updateFiles(context)
+                    FileManager.instance.updateFiles(miniAppView.context)
                 }
 
                 val list = FileManager.instance.searchFilesByName(name.toString())
@@ -1224,11 +1272,11 @@ class FileMiniUseCase(
     }
 
     override fun quickSearchFileWithKeyWords(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -1248,7 +1296,7 @@ class FileMiniUseCase(
             return
         }
         if (!FileManager.instance.hasFileIndex()) {// 没有扫描过，第一次扫描
-            FileManager.instance.updateFiles(context)
+            FileManager.instance.updateFiles(miniAppView.context)
         }
         val resultList = FileManager.instance.searchFilesByKeyWords(*keyWordsArray)
 
@@ -1261,11 +1309,11 @@ class FileMiniUseCase(
     }
 
     override fun fileDownload(
-        context: Context,
+        miniAppView: MiniAppView,
         params: Map<String, Any>,
         handler: CompletionHandler<String?>
     ) {
-        miniToParentManager.getMiniAppInfo()?.let {
+        miniAppView.viewModel.miniAppInfo?.let {
             if (!permissionMiniUseCase.checkPermissionAndRecord(it.appId, listOf(MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE))) {
                 val response = JSResponse("1", "permission not granted", "")
                 handler.complete(JsonUtil.toJson(response))
@@ -1285,7 +1333,7 @@ class FileMiniUseCase(
             handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "empty params"))))
             return
         }
-        if (!SystemUtils.isWiFiConnected(context)) {
+        if (!SystemUtils.isWiFiConnected(miniAppView.context)) {
             handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "network not Wi-Fi"))))
         }
         when (downloadEvent) {
@@ -1296,7 +1344,7 @@ class FileMiniUseCase(
                     val fileName = "$modelName.zip"
                     val downloadFileFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path
                     val downloadFilePath = "$downloadFileFolder${File.separator}$fileName"
-                    val targetFileDir = "${context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName${File.separator}"
+                    val targetFileDir = "${miniAppView.context.filesDir}${File.separator}$FILE_MODEL_PATH${File.separator}$modelName${File.separator}"
                     val downloadListener = object : IDownloadListener {
                         override fun onDownloadProgress(progress: Int) {
                             LogUtils.debug(TAG, "onDownloadProgress progress: $progress")
@@ -1331,7 +1379,7 @@ class FileMiniUseCase(
                     if (fileDownloadManager.isDownloading) {
                         handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "other task is running"))))
                     } else {
-                        val downloadData = DownloadData(url, context.getString(R.string.download_model_title), context.getString(
+                        val downloadData = DownloadData(url, miniAppView.context.getString(R.string.download_model_title), miniAppView.context.getString(
                             R.string.download_model_description), fileName)
                         fileDownloadManager.startDownload(downloadData, downloadListener)
                     }
@@ -1363,7 +1411,7 @@ class FileMiniUseCase(
                 if (fileDownloadManager.isDownloading) {
                     handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, mapOf("reason" to "other task is running"))))
                 } else {
-                    val downloadData = DownloadData(url, context.getString(R.string.download_file_title), context.getString(
+                    val downloadData = DownloadData(url, miniAppView.context.getString(R.string.download_file_title), miniAppView.context.getString(
                         R.string.download_file_description), "${filePath}${File.separator}${fileName}")
                     fileDownloadManager.startDownload(downloadData, downloadListener)
                 }
@@ -1375,31 +1423,35 @@ class FileMiniUseCase(
     }
 
     @SuppressLint("MissingPermission")
-    private fun requestLocation(context: Context, handler: CompletionHandler<String?>){
+    private fun requestLocation(miniAppView: MiniAppView, handler: CompletionHandler<String?>){
         val locationMap = mutableMapOf<String, String>()
         val locationManager =
-            context.getSystemService(LocationManager::class.java)
+            miniAppView.context.getSystemService(LocationManager::class.java)
         var hasRemoveUpdates = false
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
             && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         ) {
-            askLocationSettings(context)
+            askLocationSettings(miniAppView)
         } else {
             var locationListener: LocationListener? = null
             locationListener = LocationListener { location ->
-                logger.info("locationManager get location lat = ${location.latitude}, lon = ${location.longitude})")
-                locationMap["lon"] = location.longitude.toString()
-                locationMap["lat"] = location.latitude.toString()
-                locationListener?.let {
-                    hasRemoveUpdates = true
-                    try {
-                        locationManager.removeUpdates(it)
-                    } catch (e:Exception){
-                        e.printStackTrace()
+                scope.launch {
+                    withContext(Dispatchers.Main) {
+                        logger.info("locationManager get location lat = ${location.latitude}, lon = ${location.longitude})")
+                        locationMap["lon"] = location.longitude.toString()
+                        locationMap["lat"] = location.latitude.toString()
+                        locationListener?.let {
+                            hasRemoveUpdates = true
+                            try {
+                                locationManager.removeUpdates(it)
+                            } catch (e:Exception){
+                                e.printStackTrace()
+                            }
+                        }
+                        val response = JSResponse("0", "success", locationMap)
+                        handler.complete(JsonUtil.toJson(response))
                     }
                 }
-                val response = JSResponse("0", "success", locationMap)
-                handler.complete(JsonUtil.toJson(response))
             }
             val criteria = Criteria();
             criteria.accuracy = Criteria.ACCURACY_FINE
@@ -1435,46 +1487,32 @@ class FileMiniUseCase(
         }
     }
 
-    private fun askLocationSettings(context: Context) {
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle("开启位置服务")
-        builder.setMessage("本应用需要开启位置服务，是否去设置界面开启位置服务？")
-        builder.setPositiveButton("是", DialogInterface.OnClickListener { arg0, arg1 ->
-            val intent = Intent(
-                Settings.ACTION_LOCATION_SOURCE_SETTINGS
-            )
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent)
-        })
-        builder.setNegativeButton("否", DialogInterface.OnClickListener { arg0, arg1 ->
-            ToastUtils.showShortToast(context, "No location provider to use")
-        })
-        builder.show()
+    private fun askLocationSettings(miniAppView: MiniAppView) {
+        ToastUtils.showShortToast(miniAppView.context, "正在打开位置设置")
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        miniAppView.context.startActivity(intent)
     }
 
-    private fun isMiniAppPrivatePath(context: Context, path:String):Boolean{
+    private fun isMiniAppPrivatePath(miniAppView: MiniAppView, path:String):Boolean{
         if (TextUtils.isEmpty(path)){
             return false
         }
         if (FileUtils.isUri(path)){//因为用户无法选择到inner中的文件，这种uri只可能来自用户选择的sdcard中的文件，所以只用判断outer。
-            return path.contains(miniAppFilePath(context, "outer").replace("/sdcard",""))
+            return path.contains(miniAppFilePath(miniAppView, "outer").replace("/sdcard",""))
         }
-        return path.startsWith(miniAppFilePath(context, "inner")) || path.startsWith(miniAppFilePath(context,"outer"))
+        return path.startsWith(miniAppFilePath(miniAppView, "inner")) || path.startsWith(miniAppFilePath(miniAppView,"outer"))
     }
 
-    private fun miniAppFilePath(context: Context, type:String):String{
-        when(type){
-            "inner" -> context.let {
-                return miniToParentManager.getMiniAppInfo()?.appId?.let { it1 ->
-                    PathManager().getMiniAppInnerSpace(it,it1)
-                } ?: ""
-            }
-            "outer" -> context.let {
-                return miniToParentManager.getMiniAppInfo()?.appId?.let { it1 ->
-                    PathManager().getMiniAppOuterSpace(it1)
-                } ?: ""
-            }
+    private fun miniAppFilePath(miniAppView: MiniAppView, type: String): String {
+        return when (type) {
+            "inner" -> miniAppView.viewModel.miniAppInfo?.appId?.let {
+                PathManager().getMiniAppInnerSpace(miniAppView.context, it)
+            } ?: ""
+            "outer" -> miniAppView.viewModel.miniAppInfo?.appId?.let {
+                PathManager().getMiniAppOuterSpace(it)
+            } ?: ""
+            else -> ""
         }
-        return ""
     }
 }

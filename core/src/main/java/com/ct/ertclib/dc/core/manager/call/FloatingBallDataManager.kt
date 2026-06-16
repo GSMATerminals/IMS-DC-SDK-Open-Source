@@ -51,7 +51,7 @@ object FloatingBallDataManager {
 
     private fun findDisplayData(): FloatingBallData? {
         // 优先返回 FLOATING_DISPLAY 状态的数据
-        return floatingBallDataMap.values.find { it.showStatus == FLOATING_DISPLAY }
+        return floatingBallDataMap.values.find { it.callInfo.isInCall() }
     }
 
     private fun shouldRefresh(newData: FloatingBallData): Boolean {
@@ -60,6 +60,8 @@ object FloatingBallDataManager {
             refreshData == null -> true
             // 显示状态变化
             refreshData?.showStatus != newData.showStatus -> true
+            // 广告信息变换
+            refreshData?.adList != newData.adList -> true
             // 都是显示状态，但通话ID不同（切换了显示的通话）
             newData.showStatus == FLOATING_DISPLAY &&
                     refreshData?.callInfo?.telecomCallId != newData.callInfo.telecomCallId -> true

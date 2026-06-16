@@ -35,4 +35,61 @@
     <string name="tcp_hint">Local Area Network</string>
     <string name="client_hint">Please input the server IP.</string>
     <string name="server_hint">Should In a local area network.</string>
+    <string name="call">Call</string>
+    <string name="dialpad">Dial Pad</string>
+    <!-- Call interface -->
+    <string name="calling">Calling...</string>
+    <string name="mute">Mute</string>
+    <string name="speaker">Speaker</string>
+    <string name="hangup">Hang up</string>
+    <string name="answer">Answer</string>
+    <string name="video">Video</string>
+
+    <!-- Call status -->
+    <string name="call_status_ringing">Ringing...</string>
+    <string name="call_status_in_call">In call</string>
+    <string name="call_ended">Call ended</string>
+    <string name="call_failed">Call failed</string>
+
+    <!-- Connection and registration -->
+    <string name="connection_settings">Connection Settings</string>
+    <string name="server_url">Server URL</string>
+    <string name="register_number">Register Number</string>
+    <string name="connect">Connect</string>
+    <string name="exit">Exit</string>
+    <string name="please_wait">Please wait</string>
+    <string name="connecting">Connecting to server...</string>
+    <string name="connected_success">Connected successfully, registering device...</string>
+    <string name="register_success">Registration successful</string>
+    <string name="register_failed">Registration failed: %s</string>
+    <string name="connection_error">Connection error: %s</string>
+    <string name="reconnect_failed">Reconnection failed, please check network</string>
+    <string name="url_and_number_required">Server URL and register number cannot be empty</string>
+
+    <!-- WebSocket status -->
+    <string name="websocket_connected">WebSocket connected</string>
+    <string name="websocket_disconnected">WebSocket disconnected</string>
+    <string name="websocket_error">WebSocket error: %s</string>
+    <string name="websocket_reconnect_failed">WebSocket reconnection failed</string>
+    <string name="websocket_not_connected">WebSocket not connected, reconnecting...</string>
+
+    <!-- Contact related -->
+    <string name="unknown_contact">Unknown contact</string>
+    <string name="just_now">Just now</string>
+    <string name="unknown_reason">Unknown reason</string>
+
+    <!-- Input hints -->
+    <string name="hint_server_url">e.g., ws://192.168.1.100:8080/websocket</string>
+    <string name="hint_register_number">e.g., 18000000000</string>
+    <string name="hint_key">e.g., ED5EFD6</string>
+
+    <!-- Button text -->
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_retry">Retry</string>
+    <string name="btn_settings">Settings</string>
+    <string name="scan_card">Scan to get number</string>
+    <string name="unregister">Unregister</string>
+    <string name="register">Register</string>
+    <string name="no_number_tips">No card info</string>
 </resources>

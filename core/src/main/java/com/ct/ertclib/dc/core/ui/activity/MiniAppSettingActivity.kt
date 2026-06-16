@@ -37,6 +37,7 @@ class MiniAppSettingActivity: BaseToolBarActivity() {
     private lateinit var binding: LayoutSettingBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        overridePendingTransition(0, 0)
         super.onCreate(savedInstanceState)
         binding = LayoutSettingBinding.inflate(layoutInflater)
         setContentView(binding.root)

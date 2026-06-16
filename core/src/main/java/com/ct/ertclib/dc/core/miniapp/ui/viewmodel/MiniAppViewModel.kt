@@ -1,59 +1,37 @@
-/*
- *   Copyright 2025-China Telecom Research Institute.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *        https://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
-
 package com.ct.ertclib.dc.core.miniapp.ui.viewmodel
 
-
 import android.content.Context
-import android.content.Intent
 import android.media.MediaPlayer
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.widget.TextView
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.ct.ertclib.dc.core.utils.logger.Logger
-import com.ct.ertclib.dc.core.R
-import com.ct.ertclib.dc.core.constants.CommonConstants
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.MUTED
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.SPEAKERPHONE_ON
-import com.ct.ertclib.dc.core.data.miniapp.AppRequest
-import com.ct.ertclib.dc.core.data.miniapp.PermissionData
+import android.os.RemoteException
+import android.telecom.Call
+import com.ct.ertclib.dc.core.constants.MiniAppConstants
+import com.ct.ertclib.dc.core.data.call.CallInfo
+import com.ct.ertclib.dc.core.data.event.CloseAdcEvent
+import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
-import com.ct.ertclib.dc.core.miniapp.ui.adapter.PermissionRequestAdapter
-import com.ct.ertclib.dc.core.port.manager.IMiniToParentManager
+import com.ct.ertclib.dc.core.manager.call.NewCallsManager
+import com.ct.ertclib.dc.core.manager.common.StateFlowManager
+import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareHelper
+import com.ct.ertclib.dc.core.miniapp.MiniAppManager
+import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
+import com.ct.ertclib.dc.core.port.call.ICallStateListener
+import com.ct.ertclib.dc.core.port.common.OnPickMediaCallbackListener
+import com.ct.ertclib.dc.core.port.dc.IDcCreateListener
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
-import com.ct.ertclib.dc.core.utils.common.PermissionUtils
-import com.hjq.permissions.OnPermissionCallback
-import com.hjq.permissions.XXPermissions
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.ct.ertclib.dc.core.utils.common.DCUtils
+import com.ct.ertclib.dc.core.utils.common.JsonUtil
+import com.ct.ertclib.dc.core.utils.common.MiniAppPermissionHelper
+import com.ct.ertclib.dc.core.utils.logger.Logger
+import com.newcalllib.datachannel.V1_0.IImsDCObserver
+import com.newcalllib.datachannel.V1_0.IImsDataChannel
+import com.newcalllib.datachannel.V1_0.ImsDCStatus
+import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.ArrayList
+import java.util.Collections
 
-class MiniAppViewModel : ViewModel(), KoinComponent {
+class MiniAppViewModel : KoinComponent {
 
     companion object {
         private const val TAG = "MiniAppViewModel"
@@ -66,123 +44,99 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
         const val PHONE_BUTTON_CALLING = 2
     }
 
-    private val logger = Logger.getLogger(TAG)
+    private val sLogger = Logger.getLogger(TAG)
     private val permissionUseCase: IPermissionUseCase by inject()
-    private val miniToParentManager: IMiniToParentManager by inject()
+    private val miniAppDbRepo: MiniAppDbRepo by lazy { MiniAppDbRepo() }
+
     private var mediaPlayer: MediaPlayer? = null
-    var phoneButtonShowStatus = MutableLiveData(PHONE_BUTTON_HIDE)
-    var micStatus = MutableLiveData(MIC_STATUS_OPEN)
-    var speakerStatus = MutableLiveData(SPEAKER_STATUS_NORMAL)
+    var miniAppInfo: MiniAppInfo? = null
+    var callInfo: CallInfo? = null
+    var miniAppListInfo: MiniAppList? = null
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    fun startGrantPermission(
-        context: Context,
-        miniAppInfo: MiniAppInfo,
-        onMiniAppPermissionRequest: (MutableList<PermissionData>) -> Unit,
-        onPermissionDenied: () -> Unit,
-        ) {
-        logger.info("startGrantPermission")
-        miniAppInfo.appProperties?.permissions?.let { allPermission ->
-            viewModelScope.launch(Dispatchers.IO) {
-                val systemPermission = PermissionUtils.convertToSystemPermissions(allPermission)
-                val permissionMap = permissionUseCase.getPermission(miniAppInfo.appId)
-                val systemNoGrantedPermission = mutableListOf<String>()
-                val miniAppNoGrantedPermission = mutableListOf<String>()
-                withContext(Dispatchers.Main) {
-                    //筛选出系统未授权权限
-                    for (permission in systemPermission) {
-                        if (!permissionUseCase.isSystemPermissionGranted(permission)) {
-                            systemNoGrantedPermission.add(permission)
-                        }
-                    }
-                    //筛选出sdk未对小程序进行授权的权限
-                    for (permission in allPermission) {
-                        if ((permissionMap[permission] != true)) {
-                            miniAppNoGrantedPermission.add(permission)
-                        }
-                    }
-                    logger.info("startGrantPermission, allPermission: $allPermission, permissionMap: $permissionMap, miniAppNoGrantedPermission: $miniAppNoGrantedPermission")
-                    if (systemNoGrantedPermission.isNotEmpty()) {
-                        XXPermissions.with(context)
-                            .permission(systemPermission)
-                            .request(object : OnPermissionCallback {
-                                override fun onGranted(
-                                    permissions: MutableList<String>,
-                                    allGranted: Boolean
-                                ) {
-                                    logger.info("MiniApp has all permissions: $allGranted")
-                                    onMiniAppPermissionRequest.invoke(PermissionUtils.convertPermissionDataList(miniAppNoGrantedPermission))
-                                }
+    val systemApiLicenseMap = mutableMapOf<String, String>()
+    private val serialDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-                                override fun onDenied(
-                                    deniedPermissions: MutableList<String>,
-                                    doNotAskAgain: Boolean
-                                ) {
-                                    logger.info("MiniApp lacks the following permissions: $deniedPermissions")
-                                    if (doNotAskAgain) {
-                                        showPermissionGuidedDialog(context, miniAppInfo, deniedPermissions, onPermissionDenied)
-                                    } else {
-                                        onPermissionDenied.invoke()
-                                    }
-                                }
-                            })
-                    } else {
-                        onMiniAppPermissionRequest.invoke(PermissionUtils.convertPermissionDataList(miniAppNoGrantedPermission))
-                    }
-                }
-            }
-        }
+    // UI 状态 - 使用 Observable 模式
+    private val _phoneButtonShowStatus = ObservableValue(PHONE_BUTTON_HIDE)
+    val phoneButtonShowStatus: ObservableValue<Int> = _phoneButtonShowStatus
+
+    private val _micStatus = ObservableValue(MIC_STATUS_OPEN)
+    val micStatus: ObservableValue<Int> = _micStatus
+
+    private val _speakerStatus = ObservableValue(SPEAKER_STATUS_NORMAL)
+    val speakerStatus: ObservableValue<Int> = _speakerStatus
+
+    // 事件回调 - 由 View 注入
+    private var onCallHandler: ((String, Array<Any>) -> Unit)? = null
+    private var onFinish: (() -> Unit)? = null
+    private var onSelectFiles: ((Int?, List<String>?, OnPickMediaCallbackListener) -> Unit)? = null
+    private var onSetPageName: ((String) -> Unit)? = null
+    private var onSetWindowStyle: (() -> Unit)? = null
+    private var onCallStateChanged: ((Int) -> Unit)? = null
+
+    private var callStateListener: ICallStateListener? = null
+
+    // 数据通道相关
+    val createDCLabelList: MutableList<String> = Collections.synchronizedList(ArrayList())
+    val openDCList: MutableList<IImsDataChannel> = Collections.synchronizedList(ArrayList())
+
+    // ==================== 事件回调设置 ====================
+
+    fun setEventCallbacks(
+        onCallHandler: ((String, Array<Any>) -> Unit)? = null,
+        onFinish: (() -> Unit)? = null,
+        onSelectFiles: ((Int?, List<String>?, OnPickMediaCallbackListener) -> Unit)? = null,
+        onSetPageName: ((String) -> Unit)? = null,
+        onSetWindowStyle: (() -> Unit)? = null,
+        onCallStateChanged: ((Int) -> Unit)? = null
+    ) {
+        this.onCallHandler = onCallHandler
+        this.onFinish = onFinish
+        this.onSelectFiles = onSelectFiles
+        this.onSetPageName = onSetPageName
+        this.onSetWindowStyle = onSetWindowStyle
+        this.onCallStateChanged = onCallStateChanged
     }
 
-    fun savePermissionGrantedResults(appId: String, map: MutableMap<String, Boolean>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            permissionUseCase.savePermission(appId, map, isMainProcess = false)
-        }
+    fun init() {
+        registerDCCallBack()
+        registerParentToMiniCallback()
+        ScreenShareHelper.init()
     }
 
-    fun refreshPermission(appId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            permissionUseCase.refreshPermissionMapFromRepo(appId)
-        }
+    // ==================== 音频控制 ====================
+
+    fun toggleMic() {
+        val newStatus = if (_micStatus.value == MIC_STATUS_MUTE) MIC_STATUS_OPEN else MIC_STATUS_MUTE
+        _micStatus.value = newStatus
+        setMicMute(newStatus == MIC_STATUS_MUTE)
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun showPermissionGuidedDialog(context: Context, miniAppInfo: MiniAppInfo, permissionList: MutableList<String>, onPermissionDenied: () -> Unit) {
-        val builder = AlertDialog.Builder(context)
-        val layout = LayoutInflater.from(context).inflate(R.layout.permission_denied_tips_layout, null)
-        builder.setView(layout)
-        val tips = layout.findViewById<TextView>(R.id.permission_dialog_tips)
-        tips.text = context.resources.getString(R.string.open_permission_tips, miniAppInfo.appName)
-        val recyclerView = layout.findViewById<RecyclerView>(R.id.denied_permission_recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        recyclerView.adapter = PermissionRequestAdapter(context, PermissionUtils.convertToSystemPermissionData(permissionList))
-        val negativeText = layout.findViewById<TextView>(R.id.permission_dialog_negative_text)
-        val positiveText = layout.findViewById<TextView>(R.id.permission_dialog_positive_text)
-        val dialog = builder.create()
-        dialog.setCanceledOnTouchOutside(false)
-        val window = dialog.window
-        window?.let {
-            val attributes = it.attributes
-            attributes.gravity = Gravity.BOTTOM
-            attributes.y = context.resources.getDimensionPixelSize(R.dimen.dialog_bottom_margin)
-            it.setBackgroundDrawableResource(R.drawable.dialog_window_background)
-        }
-        negativeText.setOnClickListener {
-            onPermissionDenied.invoke()
-            dialog.dismiss()
-        }
-        positiveText.setOnClickListener {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            intent.data = Uri.fromParts("package", context.packageName, null)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-            onPermissionDenied.invoke()
-            dialog.dismiss()
-        }
-        dialog.show()
+    fun toggleSpeaker() {
+        val newStatus = if (_speakerStatus.value == SPEAKER_STATUS_NORMAL) SPEAKER_STATUS_OPEN else SPEAKER_STATUS_NORMAL
+        _speakerStatus.value = newStatus
+        setSpeakerOn(newStatus == SPEAKER_STATUS_OPEN)
     }
 
-    // 同时只能有一个在播放
+    private fun setMicMute(mute: Boolean) {
+        NewCallsManager.instance.setMuted(mute)
+    }
+
+    private fun setSpeakerOn(open: Boolean) {
+        NewCallsManager.instance.setSpeakerphone(open)
+    }
+
+    fun hangup() {
+        callInfo?.telecomCallId?.let { NewCallsManager.instance.hangUp(it) }
+    }
+
+    fun answer() {
+        callInfo?.telecomCallId?.let { NewCallsManager.instance.answer(it) }
+    }
+
+    // ==================== 音频播放 ====================
+
     fun playVoice(path: String) {
         mediaPlayer?.release()
         mediaPlayer = MediaPlayer().apply {
@@ -198,47 +152,312 @@ class MiniAppViewModel : ViewModel(), KoinComponent {
         mediaPlayer = null
     }
 
-    fun hangup() {
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_HANGUP,
-            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
+    // ==================== 权限管理 ====================
+
+    fun checkMiniAppPermissions(
+        context: Context,
+        miniAppInfo: MiniAppInfo,
+        onPermissionsResult: () -> Unit,
+        onPermissionNotGranted: () -> Unit
+    ) {
+        MiniAppPermissionHelper.checkPermissions(
+            context = context,
+            miniAppInfo = miniAppInfo,
+            callback = object : MiniAppPermissionHelper.PermissionCallback {
+                override fun onAllPermissionsGranted() {
+                    onPermissionsResult()
+                }
+
+                override fun onPermissionDenied() {
+                    onPermissionNotGranted()
+                }
+            }
         )
-        viewModelScope.launch(Dispatchers.Default) {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+    }
+    fun refreshPermission() {
+        viewModelScope.launch(Dispatchers.IO) {
+            miniAppInfo?.appId?.let { permissionUseCase.refreshPermissionMapFromRepo(it) }
         }
     }
 
-    fun answer() {
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_ANSWER,
-            mapOf("telecomCallId" to miniToParentManager.getCallInfo()?.telecomCallId)
-        )
-        viewModelScope.launch(Dispatchers.Default) {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+    // ==================== 数据持久化 ====================
+
+    fun saveMiniAppToDb(miniApp: MiniAppInfo) {
+        sLogger.debug("saveMiniAppToDb miniApp: $miniApp")
+        miniAppDbRepo.upsert(miniApp)
+    }
+
+    fun updatePhoneButtonVisibility(showPhoneButton: Boolean, callState: Int) {
+        if (showPhoneButton && callInfo != null) {
+            _phoneButtonShowStatus.value = when (callState) {
+                Call.STATE_RINGING -> {
+                    PHONE_BUTTON_RINGING
+                }
+                Call.STATE_ACTIVE -> {
+                    PHONE_BUTTON_CALLING
+                }
+                else -> {
+                    PHONE_BUTTON_HIDE
+                }
+            }
+        } else {
+            _phoneButtonShowStatus.value = PHONE_BUTTON_HIDE
         }
     }
 
-    fun setMicMute(mute: Boolean) {
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_SET_MUTED,
-            mapOf(MUTED to mute)
+    // ==================== WebView 通知 ====================
+
+    fun notifyIMEHeight(height: Int) {
+        onCallHandler?.invoke(
+            MiniAppConstants.FUNCTION_IME_HEIGHT_NOTIFY,
+            arrayOf(JsonUtil.toJson(mapOf("imeHeight" to height)))
         )
-        viewModelScope.launch(Dispatchers.Default) {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+    }
+
+    fun notifyMiniAppState(state: String) {
+        onCallHandler?.invoke(
+            MiniAppConstants.FUNCTION_MINI_APP_NOTIFY,
+            arrayOf(JsonUtil.toJson(mapOf("miniAppState" to state)))
+        )
+    }
+
+    fun notifyAudioDeviceChange() {
+        onCallHandler?.invoke(MiniAppConstants.FUNCTION_AUDIO_DEVICE_NOTIFY, arrayOf())
+    }
+
+    fun notifyCallStateChange(newCallState: Int) {
+        callInfo?.state = newCallState
+        onCallStateChanged?.invoke(newCallState)
+        onCallHandler?.invoke(
+            MiniAppConstants.FUNCTION_CALL_STATE_NOTIFY,
+            arrayOf(JsonUtil.toJson(mapOf("state" to newCallState)))
+        )
+    }
+
+    fun setWindowStyle() {
+        onSetWindowStyle?.invoke()
+    }
+
+    fun notifyPageNameChanged(pageName: String) {
+        onSetPageName?.invoke(pageName)
+    }
+
+    fun callHandler(function: String, params: Array<Any>) {
+        onCallHandler?.invoke(function, params)
+    }
+
+    // ==================== 数据通道 ====================
+
+    fun registerDCCallBack() {
+        sLogger.debug("registerDCCallBack callInfo: $callInfo, miniAppInfo: $miniAppInfo")
+        val appId = miniAppInfo?.appId
+        val telecomCallId = callInfo?.telecomCallId
+        appId?.let {
+            MiniAppManager.getAppPackageManager(telecomCallId)?.registerAppDataChannelCallbackInternal(it, DcCreateListener())
         }
     }
 
-    fun setSpeakerOn(open: Boolean) {
-        val request = AppRequest(
-            CommonConstants.CALL_APP_EVENT,
-            CommonConstants.ACTION_SET_SPEAKERPHONE,
-            mapOf(SPEAKERPHONE_ON to open)
-        )
-        viewModelScope.launch(Dispatchers.Default) {
-            miniToParentManager.sendMessageToParent(request.toJson(), null)
+    fun unregisterDCCallBack() {
+        val appId = miniAppInfo?.appId
+        val telecomCallId = callInfo?.telecomCallId
+        appId?.let {
+            MiniAppManager.getAppPackageManager(telecomCallId)?.unregisterAppDataChannelCallbackInternal(it)
         }
+    }
+
+    fun registerParentToMiniCallback(){
+        miniAppInfo?.appId?.let { appId ->
+            callStateListener = object : ICallStateListener {
+                override fun onCallAdded(context: Context, callInfo: CallInfo) {
+                    if (sLogger.isDebugActivated) {
+                        sLogger.debug("CallStatusListener onCallAdded")
+                    }
+                    notifyCallStateChange(callInfo.state)
+                }
+
+                override fun onCallRemoved(context: Context, callInfo: CallInfo) {
+                    if (sLogger.isDebugActivated) {
+                        sLogger.debug("CallStatusListener onCallRemoved")
+                    }
+                    notifyCallStateChange(callInfo.state)
+                }
+
+                override fun onCallStateChanged(callInfo: CallInfo, state: Int) {
+                    if (sLogger.isDebugActivated) {
+                        sLogger.debug("CallStatusListener onCallStateChanged")
+                    }
+                    notifyCallStateChange(callInfo.state)
+                }
+
+                override fun onAudioDeviceChange() {
+                    notifyAudioDeviceChange()
+                }
+            }
+            callStateListener?.let { MiniAppManager.getAppPackageManager(callInfo?.telecomCallId)?.registerCallStateChangeCallbackInternal(appId, it) }
+        }
+    }
+
+    fun unregisterParentToMiniCallback() {
+        callInfo?.telecomCallId?.let {
+            miniAppInfo?.appId?.let { appId ->
+                callStateListener?.let { iCallStateListener ->
+                    MiniAppManager.getAppPackageManager(it)?.unregisterCallStateListenerInternal(appId, iCallStateListener)
+                }
+            }
+        }
+    }
+
+    fun createDC(labels: List<String>, description: String): Int? {
+        val appId = miniAppInfo?.appId
+        val telecomCallId = callInfo?.telecomCallId
+
+        if (labels.isEmpty() || appId.isNullOrEmpty() || description.isEmpty()) {
+            return 1
+        }
+
+        labels.forEach {
+            if (it.contains("_1_") && MiniAppManager.getAppPackageManager(telecomCallId)?.isPeerSupportDc() != true) {
+                sLogger.error("cannot create P2P when peer not support DC")
+                return 1
+            }
+        }
+
+        return MiniAppManager.getAppPackageManager(telecomCallId)
+            ?.createApplicationDataChannelsInternal(appId, labels.toTypedArray(), description) ?: 1
+    }
+
+    fun closeDC(label: String) {
+        sLogger.debug("closeDC label:$label")
+        createDCLabelList.remove(label)
+        openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, label) }?.let {
+            onDataChannelStateChanged(it, ImsDCStatus.DC_STATE_CLOSED, 0)
+            if (it.state != ImsDCStatus.DC_STATE_CLOSING && it.state != ImsDCStatus.DC_STATE_CLOSED) {
+                it.unregisterObserver()
+                it.close()
+            }
+        }
+        onCallHandler?.invoke(
+            MiniAppConstants.FUNCTION_NOTIFY_DATA_CHANNEL,
+            arrayOf(JsonUtil.toJson(mapOf("dcLabel" to label, "imsDCStatus" to ImsDCStatus.DC_STATE_CLOSED.ordinal)))
+        )
+    }
+
+    fun selectFiles(maxSelectable: Int?, fileTypes: List<String>?, callback: OnPickMediaCallbackListener){
+        onSelectFiles?.invoke(maxSelectable, fileTypes, callback)
+    }
+
+    fun finishMiniApp() {
+        onFinish?.invoke()
+    }
+
+    private fun onDataChannelStateChanged(dc: IImsDataChannel, status: ImsDCStatus?, errorCode: Int) {
+        sLogger.info("onDataChannelStateChanged")
+        if (status == ImsDCStatus.DC_STATE_CLOSED) {
+            StateFlowManager.emitCloseAdcEvent(
+                CloseAdcEvent(0, CloseAdcEvent.CLOSE_ADC, miniAppInfo?.appId, dc)
+            )
+        }
+    }
+
+    // ==================== 内部类 ====================
+
+    inner class DcCreateListener : IDcCreateListener {
+        override fun onDataChannelCreated(telecomCallId: String, streamId: String, imsDataChannel: IImsDataChannel) {
+            try {
+                sLogger.info("IDCCallback.Stub onDcCreated callId:$telecomCallId, streamId:$streamId, dcLabel:${imsDataChannel.dcLabel}")
+                val dcLabel = imsDataChannel.dcLabel
+                if (!createDCLabelList.contains(dcLabel)) {
+                    createDCLabelList.add(dcLabel)
+                }
+                try {
+                    imsDataChannel.registerObserver(ImsDCObserverImpl(dcLabel, imsDataChannel))
+                } catch (e: RemoteException) {
+                    sLogger.error("IDCCallback.Stub onDcCreated register observer error:${e.message}")
+                }
+                onDataChannelStateChange(imsDataChannel)
+            } catch (e: RemoteException) {
+                sLogger.error("DcCreateListener onDataChannelCreated", e)
+            }
+        }
+    }
+
+    inner class ImsDCObserverImpl(
+        private val label: String,
+        private val dc: IImsDataChannel
+    ) : IImsDCObserver.Stub() {
+
+        override fun onDataChannelStateChange(status: ImsDCStatus?, errCode: Int) {
+            sLogger.debug("ImsDCObserverImpl onDataChannelStateChange status:$status, label:$label")
+            if (status == ImsDCStatus.DC_STATE_CLOSED) {
+                StateFlowManager.emitCloseAdcEvent(
+                    CloseAdcEvent(0, CloseAdcEvent.CLOSE_ADC, miniAppInfo?.appId, dc)
+                )
+            }
+            onDataChannelStateChange(dc)
+        }
+
+        override fun onMessage(data: ByteArray?, length: Int) {
+            if (data == null) return
+            viewModelScope.launch(serialDispatcher) {
+                val map = mapOf(
+                    "dcLabel" to label,
+                    "message" to android.util.Base64.encodeToString(data, android.util.Base64.NO_WRAP)
+                )
+                onCallHandler?.invoke(
+                    MiniAppConstants.FUNCTION_NOTIFY_MESSAGE,
+                    arrayOf(JsonUtil.toJson(map))
+                )
+            }
+        }
+    }
+
+    private fun onDataChannelStateChange(dc: IImsDataChannel?) {
+        if (dc == null) return
+        val state = dc.state
+        val exist = openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dc.dcLabel) }
+        if (ImsDCStatus.DC_STATE_OPEN == state && exist == null) {
+            openDCList.add(dc)
+        }
+        if (ImsDCStatus.DC_STATE_CLOSED == state && exist != null) {
+            openDCList.remove(exist)
+            createDCLabelList.remove(exist.dcLabel)
+        }
+        viewModelScope.launch(Dispatchers.Main) {
+            val map = mapOf("dcLabel" to dc.dcLabel, "imsDCStatus" to state.ordinal)
+            onCallHandler?.invoke(
+                MiniAppConstants.FUNCTION_NOTIFY_DATA_CHANNEL,
+                arrayOf(JsonUtil.toJson(map))
+            )
+        }
+    }
+
+    fun onCleared() {
+        stopPlayVoice()
+        ScreenShareHelper.release()
+        unregisterDCCallBack()
+        unregisterParentToMiniCallback()
+        viewModelScope.cancel()
+    }
+}
+
+
+
+// 简单的 Observable 类，用于浮窗场景替代 LiveData
+class ObservableValue<T>(initialValue: T) {
+    var value: T = initialValue
+        set(value) {
+            field = value
+            observers.forEach { it.invoke(value) }
+        }
+
+    private val observers = mutableListOf<(T) -> Unit>()
+
+    fun observe(observer: (T) -> Unit) {
+        observers.add(observer)
+        observer.invoke(value)
+    }
+
+    fun removeObserver(observer: (T) -> Unit) {
+        observers.remove(observer)
     }
 }

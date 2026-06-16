@@ -38,7 +38,6 @@ object UsageStateUtils: KoinComponent {
 
     @Volatile
     private var isInCallTop: Boolean = false
-    private var isExpandedActivityTop: Boolean = false
 
     private val usageStatsManager by lazy { context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager }
 
@@ -46,21 +45,15 @@ object UsageStateUtils: KoinComponent {
     fun isInCallOnTop(): Boolean {
         val topClassName = getTopClassName(context)
         if (topClassName == null) {
-            return isInCallTop
+            return isInCallTop || isNetDCDialerShow()
         } else {
             isInCallTop = inCallActivityArray.contains(topClassName)
-            return isInCallTop
+            return isInCallTop || isNetDCDialerShow()
         }
     }
 
-    fun isMiniAppExpandedActivityShow(): Boolean {
-        val topClassName = getTopClassName(context)
-        if (topClassName == null) {
-            return isExpandedActivityTop
-        } else {
-            isExpandedActivityTop = "com.ct.ertclib.dc.app.ui.activity.MiniAppExpandedActivity" == topClassName
-            return isExpandedActivityTop
-        }
+    fun isNetDCDialerShow(): Boolean {
+        return ActivityTracker.isTopActivity("com.ct.ertclib.dc.feature.testing.netdc.ui.activity.DcDialerActivity")
     }
 
     @JvmStatic

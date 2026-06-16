@@ -3,7 +3,7 @@
     <stroke android:color="#80000000"
         android:width="0.5dp"/>
     <!-- 设置背景颜色 -->
-    <solid android:color="#80ffffff" />
+    <solid android:color="#00000000" />
 
     <!-- 定义圆角弧度 -->
     <corners

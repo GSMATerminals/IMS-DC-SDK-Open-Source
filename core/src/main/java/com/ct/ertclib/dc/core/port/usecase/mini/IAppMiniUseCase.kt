@@ -17,88 +17,91 @@
 package com.ct.ertclib.dc.core.port.usecase.mini
 
 import android.content.Context
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 interface IAppMiniUseCase {
 
-    fun hangup(context: Context): String?
+    fun hangup(miniAppView: MiniAppView): String?
 
-    fun getCallState(context: Context): String?
+    fun getCallState(miniAppView: MiniAppView): String?
 
-    fun getMiniAppInfo(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun getMiniAppInfo(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getSDKInfo(context: Context, params: Map<String, Any>):String
+    fun getSDKInfo(miniAppView: MiniAppView, params: Map<String, Any>):String
 
-    fun getScreenInfo(context: Context, params: Map<String, Any>):String
+    fun getScreenInfo(miniAppView: MiniAppView, params: Map<String, Any>):String
 
-    fun startApp(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun startApp(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun setWindow(context: Context, params: Map<String, Any>, handler: CompletionHandler<String?>)
+    fun setWindow(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun getRemoteNumber(context: Context, handler: CompletionHandler<String?>)
+    fun getRemoteNumber(miniAppView: MiniAppView, handler: CompletionHandler<String?>)
 
-    fun requestStartAdverseApp(context: Context): String?
+    fun requestStartAdverseApp(miniAppView: MiniAppView): String?
 
-    fun addOrEditContact(context: Context, params: Map<String, Any>): String
+    fun addOrEditContact(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun getContactName(context: Context, params: Map<String, Any>): String
+    fun getContactName(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun getContactList(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun getContactList(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun setSystemApiLicense(context: Context, params: Map<String, Any>): String
+    fun setSystemApiLicense(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun openWeb(context: Context, params: Map<String, Any>): String
+    fun openWeb(miniAppView: MiniAppView, params: Map<String, Any>): String
 
     fun getHttpResult(params: Map<String, Any>, handler: CompletionHandler<String?>)
 
-    fun moveToFront(): String
+    fun moveToFront(miniAppView: MiniAppView): String
 
-    fun stopApp(): String
+    fun stopApp(miniAppView: MiniAppView): String
 
-    fun getShareTypeName(context: Context, params: Map<String, Any>): String
+    fun getShareTypeName(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun playDtmfTone(context: Context, params: Map<String, Any>): String
+    fun playDtmfTone(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun setSpeakerphone(context: Context, params: Map<String, Any>): String
+    fun setSpeakerphone(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun isSpeakerphoneOn(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun isSpeakerphoneOn(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun setMuted(context: Context, params: Map<String, Any>): String
+    fun setMuted(miniAppView: MiniAppView, params: Map<String, Any>): String
 
-    fun isMuted(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun isMuted(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun answer(context: Context): String?
+    fun answer(miniAppView: MiniAppView): String?
 
-    fun hangupAsync(context: Context,handler: CompletionHandler<String?>)
+    fun hangupAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun getCallStateAsync(context: Context,handler: CompletionHandler<String?>)
+    fun getCallStateAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun getSDKInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun getSDKInfoAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun getScreenInfoAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun getScreenInfoAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun requestStartAdverseAppAsync(context: Context,handler: CompletionHandler<String?>)
+    fun requestStartAdverseAppAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun addOrEditContactAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun addOrEditContactAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun getContactNameAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun getContactNameAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun setSystemApiLicenseAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun setSystemApiLicenseAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun openWebAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun openWebAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
 
-    fun moveToFrontAsync(handler: CompletionHandler<String?>)
+    fun moveToFrontAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun stopAppAsync(handler: CompletionHandler<String?>)
+    fun stopAppAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
 
-    fun getShareTypeNameAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun getShareTypeNameAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun playDtmfToneAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun playDtmfToneAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun setSpeakerphoneAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun setSpeakerphoneAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun setMutedAsync(context: Context, params: Map<String, Any>,handler: CompletionHandler<String?>)
+    fun setMutedAsync(miniAppView: MiniAppView, params: Map<String, Any>,handler: CompletionHandler<String?>)
 
-    fun answerAsync(context: Context,handler: CompletionHandler<String?>)
+    fun answerAsync(miniAppView: MiniAppView,handler: CompletionHandler<String?>)
+
+    fun getPlatformInfo(miniAppView: MiniAppView, params: Map<String, Any>, handler: CompletionHandler<String?>)
 }

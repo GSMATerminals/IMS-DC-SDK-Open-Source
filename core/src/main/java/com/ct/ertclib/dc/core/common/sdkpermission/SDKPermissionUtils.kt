@@ -83,6 +83,24 @@ object SDKPermissionUtils {
         if (!checkPermissions(context, Manifest.permission.READ_PHONE_STATE)){
             list.add(Manifest.permission.READ_PHONE_STATE)
         }
+        if (!checkPermissions(context, Manifest.permission.READ_CONTACTS)){
+            list.add(Manifest.permission.READ_CONTACTS)
+        }
+        if (!checkPermissions(context, Manifest.permission.BLUETOOTH_CONNECT)){
+            list.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+
+        // 兼容 Android 13+ 存储权限
+        // 获取桌面背景需要用到
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!checkPermissions(context, Manifest.permission.READ_MEDIA_IMAGES)) {
+                list.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        } else {
+            if (!checkPermissions(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                list.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
         return list.toTypedArray()
     }
 
