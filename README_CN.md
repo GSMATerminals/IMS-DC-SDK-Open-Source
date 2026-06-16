@@ -1,8 +1,8 @@
 ![logo.png](images/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
-## News[2026/06/18] 🔥
-- 支持引导程序
+## News[2026/06/16] 🔥
+- 支持引导程序 ( 按照3GPP、GSMA等国际标准加载引导程序，用于展示小程序列表 )
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
 - 接入DCLab ( New! 一个完全对标IMS现网的DC环境，可用于DC小程序和AS的开发测试及业务体验 )  
   <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
