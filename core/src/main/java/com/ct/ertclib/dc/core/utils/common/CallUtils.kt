@@ -19,6 +19,7 @@ package com.ct.ertclib.dc.core.utils.common
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
@@ -211,6 +212,37 @@ object CallUtils {
         }
 
         return contactName
+    }
+
+    @SuppressLint("Range")
+    fun getContactPhoto(context: Context, phoneNumber: String): String? {
+        var photoBase64: String? = null
+        val contentResolver = context.contentResolver
+        val uri = Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(phoneNumber)
+        )
+        val cursor = contentResolver.query(
+            uri,
+            arrayOf(ContactsContract.PhoneLookup._ID),
+            null, null, null
+        )
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                val contactId = cursor.getLong(cursor.getColumnIndex(ContactsContract.PhoneLookup._ID))
+                val contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId)
+                val inputStream = ContactsContract.Contacts.openContactPhotoInputStream(contentResolver, contactUri, true)
+                if (inputStream != null) {
+                    val bitmap = inputStream.readBytes()
+                    photoBase64 = FileUtils.byteArrayToBase64(bitmap)
+                    inputStream.close()
+                }
+            }
+            cursor.close()
+        }
+
+        return photoBase64
     }
 
     // TODO: license控制

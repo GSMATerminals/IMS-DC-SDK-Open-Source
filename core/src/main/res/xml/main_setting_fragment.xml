@@ -17,13 +17,7 @@
         app:allowDividerAbove="false"
         app:allowDividerBelow="false" />
 
-    <com.ct.ertclib.dc.core.ui.widget.SettingPreference
-        app:key="debug_preference"
-        app:layout="@layout/setting_preference_layout"
-        app:title="@string/local_debug_entry"
-        app:summary="@string/local_debug_entry_summary"
-        app:allowDividerAbove="false"
-        app:allowDividerBelow="false"/>
+
 
     <com.ct.ertclib.dc.core.ui.widget.SettingPreference
         app:key="privacy_preference"

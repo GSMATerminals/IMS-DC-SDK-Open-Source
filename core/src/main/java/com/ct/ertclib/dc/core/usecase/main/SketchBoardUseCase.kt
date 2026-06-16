@@ -33,14 +33,13 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_HEIGHT_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_STATUS_PARAM
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.NOTIFY_WIDTH_PARAM
 import com.ct.ertclib.dc.core.data.common.VideoInfo
-import com.ct.ertclib.dc.core.data.event.NotifyEvent
-import com.ct.ertclib.dc.core.port.common.IParentToMiniNotify
 import com.ct.ertclib.dc.core.port.listener.ISketchWindowListener
 import com.ct.ertclib.dc.core.port.manager.ISketchManager
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.port.usecase.main.ISketchBoardUseCase
 import com.ct.ertclib.dc.core.data.screenshare.DrawingInfo
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
+import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.port.common.IScreenChangedCallback
 import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
@@ -58,7 +57,6 @@ import java.util.concurrent.ConcurrentHashMap
 class SketchBoardUseCase(
     private val context: Context,
     private val screenShareSketchManager: ISketchManager,
-    private val parentToMiniNotifier: IParentToMiniNotify,
     private val screenShareUseCase: IScreenShareUseCase
     ): ISketchBoardUseCase, KoinComponent {
 
@@ -95,15 +93,12 @@ class SketchBoardUseCase(
             logger.info("openSketchBoard, return")
             return
         }
-        val screenSizeNotifyEvent = NotifyEvent(
+        MiniAppStartManager.getRunningMiniApp(callId,appId)?.viewModel?.callHandler(
             FUNCTION_SCREEN_SIZE_NOTIFY,
-            mapOf(
-                NOTIFY_WIDTH_PARAM to ScreenUtils.getScreenWidth(context),
-                NOTIFY_HEIGHT_PARAM to ScreenUtils.getScreenHeight(context)
-            )
-        )
-
-        parentToMiniNotifier.notifyEvent(callId, appId, screenSizeNotifyEvent)
+            arrayOf(JsonUtil.toJson(mapOf(
+                        NOTIFY_WIDTH_PARAM to ScreenUtils.getScreenWidth(context),
+                        NOTIFY_HEIGHT_PARAM to ScreenUtils.getScreenHeight(context)
+                    ))))
         screenShareSketchManager.showSketchControlWindow(paintColor, paintWidth)
         ScreenUtils.addScreenChangedListener(screenChangedCallback)
     }
@@ -112,11 +107,7 @@ class SketchBoardUseCase(
         logger.info("closeSketchBoard")
         screenShareSketchManager.exitSketchControlWindow()
         if (needNotifyToMini) {
-            val closeBoardNotifyEvent = NotifyEvent(
-                FUNCTION_SKETCH_STATUS_NOTIFY,
-                mapOf(NOTIFY_STATUS_PARAM to STATUS_CLOSE)
-            )
-            parentToMiniNotifier.notifyEvent(callId, appId, closeBoardNotifyEvent)
+            MiniAppStartManager.getRunningMiniApp(callId,appId)?.viewModel?.callHandler(FUNCTION_SKETCH_STATUS_NOTIFY, arrayOf(JsonUtil.toJson(mapOf(NOTIFY_STATUS_PARAM to STATUS_CLOSE))))
         }
         ScreenUtils.removeScreenChangedListener(screenChangedCallback)
     }
@@ -170,24 +161,12 @@ class SketchBoardUseCase(
 
         override fun onSketchEvent(drawingInfo: DrawingInfo) {
             logger.info("onSketchEvent")
-            val drawingNotifyEvent = NotifyEvent(
-                FUNCTION_DRAWING_INO_NOTIFY,
-                mapOf(NOTIFY_DRAWING_INFO_PARAM to JsonUtil.toJson(drawingInfo))
-            )
-            parentToMiniNotifier.notifyEvent(callId, appId, drawingNotifyEvent)
+            MiniAppStartManager.getRunningMiniApp(callId,appId)?.viewModel?.callHandler(FUNCTION_DRAWING_INO_NOTIFY, arrayOf(JsonUtil.toJson(mapOf(NOTIFY_DRAWING_INFO_PARAM to JsonUtil.toJson(drawingInfo)))))
             LogUtils.debug(TAG, "onSketchEvent param: ${JsonUtil.toJson(drawingInfo)}")
         }
 
         override fun onLocalWindowNotified(width: Float, height: Float) {
-            val screenSizeNotifyEvent = NotifyEvent(
-                FUNCTION_VIDEO_WINDOW_NOTIFY,
-                mapOf(
-                    NOTIFY_WIDTH_PARAM to width.toString(),
-                    NOTIFY_HEIGHT_PARAM to height.toString()
-                )
-            )
-
-            parentToMiniNotifier.notifyEvent(callId, appId, screenSizeNotifyEvent)
+            MiniAppStartManager.getRunningMiniApp(callId,appId)?.viewModel?.callHandler(FUNCTION_VIDEO_WINDOW_NOTIFY, arrayOf(JsonUtil.toJson(mapOf(NOTIFY_WIDTH_PARAM to width, NOTIFY_HEIGHT_PARAM to height))))
         }
     }
 

@@ -17,40 +17,23 @@
 package com.ct.ertclib.dc.core.miniapp
 
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.RemoteException
+import android.view.WindowManager
 import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
-import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
-import com.ct.ertclib.dc.core.service.MiniAppService
-import com.ct.ertclib.dc.core.miniapp.aidl.IMessageCallback
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppProperties
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity0
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity1
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity2
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity3
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity4
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity5
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity6
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity7
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity8
-import com.ct.ertclib.dc.core.miniapp.ui.activity.MiniAppActivity9
-import com.ct.ertclib.dc.core.utils.common.ClassUtils
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartManager
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppStartCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
@@ -58,16 +41,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 object MiniAppStartManager : IMiniAppStartManager {
     private const val TAG = "MiniAppStartManager"
     private val sLogger: Logger = Logger.getLogger(TAG)
-    private val mMiniAppInfoList = ArrayList<MiniAppInfoWrapper>()
-    private var appService: MiniAppService? = null
-
-
-    class MiniAppChecker(private val activityClass: Class<out MiniAppActivity>) :
-            (MiniAppInfoWrapper) -> Boolean {
-        override fun invoke(miniAppInfo: MiniAppInfoWrapper): Boolean {
-            return miniAppInfo.activityClass == activityClass
-        }
-    }
+    private val mMiniAppInfoWrapperList = ArrayList<MiniAppInfoWrapper>()
 
     private fun startMiniAppInfo(miniAppInfo: MiniAppInfo, context: Context, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?) {
         val coroutineScope = CoroutineScope(EmptyCoroutineContext)
@@ -119,162 +93,70 @@ object MiniAppStartManager : IMiniAppStartManager {
         callInfo: CallInfo?,
         miniAppListInfo: MiniAppList?
     ) {
-        if (sLogger.isDebugActivated) sLogger.debug("startMiniAppActivity miniAppInfp:$miniAppInfo")
+        if (sLogger.isDebugActivated) sLogger.debug("startMiniAppActivity miniAppInfo:$miniAppInfo")
 
-        checkAllRunningApp(context)
 
         val runningMiniAppWrapper = getRunningMiniAppWrapper(miniAppInfo, callInfo)
         if (runningMiniAppWrapper != null) {
-            val intent = Intent(context, runningMiniAppWrapper.activityClass)
-            intent.putExtra("miniApp", runningMiniAppWrapper.miniApp)
-            intent.putExtra("callInfo", runningMiniAppWrapper.callInfo)
-            intent.putExtra("miniAppListInfo", miniAppListInfo)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
             val coroutineScope = CoroutineScope(EmptyCoroutineContext)
             coroutineScope.launch(Dispatchers.Main) {
-                delay(500)
-                context.startActivity(intent)
+                sLogger.debug("startMiniAppActivity runningMiniAppWrapper:$runningMiniAppWrapper")
+                runningMiniAppWrapper.view.show()
             }
             return
         }
 
-        val targetActivityClass = getTargetActivityClass(context, miniAppInfo)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            mMiniAppInfoList.removeIf {
-                MiniAppChecker(targetActivityClass).invoke(it)
-            }
-        }
+        val miniAppInfoWrapper = MiniAppInfoWrapper(miniAppInfo, callInfo, MiniAppView(context))
+        mMiniAppInfoWrapperList.add(miniAppInfoWrapper)
 
-        val miniAppInfoWrapper = MiniAppInfoWrapper(miniAppInfo, callInfo, targetActivityClass)
-        mMiniAppInfoList.add(miniAppInfoWrapper)
-
-        NewCallAppSdkInterface.emitCloseExpandedViewFlow(isClose = true)
-        val intent = Intent(context, miniAppInfoWrapper.activityClass)
-        intent.putExtra("miniApp", miniAppInfoWrapper.miniApp)
-        intent.putExtra("callInfo", callInfo)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
+        // NewCallAppSdkInterface.emitCloseExpandedViewFlow(isClose = true)
         val coroutineScope = CoroutineScope(EmptyCoroutineContext)
         coroutineScope.launch(Dispatchers.Main) {
-            delay(500)
-            context.startActivity(intent)
+            sLogger.debug("startMiniAppActivity addMiniAppView")
+            addMiniAppView(context, miniAppInfoWrapper,miniAppListInfo)
         }
-    }
-
-
-    private fun getTargetActivityClass(
-        context: Context,
-        miniAppInfo: MiniAppInfo
-    ): Class<out MiniAppActivity> {
-
-        val clsArr = arrayOf(
-            MiniAppActivity0::class.java,
-            MiniAppActivity1::class.java,
-            MiniAppActivity2::class.java,
-            MiniAppActivity3::class.java,
-            MiniAppActivity4::class.java,
-            MiniAppActivity5::class.java,
-            MiniAppActivity6::class.java,
-            MiniAppActivity7::class.java,
-            MiniAppActivity8::class.java,
-            MiniAppActivity9::class.java
-        )
-        //如果没有有没有使用的app界面，直接返回使用拉起。
-        clsArr.forEach {
-            val runAppClassName = ClassUtils.getRunAppClassName(context, it)
-            if (!ClassUtils.isAppClassRunning(context, runAppClassName)) {
-                return it
-            }
-        }
-
-        //如果没有空闲activity,那么根据properties 优先级结束最低优先级的小程序，返回此小程序界面
-        val priority = miniAppInfo.appProperties?.priority
-
-        val launchAppProperties = priority ?: -1
-        val lowPropertiesMiniAppList = ArrayList<MiniAppInfoWrapper>()
-        for (miniAppWrapper in mMiniAppInfoList) {
-            val appProperties = miniAppWrapper.miniApp.appProperties?.priority
-            if ((appProperties ?: -1) <= launchAppProperties) {
-                lowPropertiesMiniAppList.add(miniAppWrapper)
-            }
-        }
-
-        if (lowPropertiesMiniAppList.isEmpty()) {
-            throw Exception("No low priority found value:$launchAppProperties")
-        }
-        var miniAppInfoWraper: MiniAppInfoWrapper?
-        if (lowPropertiesMiniAppList.size == 1) {
-            miniAppInfoWraper = lowPropertiesMiniAppList[0]
-        } else {
-            val iterator = lowPropertiesMiniAppList.iterator()
-            miniAppInfoWraper = iterator.next()
-            var desPriority = miniAppInfoWraper.miniApp.appProperties?.priority ?: -1
-            do {
-                val next = iterator.next()
-                val nextPriority = next.miniApp.appProperties?.priority ?: -1
-                if (desPriority > nextPriority) {
-                    miniAppInfoWraper = next
-                    desPriority = nextPriority
-                }
-            } while (iterator.hasNext())
-        }
-
-        if (miniAppInfoWraper != null) {
-            finishMiniApp(miniAppInfoWraper.miniApp.callId,miniAppInfoWraper.miniApp.appId)
-            return miniAppInfoWraper.activityClass
-        }
-
-        throw Exception("can not get target class")
-
     }
 
     private fun finishMiniApp(callId: String,appId: String) {
         if (sLogger.isDebugActivated) {
             sLogger.debug("finishMiniApp, appId:$appId")
         }
-        if (appService != null) {
-            val iParentToMini = appService?.mParentToMiniCallbackMap?.get(appService?.getKey(callId,appId))
-            if (iParentToMini != null) {
-                try {
-                    iParentToMini.finishMiniAppActivity()
-                } catch (e: RemoteException) {
-                    if (sLogger.isDebugActivated) sLogger.error("finishMiniApp", e)
-                    appService!!.onRemoteError(callId,appId)
-                }
-            }
+        val miniAppWrapper = mMiniAppInfoWrapperList.firstOrNull { it.miniApp.appId == appId && it.miniApp.callId == callId }
+        if (miniAppWrapper == null) {
+            sLogger.warn("finishMiniApp: MiniApp not found, appId:$appId")
+            return
         }
+
+        try {
+            miniAppWrapper.view.finishAndKillMiniApp()
+            sLogger.debug("Removed view for callId: $callId, app: $appId")
+        } catch (e: Exception) {
+            sLogger.error("Failed to remove view for callId: $callId, app: $appId", e)
+        }
+
+        sLogger.debug("Removed wrapper for callId: $callId, app: $appId, remaining count: ${mMiniAppInfoWrapperList.size}")
     }
 
     private fun getRunningMiniAppWrapper(
         miniAppInfo: MiniAppInfo,
         callInfo: CallInfo?
     ): MiniAppInfoWrapper? {
-        for (miniAppInfoWraper in mMiniAppInfoList) {
-            if (miniAppInfoWraper.miniApp.appId == miniAppInfo.appId && miniAppInfoWraper.miniApp.callId == miniAppInfo.callId) {
-                if (miniAppInfoWraper.miniApp.appProperties?.version?.let { miniAppInfo.appProperties?.version?.let { it1 ->
+        for (miniAppInfoWrapper in mMiniAppInfoWrapperList) {
+            if (miniAppInfoWrapper.miniApp.appId == miniAppInfo.appId && miniAppInfoWrapper.miniApp.callId == miniAppInfo.callId) {
+                if (miniAppInfoWrapper.miniApp.appProperties?.version?.let { miniAppInfo.appProperties?.version?.let { it1 ->
                         PathManager().compareVersion(it,
                             it1
                         )
                     } } == 1) {
-                    miniAppInfoWraper.miniApp = miniAppInfo
+                    miniAppInfoWrapper.miniApp = miniAppInfo
                     if (callInfo != null) {
-                        miniAppInfoWraper.callInfo = callInfo
+                        miniAppInfoWrapper.callInfo = callInfo
                     }
                 }
-                return miniAppInfoWraper
+                return miniAppInfoWrapper
             }
         }
         return null
-    }
-
-    private fun checkAllRunningApp(context: Context) {
-        val list = ArrayList<MiniAppInfoWrapper>()
-        mMiniAppInfoList.forEach {
-            val runAppClassName = ClassUtils.getRunAppClassName(context, it.activityClass)
-            if (!ClassUtils.isAppClassRunning(context, runAppClassName)) {
-                list.add(it)
-            }
-        }
-        mMiniAppInfoList.removeAll(list.toSet())
     }
 
     override fun startMiniApp(context: Context, miniAppInfo: MiniAppInfo, callInfo: CallInfo?, miniAppListInfo: MiniAppList?, callback: IMiniAppStartCallback?) {
@@ -285,34 +167,35 @@ object MiniAppStartManager : IMiniAppStartManager {
         finishMiniApp(callId,appId)
     }
 
-    fun setMiniAppAidlService(appService: MiniAppService?) {
-        this.appService = appService
-    }
-
-    fun sendMessageToMiniApp(callId: String,appId: String, message: String, callback: IMessageCallback?) {
-        LogUtils.debug(TAG, "sendMessageToMiniApp, callId: $callId, appId: $appId, message: $message")
-        try {
-            appService?.let {
-                it.mParentToMiniCallbackMap[it.getKey(callId,appId)]?.sendMessageToMini(appId, message, callback)
+    override fun clearBackgroundTaskListByCall(callId: String) {
+        mMiniAppInfoWrapperList.filter { it.miniApp.callId == callId }.forEach { wrapper ->
+            try {
+                wrapper.view.finishAndKillMiniApp()
+            } catch (e: Exception) {
+                sLogger.error("Failed to remove view for app: ${wrapper.miniApp.appId}", e)
             }
-        } catch (e: RemoteException) {
-            if (sLogger.isDebugActivated) {
-                sLogger.error("sendMessageToMiniApp err:", e)
+            mMiniAppInfoWrapperList.remove(wrapper)
+        }
+        sLogger.debug("Removed views, remaining count: ${mMiniAppInfoWrapperList.size}")
+    }
+
+    fun getRunningMiniApp(callId: String,appId: String): MiniAppView? {
+        return mMiniAppInfoWrapperList.firstOrNull { it.miniApp.appId == appId && it.miniApp.callId == callId }?.view
+    }
+
+    private fun addMiniAppView(context: Context, miniAppInfoWrapper: MiniAppInfoWrapper, miniAppListInfo: MiniAppList?) {
+        // 直接让 View 自己添加到 WindowManager
+        miniAppInfoWrapper.view.attachToWindow()
+
+        miniAppInfoWrapper.view.setControlListener(object : MiniAppView.ControlListener {
+            override fun onToRemove() {
+                // 移除 wrapper
+                mMiniAppInfoWrapperList.remove(miniAppInfoWrapper)
+                sLogger.debug("Removed wrapper for app: ${miniAppInfoWrapper.miniApp.appId}, remaining count: ${mMiniAppInfoWrapperList.size}")
             }
-        }
+        })
 
-    }
-
-    override fun clearBackgroundTaskList() {
-        mMiniAppInfoList.clear()
-    }
-
-    override fun moveMiniAppToFront(context: Context, appId: String) {
-        val miniAppWrapper = mMiniAppInfoList.firstOrNull { it.miniApp.appId == appId }
-        miniAppWrapper?.let {
-            val intent = Intent(context, it.activityClass)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            context.startActivity(intent)
-        }
+        miniAppInfoWrapper.view.start(miniAppInfoWrapper.miniApp, miniAppInfoWrapper.callInfo, miniAppListInfo)
+        sLogger.debug("addMiniAppView success, appId: ${miniAppInfoWrapper.miniApp.appId}")
     }
 }

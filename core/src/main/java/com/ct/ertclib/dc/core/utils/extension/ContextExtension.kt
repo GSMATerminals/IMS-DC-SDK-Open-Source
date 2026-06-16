@@ -28,6 +28,7 @@ import com.ct.ertclib.dc.core.data.call.CallInfo
 
 fun Context.startAddContactActivity(name: String, number: String) {
     val intent = Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     intent.putExtra(ContactsContract.Intents.Insert.NAME, name)
     intent.putExtra(ContactsContract.Intents.Insert.PHONE, number)
     this.startActivity(intent)
@@ -36,6 +37,7 @@ fun Context.startAddContactActivity(name: String, number: String) {
 
 fun Context.startEditContactActivity(number: String) {
     val intent = Intent(Intent.ACTION_INSERT_OR_EDIT)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     intent.setType(TYPE_CONTACT_PERSON)
     intent.setType(TYPE_CONTACT_CONTACT)
     intent.setType(TYPE_CONTACT_RAW)
@@ -51,6 +53,12 @@ fun Context.startLocalTestActivity() {
 
 fun Context.startSettingsActivity() {
     val intent = Intent(ContextConstants.INTENT_SETTINGS_ACTIVITY)
+    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    this.startActivity(intent)
+}
+
+fun Context.startNetDCDialerActivity() {
+    val intent = Intent(ContextConstants.INTENT_NET_DIALER_ACTIVITY)
     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
     this.startActivity(intent)
 }

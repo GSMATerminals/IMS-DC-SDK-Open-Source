@@ -46,6 +46,7 @@ object MiniAppConstants {
     //function for file
     const val FUNCTION_GET_LOCATION = "getLocation"
     const val FUNCTION_SELECT_FILE = "selectFile"
+    const val FUNCTION_SELECT_FILES = "selectFiles"
     const val FUNCTION_GET_FILE_LIST = "getFileList"
     const val FUNCTION_GET_PRIVATE_FOLDER = "getPrivateFolder"
     const val FUNCTION_START_SAVE_FILE = "startSaveFile"
@@ -82,6 +83,7 @@ object MiniAppConstants {
     const val FUNCTION_REQUEST_START_ADVERSE_APP = "requestStartAdverseApp"
     const val FUNCTION_ADD_CONTACT = "addContact"
     const val FUNCTION_GET_CONTACT_NAME = "getContactName"
+    const val FUNCTION_GET_CONTACT_PHOTO = "getContactPhoto"
     const val FUNCTION_GET_CONTACT_LIST = "getContactList"
     const val FUNCTION_SET_SYSTEM_API_LICENSE = "setSystemApiLicense"
     const val FUNCTION_OPEN_WEB = "openWeb"
@@ -94,6 +96,11 @@ object MiniAppConstants {
     const val FUNCTION_SET_MUTED = "setMuted"
     const val FUNCTION_IS_MUTED = "isMuted"
     const val FUNCTION_ANSWER = "answer"
+    const val FUNCTION_GET_AUDIO_DEVICES = "getAudioDevices"
+    const val FUNCTION_GET_CURRENT_AUDIO_DEVICE = "getCurrentAudioDevice"
+    const val FUNCTION_SET_AUDIO_DEVICE = "setAudioDevice"
+
+    const val FUNCTION_GET_PLATFORM_INFO = "getPlatFormInfo"
 
     //function for screen share
     const val FUNCTION_START_SCREEN_SHARE = "startScreenShare"
@@ -105,6 +112,9 @@ object MiniAppConstants {
     const val FUNCTION_REMOTE_SIZE_INFO = "addRemoteSizeInfo"
     const val FUNCTION_SET_PRIVACY_MODE = "setScreenSharePrivacyMode"
     const val FUNCTION_REMOTE_WINDOW_SIZE_INFO = "addRemoteWindowSizeInfo"
+    const val FUNCTION_GET_MINI_APP_LIST_INFO = "getMiniAppListInfo"
+    const val FUNCTION_GET_RUNNING_APP_LIST = "getRunningAppList"
+    const val FUNCTION_GET_CALL_INFO = "getCallInfo"
 
     //function for notify
     const val FUNCTION_NOTIFY_DATA_CHANNEL = "dataChannelNotify"

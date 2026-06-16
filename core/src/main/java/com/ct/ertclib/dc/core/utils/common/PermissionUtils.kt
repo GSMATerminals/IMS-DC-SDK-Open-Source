@@ -18,8 +18,12 @@ package com.ct.ertclib.dc.core.utils.common
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
@@ -27,6 +31,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 object PermissionUtils : KoinComponent {
+
+    private const val TAG = "PermissionUtils"
 
     private const val CAMERA_INDEX = 0
     private const val VIBRATE_INDEX = 1
@@ -92,7 +98,6 @@ object PermissionUtils : KoinComponent {
 
 
     //将miniApp Permission列表转换成系统权限列表
-    @RequiresApi(Build.VERSION_CODES.S)
     @JvmStatic
     fun convertToSystemPermissions(permissions: List<String>): MutableList<String> {
         val allPermission = mutableListOf<String>()
@@ -161,7 +166,6 @@ object PermissionUtils : KoinComponent {
     }
 
     //根据系统权限获取对应的权限名称
-    @RequiresApi(Build.VERSION_CODES.S)
     fun convertToSystemPermissionData(permissions: List<String>): MutableList<PermissionData> {
         val permissionDataList = mutableListOf<PermissionData>()
         permissions.forEach {
@@ -250,5 +254,34 @@ object PermissionUtils : KoinComponent {
             }
         }
         return map
+    }
+
+    fun checkOverlayPermission(context: Context) {
+        if (!Settings.canDrawOverlays(context)) {
+            // 悬浮窗授权，这里各个终端情况不一样
+            val brand = PkgUtils.brand()
+            LogUtils.debug(TAG, "brand:$brand")
+            when(brand){
+                PkgUtils.SAMSUNG -> {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.fromParts("package", context.packageName, null)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra(":settings:fragment_args_key", "system_alert_window");
+                    context.startActivity(intent)
+                }
+
+                PkgUtils.XIAOMI -> {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri())
+                    intent.setClassName("com.android.settings","com.android.settings.SubSettings")
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra(":settings:show_fragment", "com.android.settings.applications.appinfo.DrawOverlayDetails");
+                    context.startActivity(intent)
+                }
+                else -> {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri())
+                    context.startActivity(intent)
+                }
+            }
+        }
     }
 }

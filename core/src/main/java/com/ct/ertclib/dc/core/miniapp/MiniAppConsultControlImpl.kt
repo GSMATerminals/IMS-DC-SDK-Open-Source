@@ -74,6 +74,7 @@ class MiniAppConsultControlImpl(private val appId: String,private val onOnContro
                                         val appInfoStr = request.params["appInfo"] as String
                                         val appInfo = JsonUtil.fromJson(appInfoStr, MiniAppInfo::class.java)
                                         if (appInfo != null) {
+                                            appInfo.isFromBDC100 = imsDataChannel.dcLabel.startsWith("_remote")
                                             onOnControlListener.onRequestStartApp(appInfo)
                                         }
                                     }
@@ -112,7 +113,8 @@ class MiniAppConsultControlImpl(private val appId: String,private val onOnContro
 
     fun requestStartAdverseApp(appInfo: MiniAppInfo) {
         val appInfoStr = JsonUtil.toJson(appInfo)
-        val msg = MiniAppConsultControlMsg(CMD_REQUEST_START_APP, mapOf("appInfo" to appInfoStr))
+        val contentToSend = JsonUtil.removeJsonFieldWithGson(appInfoStr, "appIcon")
+        val msg = MiniAppConsultControlMsg(CMD_REQUEST_START_APP, mapOf("appInfo" to contentToSend))
         val byteArray = JsonUtil.toJson(msg).toByteArray()
         mDC?.let {
             if (it.state == ImsDCStatus.DC_STATE_OPEN) {

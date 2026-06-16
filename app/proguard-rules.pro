@@ -216,3 +216,33 @@
 
 -dontwarn okhttp3.logging.**
 -dontwarn retrofit2.**
+
+
+-keep class com.ct.ertclib.dc.core.miniapp.MiniAppRootADCImpl { *; }
+-keep class com.ct.ertclib.dc.core.miniapp.MiniAppRootADCImpl$* { *; }
+
+# 保持 WebRTC 所有类不被混淆（尤其是 Native 层通过 JNI 引用的类）
+-keep class org.webrtc.** { *; }
+
+# 保持 WebRTC 内部需要反射调用的方法
+-keepclassmembers class org.webrtc.** {
+    *;
+}
+
+# 如果有自定义的 WebRTC 相关类（例如用到 PeerConnectionFactory 等），也保持
+-keep class com.ct.ertclib.dc.net.webrtc.** { *; }
+
+-keep class com.ct.ertclib.dc.net.data.ConfigData { *; }
+
+# XStream 库的规则 - 忽略缺失的 AWT/Swing 类
+-dontwarn java.awt.**
+-dontwarn javax.swing.**
+-dontwarn com.thoughtworks.xstream.converters.extended.ColorConverter
+-dontwarn com.thoughtworks.xstream.converters.extended.FontConverter
+-dontwarn com.thoughtworks.xstream.converters.extended.LookAndFeelConverter
+
+# 保留 XStream 的核心功能
+-keep class com.thoughtworks.xstream.** { *; }
+-keep class com.thoughtworks.xstream.converters.** { *; }
+-keep class com.thoughtworks.xstream.core.** { *; }
+-dontwarn com.thoughtworks.xstream.**

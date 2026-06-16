@@ -36,7 +36,7 @@ android {
             isMinifyEnabled = false
         }
         val release by getting {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -47,14 +47,22 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(files("libs\\net-release-1.0.0.aar"))
 
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(libs.okhttp)
 
     // room
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     compileOnly(files("${rootProject.projectDir}\\libs\\XXPermissions-18.2.aar"))
     compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
+    api("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    implementation("io.ktor:ktor-client-core:2.3.12")
+    implementation("io.ktor:ktor-client-cio:2.3.12")
+    implementation("io.ktor:ktor-client-websockets:2.3.12")
+    implementation("io.livekit:livekit-android:2.25.2")
 }

@@ -16,18 +16,18 @@
 
 package com.ct.ertclib.dc.core.dispatcher.js
 
-import android.content.Context
 import com.ct.ertclib.dc.core.data.bridge.JSRequest
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
-import wendu.dsbridge.CompletionHandler
 
 class DefaultJsDispatcher : IJsEventDispatcher {
 
-    override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
+    override fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>) {
         //empty implementation
     }
 
-    override fun dispatchSyncMessage(context: Context, request: JSRequest): String? {
+    override fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String? {
         //empty implementation
         return ""
     }

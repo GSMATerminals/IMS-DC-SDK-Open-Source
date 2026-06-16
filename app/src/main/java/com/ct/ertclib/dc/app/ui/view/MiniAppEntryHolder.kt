@@ -37,6 +37,7 @@ import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface.SDK_INTENT_MINI_EXPANDED
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.model.AdItem
 import com.ct.ertclib.dc.core.port.common.IUIChangeListener
 import com.ct.ertclib.dc.core.utils.common.ScreenUtils
 import kotlin.math.absoluteValue
@@ -65,10 +66,14 @@ class MiniAppEntryHolder(private val context: Context) {
     private var currentMode = EntryMode.DISMISS
     private var preTouchX = 0f
     private var preTouchY = 0f
+    private var floatPositionX = 0
+
     private var isMove = false
 
     var miniAppList: MiniAppList? = null
     var callInfo: CallInfo? = null
+
+    var adList : ArrayList<AdItem> = arrayListOf()
     var style: Int = 0
 
     private val uiChangeListener: IUIChangeListener = object : IUIChangeListener {
@@ -106,8 +111,7 @@ class MiniAppEntryHolder(private val context: Context) {
 
         if (floatLps == null) {
             floatLps = getWindowLayoutParams().apply {
-                y = NewCallAppSdkInterface.floatPositionY
-                x = NewCallAppSdkInterface.floatPositionX
+                y = ScreenUtils.getScreenHeight(context) / 2
             }
             miniAppEntryView = MiniAppEntryView(context)
             miniAppEntryView?.let { view ->
@@ -149,23 +153,17 @@ class MiniAppEntryHolder(private val context: Context) {
     fun refreshUI(newStyle: Int = style) {
         miniAppEntryView?.let {
             it.setFloatingBallIcon(newStyle)
-            it.setFloatingHalfBallIcon(newStyle, isLeftSide(NewCallAppSdkInterface.floatPositionX.toFloat()))
+            it.setFloatingHalfBallIcon(newStyle, isLeftSide(floatPositionX.toFloat()))
         }
     }
 
     private fun switchToExpandedView() {
-        dismiss()
-
+        hideFloatingBall()
         val intent = Intent(SDK_INTENT_MINI_EXPANDED)
-        intent.putExtra("miniAppList", miniAppList)
+        intent.setPackage(context.packageName)
         intent.putExtra("callInfo", callInfo)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_NEW_TASK)
-        val point = Point(0, 0)
-        floatLps?.let {
-            point.x = it.x
-            point.y = it.y
-        }
-        intent.putExtra("point", point)
+        intent.putExtra("adList", adList)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         context.startActivity(intent)
     }
 
@@ -200,8 +198,7 @@ class MiniAppEntryHolder(private val context: Context) {
                         updateFloatingButtonLocation(dx, dy)
                         preTouchX = x
                         preTouchY = y
-                        NewCallAppSdkInterface.floatPositionX += dx.toInt()
-                        NewCallAppSdkInterface.floatPositionY += dy.toInt()
+                        floatPositionX += dx.toInt()
                         if (dx.absoluteValue > 2 || dy.absoluteValue > 2) {
                             isMove = true
                         } else {
@@ -230,7 +227,7 @@ class MiniAppEntryHolder(private val context: Context) {
                             }
                             valueAnimation?.addListener(object: AnimatorListenerAdapter() {
                                 override fun onAnimationEnd(animation: Animator) {
-                                    NewCallAppSdkInterface.floatPositionX = finalX.toInt()
+                                    floatPositionX = finalX.toInt()
                                     hideFloatingBallDelayed()
                                     preTouchX = finalX
                                     isMove = false

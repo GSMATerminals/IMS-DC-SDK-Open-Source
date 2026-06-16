@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.manager.call
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -25,8 +26,10 @@ import android.os.Message
 import android.os.SystemClock
 import android.telecom.Call
 import com.blankj.utilcode.util.Utils
+import com.blankj.utilcode.util.ZipUtils
 import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionUtils
 import com.ct.ertclib.dc.core.utils.httpstack.HttpStackResponse
 import com.ct.ertclib.dc.core.utils.httpstack.HttpStackHelper
@@ -36,36 +39,47 @@ import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.constants.CommonConstants
+import com.ct.ertclib.dc.core.constants.CommonConstants.AS_MODULE_ADLIST_INFO_EVENT
 import com.ct.ertclib.dc.core.constants.CommonConstants.FLOATING_DISMISS
 import com.ct.ertclib.dc.core.constants.CommonConstants.FLOATING_DISPLAY
 import com.ct.ertclib.dc.core.constants.CommonConstants.PERCENT_CONSTANTS
-import com.ct.ertclib.dc.core.constants.MiniAppConstants.STYLE_DEFAULT
+import com.ct.ertclib.dc.core.data.bootstrap.BootstrapProperties
 import com.ct.ertclib.dc.core.data.common.CallStateData
 import com.ct.ertclib.dc.core.data.common.FloatingBallData
 import com.ct.ertclib.dc.core.data.event.MiniAppListGetEvent
+import com.ct.ertclib.dc.core.data.miniapp.AppResponse
 import com.ct.ertclib.dc.core.port.miniapp.IDownloadMiniApp
 import com.ct.ertclib.dc.core.port.miniapp.IMiniAppListLoadedCallback
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppDownloadResult
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
+import com.ct.ertclib.dc.core.data.model.AdItem
+import com.ct.ertclib.dc.core.manager.common.LicenseManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.port.call.ICallInfoUpdateListener
+import com.ct.ertclib.dc.core.port.common.IMessageCallback
 import com.ct.ertclib.dc.core.port.dc.IDcCreateListener
+import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.utils.common.UsageStateUtils
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback
 import com.newcalllib.datachannel.V1_0.IImsDCObserver
 import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.Request
 import org.koin.core.component.KoinComponent
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.concurrent.LinkedBlockingDeque
 
 
@@ -98,10 +112,8 @@ class BDCManager(
         job1 = scope.launch {
             NewCallAppSdkInterface.miniAppListEventFlow.distinctUntilChanged().collect { event ->
                 sLogger.debug("collect miniAppListEventFlow event: ${event.message}")
-                if (MiniAppListGetEvent.TO_REFRESH == event.message && callInfo.telecomCallId == event.miniAppListInfo?.callId){
-                    getMiniAppList(0)
-                } else if (MiniAppListGetEvent.TO_LOADMORE == event.message && callInfo.telecomCallId == event.miniAppListInfo?.callId){
-                    getMiniAppList(event.miniAppListInfo.beginIndex+CommonConstants.MINI_APP_LIST_PAGE_SIZE)
+                if (MiniAppListGetEvent.TO_GET == event.message && callInfo.telecomCallId == event.callId){
+                    getMiniAppList(event.index,event.num)
                 }
             }
         }
@@ -118,6 +130,8 @@ class BDCManager(
     private var mDc: IImsDataChannel? = null
     private var mDc100: IImsDataChannel? = null
     private var mLastDcStatus : ImsDCStatus ?= null
+
+    var adList : ArrayList<AdItem> = arrayListOf()
 
     //防止重复打印日志
     private var hideReason = 0
@@ -150,23 +164,27 @@ class BDCManager(
         }
     }
 
-    private fun checkTopTask() {
+    // 这个定时任务只能辅助，不能依赖这个定时任务实现必要的逻辑，目前只有isInCallOnTop依赖这个定时任务
+    private fun startTimerTask() {
         if (job2 != null){// 防止任务重复启动
             return
         }
-        sLogger.info("${mTag}checkTopActivityTask...")
-        job2 = scope.launch {
-            while (isActive && mDc?.state == ImsDCStatus.DC_STATE_OPEN && callInfo.state!=Call.STATE_DISCONNECTED) {
-                // 利用定时任务顺便刷新一下通话信息
-                StateFlowManager.emitCallInfoFlow(
-                    CallStateData(
-                        callInfo,
-                        SystemClock.currentThreadTimeMillis()
+        sLogger.info("${mTag} startTimerTask...")
+        job2 = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            sLogger.info("${mTag} job2 started")
+            while (isActive) {
+                if (mDc?.state == ImsDCStatus.DC_STATE_OPEN && callInfo.state != Call.STATE_DISCONNECTED) {
+                    StateFlowManager.emitCallInfoFlow(
+                        CallStateData(
+                            callInfo,
+                            SystemClock.currentThreadTimeMillis()
+                        )
                     )
-                )
-                updateMiniAppEntryHolder()
+                    updateMiniAppEntryHolder()
+                }
                 delay(300)
             }
+            sLogger.info("${mTag}job2 exited")
         }
     }
 
@@ -200,23 +218,36 @@ class BDCManager(
             if (sLogger.isDebugActivated) {
                 sLogger.debug("${mTag}handleReceiveMsg decodeHttpResp is null")
             }
-            if (MessageType.TYPE_GET_MINI_APP != requestMessage.messageType) {
+            if (MessageType.TYPE_GET_MINI_APP == requestMessage.messageType) {
+                notifyDownloadFailed(appId = requestMessage.appId!!, null)
                 return
             }
-            notifyDownloadFailed(appId = requestMessage.appId!!, null)
         } else if (!decodeHttpResponse.isSuccessful) {
             if (sLogger.isDebugActivated) {
                 sLogger.debug("${mTag}handleReceiveMsg decodeHttpResp code: ${decodeHttpResponse.code()}")
             }
-            if (MessageType.TYPE_GET_MINI_APP != requestMessage.messageType) {
+            if (MessageType.TYPE_GET_MINI_APP == requestMessage.messageType) {
+                notifyDownloadFailed(appId = requestMessage.appId!!, null)
+                return
+            } else if (MessageType.TYPE_GET_BOOTSTRAP_MINI_APP == requestMessage.messageType && decodeHttpResponse.code() == 304) {
+                getMiniAppList(0)
                 return
             }
-            notifyDownloadFailed(appId = requestMessage.appId!!, null)
         } else {
-            if (MessageType.TYPE_GET_MINI_APP_LIST == requestMessage.messageType) {
-                receiveMiniAppList(telecomCallId, decodeHttpResponse)
-            } else {
-                receiveMiniApp(telecomCallId, requestMessage.appId!!, decodeHttpResponse)
+            when (requestMessage.messageType) {
+                MessageType.TYPE_GET_MINI_APP_LIST -> {
+                    receiveMiniAppList(telecomCallId, decodeHttpResponse)
+                }
+                MessageType.TYPE_GET_MINI_APP -> {
+                    receiveMiniApp(telecomCallId, requestMessage.appId!!, decodeHttpResponse)
+                }
+                MessageType.TYPE_GET_BOOTSTRAP_MINI_APP -> {
+                    receiveBootstrapMiniApp(telecomCallId, decodeHttpResponse)
+                    getMiniAppList(0)
+                }
+                else -> {
+                    sLogger.debug("${mTag}handleReceiveMsg not deal with messageType:${requestMessage.messageType}")
+                }
             }
         }
     }
@@ -226,6 +257,30 @@ class BDCManager(
         val miniAppDownloadResult =
             MiniAppDownloadResult(appId = appId, isSuccessful = false, errorMessage = errorMsg)
         miniAppManager.onMiniAppDownloaded(miniAppDownloadResult, null)
+    }
+
+
+    private fun receiveBootstrapMiniApp(
+        telecomCallId: String?,
+        decodeHttpResponse: HttpStackResponse
+    ) {
+        if (sLogger.isDebugActivated) {
+            sLogger.debug("$mTag receiveBootstrapMiniApp telecomCallId:$telecomCallId, httpResponse:$decodeHttpResponse")
+        }
+        val eTag = decodeHttpResponse.header("etag")
+        if (eTag.isNullOrEmpty()) {
+            sLogger.debug("$mTag receiveBootstrapMiniApp - etag is null")
+            return
+        }
+
+        val body = decodeHttpResponse.body()
+        if (body == null) {
+            sLogger.debug("$mTag receiveBootstrapMiniApp - body is null")
+            return
+        }
+
+        val bytes = body.bytes()
+        FileUtils.installBootstrapMiniApp(eTag, bytes)
     }
 
     private fun receiveMiniApp(
@@ -270,29 +325,42 @@ class BDCManager(
             sLogger.debug("$mTag receiveMiniAppList body is null")
             return
         }
-        try {
-            val bodyString = body.string() //待调试，是否是json格式String
-            if (bodyString.isEmpty()) {
-                sLogger.debug("$mTag receiveMiniAppList bodyString is null")
-                return
-            }
 
-            if (sLogger.isDebugActivated) {
-                sLogger.debug("$mTag receiveMiniAppList bodyString:$bodyString")
-            }
-            val miniAppList = JsonUtil.fromJson(bodyString, MiniAppList::class.java)
-            miniAppList?.let {
-                miniAppList.callId = telecomCallId
-                if (miniAppList.applications == null) {
-                    sLogger.info("$mTag receiveMiniAppList applications is null")
-                } else {
-                    miniAppManager.onMiniAppListLoaded(miniAppList)
-                    checkTopTask()
+        val bodyString = body.string()
+        if (bodyString.isEmpty()) {
+            sLogger.debug("$mTag receiveMiniAppList bodyString is null")
+            return
+        }
+
+        if (sLogger.isDebugActivated) {
+            sLogger.debug("$mTag receiveMiniAppList bodyString:$bodyString")
+        }
+        val miniAppList = try {
+            JsonUtil.fromJson(bodyString, MiniAppList::class.java)?.let { list ->
+                requireNotNull(list.applications) { "applications is required" }
+                requireNotNull(list.totalAppNum) { "totalAppNum is required" }
+                requireNotNull(list.beginIndex) { "beginIndex is required" }
+                requireNotNull(list.appNum) { "appNum is required" }
+
+                list.applications?.forEach { app ->
+                    requireNotNull(app.appId) { "appId is required" }
+                    requireNotNull(app.appName) { "appName is required" }
+                    requireNotNull(app.eTag) { "eTag is required" }
+                    requireNotNull(app.phase) { "phase is required" }
+                    requireNotNull(app.qosHint) { "qosHint is required" }
                 }
-            }
-        } catch (e: Exception) {
-            if (sLogger.isDebugActivated) {
-                sLogger.error("$mTag receiveMiniAppList error", e)
+                list
+            } ?: throw IllegalArgumentException("Parse failed: result is null")
+        } catch (e: IllegalArgumentException) {
+            sLogger.error("Required field missing: ${e.message}")
+            null
+        }
+        miniAppList?.let {
+            miniAppList.callId = telecomCallId
+            if (miniAppList.applications == null) {
+                sLogger.info("$mTag receiveMiniAppList applications is null")
+            } else {
+                miniAppManager.onMiniAppListLoaded(miniAppList)
             }
         }
     }
@@ -356,6 +424,7 @@ class BDCManager(
             }
             return
         }
+        first.status = RequestMessageStatus.SENDING
         if (sLogger.isDebugActivated) {
             sLogger.debug("handleSendRequest-send $first")
         }
@@ -439,7 +508,8 @@ class BDCManager(
 
     enum class MessageType {
         TYPE_GET_MINI_APP_LIST,
-        TYPE_GET_MINI_APP
+        TYPE_GET_MINI_APP,
+        TYPE_GET_BOOTSTRAP_MINI_APP
     }
 
     enum class RequestMessageStatus {
@@ -518,7 +588,32 @@ class BDCManager(
         miniAppManager.registerMiniAppListLoadedListener(this)
         miniAppManager.setDownloadAppListener(this)
         miniAppManager.onImsBDCOpen()
-        getMiniAppList(0)
+        getAdList()
+        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
+            getMiniAppList(0)
+        } else {
+            getBootstrap()
+        }
+    }
+
+    private fun getAdList(){
+        sLogger.info("$mTag getAdList")
+        miniAppManager.dispatchASEvent(AS_MODULE_ADLIST_INFO_EVENT, mapOf(), object : IMessageCallback {
+            override fun reply(message: String?) {
+                message?.let {
+                    val appResponse = JsonUtil.fromJson(message, AppResponse::class.java)
+                    val map = appResponse?.data as? Map<*, *>
+                    val adListData = map?.get(AS_MODULE_ADLIST_INFO_EVENT)
+                    if (adListData != null) {
+                        val adListJsonString = JsonUtil.toJson(adListData)
+                        val parsedArray = JsonUtil.fromJson(adListJsonString, Array<AdItem>::class.java)
+                        parsedArray?.let { array ->
+                            adList = ArrayList(array.toList())
+                        }
+                    }
+                }
+            }
+        })
     }
 
     fun onImsCallRemovedBDCClose() {
@@ -538,13 +633,29 @@ class BDCManager(
         }
     }
 
-    private fun getMiniAppList(index:Int) {
+    private fun getBootstrap() {
+        val builder = Request.Builder()
+            .url("http://bootstrap?Terminal_Vendor=${Build.MANUFACTURER}&Terminal_Model=${Build.MODEL}")
+            .method("GET", null)
+        if (FileUtils.getLatestInstalledBootstrapVersion() != null) {
+            builder.header("If-None-Match", FileUtils.getLatestInstalledBootstrapVersion()!!)
+        }
+        val request = builder.build()
+
+        val requestMessage = RequestMessage()
+        requestMessage.dc = mDc
+        requestMessage.messageType = MessageType.TYPE_GET_BOOTSTRAP_MINI_APP
+        requestMessage.request = request
+        sLogger.info("$mTag, getBootstrap telecomCallId:${mDc?.telecomCallId}")
+        addRequestMessageToSend(requestMessage)
+    }
+    private fun getMiniAppList(index:Int, pageSize:Int = CommonConstants.MINI_APP_LIST_PAGE_SIZE) {
         val packageInfo = Utils.getApp().packageManager.getPackageInfo(Utils.getApp().packageName, 0)
         val versionName = packageInfo.versionName
 
 
         val request = Request.Builder()
-            .url("http:/applicationlist?begin-index=$index&app-num=${CommonConstants.MINI_APP_LIST_PAGE_SIZE}&sdkVersion=$versionName")
+            .url("http://applicationlist?begin-index=$index&app-num=$pageSize&sdkVersion=$versionName")
             .method("GET", null).build()
 
         val requestMessage = RequestMessage()
@@ -602,14 +713,14 @@ class BDCManager(
         val packageInfo = Utils.getApp().packageManager.getPackageInfo(Utils.getApp().packageName, 0)
         val versionName = packageInfo.versionName
 
-        val builer = Request.Builder().url("http:/applications?appid=$appId&sdkVersion=$versionName")
+        val builder = Request.Builder().url("http://applications?appid=$appId&sdkVersion=$versionName")
             .method("GET", null)
         val cacheAppVersion = miniAppManager.getCacheAppVersion(miniAppInfo)
-        if (!cacheAppVersion.isNullOrEmpty()) {
-            builer.header("If-None-Match", cacheAppVersion)
+        if (cacheAppVersion.isNotEmpty()) {
+            builder.header("If-None-Match", cacheAppVersion)
         }
 
-        val request = builer.build()
+        val request = builder.build()
 
         val requestMessage = RequestMessage()
         if (miniAppInfo.isFromBDC100){
@@ -628,7 +739,7 @@ class BDCManager(
 
     override fun onMiniAppListLoaded() {
         sLogger.debug("$mTag onMiniAppListLoaded")
-        checkTopTask()
+        startTimerTask()
         updateMiniAppEntryHolder()
     }
 
@@ -686,12 +797,6 @@ class BDCManager(
                 hideReason = 2
             }
             hideMiniAppEntryHolder()
-        } else if (!SDKPermissionUtils.isFellowDialer() && UsageStateUtils.isMiniAppExpandedActivityShow() && FlavorUtils.getChannelName() != FlavorUtils.CHANNEL_DIALER) {
-            if (hideReason != 3){
-                sLogger.info("$mTag updateMiniAppEntryHolder hide when expended list")
-                hideReason = 3
-            }
-            hideMiniAppEntryHolder()
         } else if (miniAppManager.getMiniAppInfoList() == null) {
             if (hideReason != 4){
                 sLogger.info("$mTag updateMiniAppEntryHolder hide miniAppList is null")
@@ -705,6 +810,7 @@ class BDCManager(
                     FloatingBallData(
                     FLOATING_DISPLAY,
                     callInfo,
+                    adList,
                     it,
                     NewCallAppSdkInterface.floatingBallStyle.value)
                 )
@@ -717,6 +823,7 @@ class BDCManager(
             FloatingBallData(
                 FLOATING_DISMISS,
                 callInfo,
+                adList,
                 null
             )
         )

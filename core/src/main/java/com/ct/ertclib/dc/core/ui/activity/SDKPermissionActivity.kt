@@ -104,11 +104,13 @@ class SDKPermissionActivity : BaseAppCompatActivity() {
             binding.privacyPolicyTextview.setOnClickListener{
                 userClicked = true
                 val intent = SDKPermissionUtils.getPrivacyActivityIntent(this@SDKPermissionActivity)
+                intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
                 webActivityLauncher.launch(intent)
             }
             binding.userTextview.setOnClickListener{
                 userClicked = true
                 val intent = SDKPermissionUtils.getUserServiceActivityIntent(this@SDKPermissionActivity)
+                intent.flags = intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK.inv()
                 webActivityLauncher.launch(intent)
             }
             binding.btnCancel.setOnClickListener {

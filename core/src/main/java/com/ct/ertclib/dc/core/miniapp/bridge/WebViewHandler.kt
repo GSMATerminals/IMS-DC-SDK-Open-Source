@@ -17,7 +17,7 @@
 package com.ct.ertclib.dc.core.miniapp.bridge
 
 import com.ct.ertclib.dc.core.utils.logger.Logger
-import wendu.dsbridge.DWebView
+import com.ct.ertclib.dc.core.miniapp.ui.webview.DWebView
 
 class WebViewHandler(val webView: DWebView) {
 

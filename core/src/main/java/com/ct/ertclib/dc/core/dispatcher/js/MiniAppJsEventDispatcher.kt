@@ -16,7 +16,6 @@
 
 package com.ct.ertclib.dc.core.dispatcher.js
 
-import android.content.Context
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_ADD_CONTACT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_ANSWER
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CALL_STATE
@@ -24,6 +23,7 @@ import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CONTACT_LI
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_CONTACT_NAME
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_HTTP_RESULT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_MINI_APP_INFO
+import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_PLATFORM_INFO
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_REMOTE_NUMBER
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_SCREEN_INFO
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.FUNCTION_GET_SDK_INFO
@@ -46,60 +46,62 @@ import com.ct.ertclib.dc.core.port.dispatcher.IJsEventDispatcher
 import com.ct.ertclib.dc.core.port.usecase.mini.IAppMiniUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import wendu.dsbridge.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.webview.CompletionHandler
+import com.ct.ertclib.dc.core.miniapp.ui.widget.MiniAppView
 
 class MiniAppJsEventDispatcher : IJsEventDispatcher, KoinComponent {
 
     private val miniAppEventUseCase : IAppMiniUseCase by inject()
 
-    override fun dispatchAsyncMessage(context: Context, request: JSRequest, handler: CompletionHandler<String?>) {
+    override fun dispatchAsyncMessage(miniAppView: MiniAppView, request: JSRequest, handler: CompletionHandler<String?>) {
         when (request.function) {
-            FUNCTION_GET_MINI_APP_INFO -> miniAppEventUseCase.getMiniAppInfo(context, request.params, handler)
-            FUNCTION_START_APP -> miniAppEventUseCase.startApp(context, request.params, handler)
-            FUNCTION_SET_WINDOW -> miniAppEventUseCase.setWindow(context, request.params, handler)
-            FUNCTION_GET_REMOTE_NUMBER -> miniAppEventUseCase.getRemoteNumber(context, handler)
+            FUNCTION_GET_MINI_APP_INFO -> miniAppEventUseCase.getMiniAppInfo(miniAppView, request.params, handler)
+            FUNCTION_START_APP -> miniAppEventUseCase.startApp(miniAppView, request.params, handler)
+            FUNCTION_SET_WINDOW -> miniAppEventUseCase.setWindow(miniAppView, request.params, handler)
+            FUNCTION_GET_REMOTE_NUMBER -> miniAppEventUseCase.getRemoteNumber(miniAppView, handler)
             FUNCTION_GET_HTTP_RESULT -> miniAppEventUseCase.getHttpResult(request.params, handler)
-            FUNCTION_GET_CONTACT_LIST -> miniAppEventUseCase.getContactList(context, request.params,handler)
-            FUNCTION_IS_SPEAKERPHONE_ON -> miniAppEventUseCase.isSpeakerphoneOn(context, request.params,handler)
-            FUNCTION_IS_MUTED -> miniAppEventUseCase.isMuted(context, request.params,handler)
+            FUNCTION_GET_CONTACT_LIST -> miniAppEventUseCase.getContactList(miniAppView, request.params,handler)
+            FUNCTION_IS_SPEAKERPHONE_ON -> miniAppEventUseCase.isSpeakerphoneOn(miniAppView, request.params,handler)
+            FUNCTION_IS_MUTED -> miniAppEventUseCase.isMuted(miniAppView, request.params,handler)
 
-            FUNCTION_ADD_CONTACT -> miniAppEventUseCase.addOrEditContactAsync(context, request.params,handler)
-            FUNCTION_GET_CONTACT_NAME -> miniAppEventUseCase.getContactNameAsync(context, request.params,handler)
-            FUNCTION_GET_SDK_INFO -> miniAppEventUseCase.getSDKInfoAsync(context, request.params,handler)
-            FUNCTION_GET_SCREEN_INFO -> miniAppEventUseCase.getScreenInfoAsync(context, request.params,handler)
-            FUNCTION_HANG_UP -> miniAppEventUseCase.hangupAsync(context,handler)
-            FUNCTION_GET_CALL_STATE -> miniAppEventUseCase.getCallStateAsync(context,handler)
-            FUNCTION_REQUEST_START_ADVERSE_APP -> miniAppEventUseCase.requestStartAdverseAppAsync(context,handler)
-            FUNCTION_SET_SYSTEM_API_LICENSE -> miniAppEventUseCase.setSystemApiLicenseAsync(context, request.params,handler)
-            FUNCTION_OPEN_WEB ->  miniAppEventUseCase.openWebAsync(context, request.params,handler)
-            FUNCTION_MOVE_TO_FRONT -> miniAppEventUseCase.moveToFrontAsync(handler)
-            FUNCTION_STOP_APP -> miniAppEventUseCase.stopAppAsync(handler)
-            FUNCTION_GET_SHARE_TYPE_NAME -> miniAppEventUseCase.getShareTypeNameAsync(context, request.params,handler)
-            FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfToneAsync(context, request.params,handler)
-            FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphoneAsync(context, request.params,handler)
-            FUNCTION_SET_MUTED -> miniAppEventUseCase.setMutedAsync(context, request.params,handler)
-            FUNCTION_ANSWER ->  miniAppEventUseCase.answerAsync(context,handler)
+            FUNCTION_ADD_CONTACT -> miniAppEventUseCase.addOrEditContactAsync(miniAppView, request.params,handler)
+            FUNCTION_GET_CONTACT_NAME -> miniAppEventUseCase.getContactNameAsync(miniAppView, request.params,handler)
+            FUNCTION_GET_SDK_INFO -> miniAppEventUseCase.getSDKInfoAsync(miniAppView, request.params,handler)
+            FUNCTION_GET_SCREEN_INFO -> miniAppEventUseCase.getScreenInfoAsync(miniAppView, request.params,handler)
+            FUNCTION_HANG_UP -> miniAppEventUseCase.hangupAsync(miniAppView,handler)
+            FUNCTION_GET_CALL_STATE -> miniAppEventUseCase.getCallStateAsync(miniAppView,handler)
+            FUNCTION_REQUEST_START_ADVERSE_APP -> miniAppEventUseCase.requestStartAdverseAppAsync(miniAppView,handler)
+            FUNCTION_SET_SYSTEM_API_LICENSE -> miniAppEventUseCase.setSystemApiLicenseAsync(miniAppView, request.params,handler)
+            FUNCTION_OPEN_WEB ->  miniAppEventUseCase.openWebAsync(miniAppView, request.params,handler)
+            FUNCTION_MOVE_TO_FRONT -> miniAppEventUseCase.moveToFrontAsync(miniAppView,handler)
+            FUNCTION_STOP_APP -> miniAppEventUseCase.stopAppAsync(miniAppView,handler)
+            FUNCTION_GET_SHARE_TYPE_NAME -> miniAppEventUseCase.getShareTypeNameAsync(miniAppView, request.params,handler)
+            FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfToneAsync(miniAppView, request.params,handler)
+            FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphoneAsync(miniAppView, request.params,handler)
+            FUNCTION_SET_MUTED -> miniAppEventUseCase.setMutedAsync(miniAppView, request.params,handler)
+            FUNCTION_ANSWER ->  miniAppEventUseCase.answerAsync(miniAppView,handler)
+            FUNCTION_GET_PLATFORM_INFO -> miniAppEventUseCase.getPlatformInfo(miniAppView, request.params, handler)
         }
     }
 
-    override fun dispatchSyncMessage(context: Context, request: JSRequest): String? {
+    override fun dispatchSyncMessage(miniAppView: MiniAppView, request: JSRequest): String? {
         when (request.function) {
-            FUNCTION_ADD_CONTACT -> return miniAppEventUseCase.addOrEditContact(context, request.params)
-            FUNCTION_GET_CONTACT_NAME -> return miniAppEventUseCase.getContactName(context, request.params)
-            FUNCTION_GET_SDK_INFO -> miniAppEventUseCase.getSDKInfo(context, request.params)
-            FUNCTION_GET_SCREEN_INFO -> miniAppEventUseCase.getScreenInfo(context, request.params)
-            FUNCTION_HANG_UP -> return miniAppEventUseCase.hangup(context)
-            FUNCTION_GET_CALL_STATE -> return miniAppEventUseCase.getCallState(context)
-            FUNCTION_REQUEST_START_ADVERSE_APP -> return miniAppEventUseCase.requestStartAdverseApp(context)
-            FUNCTION_SET_SYSTEM_API_LICENSE -> return miniAppEventUseCase.setSystemApiLicense(context, request.params)
-            FUNCTION_OPEN_WEB -> return miniAppEventUseCase.openWeb(context, request.params)
-            FUNCTION_MOVE_TO_FRONT -> return miniAppEventUseCase.moveToFront()
-            FUNCTION_STOP_APP -> miniAppEventUseCase.stopApp()
-            FUNCTION_GET_SHARE_TYPE_NAME -> miniAppEventUseCase.getShareTypeName(context, request.params)
-            FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfTone(context, request.params)
-            FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphone(context, request.params)
-            FUNCTION_SET_MUTED -> miniAppEventUseCase.setMuted(context, request.params)
-            FUNCTION_ANSWER -> return miniAppEventUseCase.answer(context)
+            FUNCTION_ADD_CONTACT -> return miniAppEventUseCase.addOrEditContact(miniAppView, request.params)
+            FUNCTION_GET_CONTACT_NAME -> return miniAppEventUseCase.getContactName(miniAppView, request.params)
+            FUNCTION_GET_SDK_INFO -> miniAppEventUseCase.getSDKInfo(miniAppView, request.params)
+            FUNCTION_GET_SCREEN_INFO -> miniAppEventUseCase.getScreenInfo(miniAppView, request.params)
+            FUNCTION_HANG_UP -> return miniAppEventUseCase.hangup(miniAppView)
+            FUNCTION_GET_CALL_STATE -> return miniAppEventUseCase.getCallState(miniAppView)
+            FUNCTION_REQUEST_START_ADVERSE_APP -> return miniAppEventUseCase.requestStartAdverseApp(miniAppView)
+            FUNCTION_SET_SYSTEM_API_LICENSE -> return miniAppEventUseCase.setSystemApiLicense(miniAppView, request.params)
+            FUNCTION_OPEN_WEB -> return miniAppEventUseCase.openWeb(miniAppView, request.params)
+            FUNCTION_MOVE_TO_FRONT -> return miniAppEventUseCase.moveToFront(miniAppView)
+            FUNCTION_STOP_APP -> miniAppEventUseCase.stopApp(miniAppView)
+            FUNCTION_GET_SHARE_TYPE_NAME -> miniAppEventUseCase.getShareTypeName(miniAppView, request.params)
+            FUNCTION_PLAY_DTMF_TONE -> miniAppEventUseCase.playDtmfTone(miniAppView, request.params)
+            FUNCTION_SET_SPEAKERPHONE -> miniAppEventUseCase.setSpeakerphone(miniAppView, request.params)
+            FUNCTION_SET_MUTED -> miniAppEventUseCase.setMuted(miniAppView, request.params)
+            FUNCTION_ANSWER -> return miniAppEventUseCase.answer(miniAppView)
         }
         return ""
     }

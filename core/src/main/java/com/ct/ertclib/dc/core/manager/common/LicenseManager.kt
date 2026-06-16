@@ -43,10 +43,10 @@ class LicenseManager {
 
     private fun loadPublicKeyFromAssets(): String {
         return try {
-            val keyFileName = if (FlavorUtils.CHANNEL_LOCAL == FlavorUtils.getChannelName()){
-                "local_public_key.pem"
+            val keyFileName = if (FlavorUtils.CHANNEL_Lab == FlavorUtils.getChannelName() || FlavorUtils.CHANNEL_LOCAL == FlavorUtils.getChannelName()){
+                "net_public_verify"
             } else {
-                "public_key.pem"
+                "public_verify"
             }
             Utils.getApp().assets.open(keyFileName).use { inputStream ->
                 InputStreamReader(inputStream).use { reader ->
