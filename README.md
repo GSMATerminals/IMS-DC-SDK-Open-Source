@@ -171,8 +171,6 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-26.2.0).
 
-<div align="center"><img src="images/image-20260303163643165.png" alt="image-20260303163643165" width="800" /></div>
-
 2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
 
 3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
