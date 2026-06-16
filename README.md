@@ -4,7 +4,7 @@ Note: This document aims to help developers understand the architectural design 
 ## News[2026/06/16] 🔥
 - Support Bootstrap ( The bootstrap program is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
-- Access DCLab (New! A fully IMS-live-network-equivalent DC environment for IMS Data Channel Application and AS development, testing, and service experience.)
+- Access DCLab (New! A DC environment fully equivalent to the IMS commercial network for IMS Data Channel Application and AS development, testing, and service experience.)
   <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
 
 # 5G New Calling Terminal SDK
