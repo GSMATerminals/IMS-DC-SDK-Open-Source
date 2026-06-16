@@ -14,7 +14,8 @@
  *   limitations under the License.
  */
 
-package com.ct.ertclib.dc.core.miniapp.ui.activity
+package com.ct.ertclib.dc.core.port.common
 
-class MiniAppActivity3 : MiniAppActivity() {
+interface IMessageCallback {
+    fun reply(message : String?)
 }
