@@ -1,10 +1,10 @@
 ![logo.png](images/logo.png)   
 Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
 
-## News[2026/06/18] 🔥
-- Support Bootstrap
+## News[2026/06/16] 🔥
+- Support Bootstrap ( The bootstrap program is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
-- Access DCLab
+- Access DCLab (New! A fully IMS-live-network-equivalent DC environment for IMS Data Channel Application and AS development, testing, and service experience.)
   <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
 
 # 5G New Calling Terminal SDK
