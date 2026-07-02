@@ -17,6 +17,7 @@
 package com.ct.ertclib.dc.core.miniapp.bridge
 
 import android.content.Context
+import android.content.res.Configuration.UI_MODE_NIGHT_MASK
 import android.webkit.JavascriptInterface
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.constants.CommonConstants.DC_SEND_DATA_OK
@@ -52,6 +53,7 @@ import com.ct.ertclib.dc.core.manager.call.DCManager
 import com.ct.ertclib.dc.core.utils.common.CallUtils
 import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.newcalllib.datachannel.V1_0.IDCSendDataCallback
+import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -158,6 +160,20 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         val device = NewCallsManager.instance.getCurrentAudioDevice()
                         handler.complete(JsonUtil.toJson(JSResponse("0", "success", device)))
                     }
+                    MiniAppConstants.FUNCTION_GET_SYSTEM_THEME -> {
+                        val currentNightMode = context.resources.configuration.uiMode and UI_MODE_NIGHT_MASK
+                        val theme = if (currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
+                        val response = JSResponse("0", "success", mutableMapOf("theme" to theme))
+                        handler.complete(JsonUtil.toJson(response))
+                    }
+                    MiniAppConstants.FUNCTION_GET_SYSTEM_FONT_SCALE -> {
+                        val fontScale = context.resources.configuration.fontScale
+                        val response = JSResponse("0", "success", mutableMapOf("fontScale" to fontScale))
+                        handler.complete(JsonUtil.toJson(response))
+                    }
+                    MiniAppConstants.FUNCTION_GET_LOCATION -> {
+                        requestLocation(handler)
+                    }
                     MiniAppConstants.FUNCTION_SET_AUDIO_DEVICE -> {
                         val name = jsRequest.params["name"] as? String
                         val type = jsRequest.params["type"] as? String
@@ -244,7 +260,7 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         handler.complete(JsonUtil.toJson(JSResponse("0", "success", callStateMap)))
                     }
                     MiniAppConstants.FUNCTION_GET_CALL_INFO -> {
-                        val type = if(NewCallsManager.instance.isVideoCall(callInfo.telecomCallId)) 1 else 0
+                        val type = NewCallsManager.instance.getCallType(callInfo.telecomCallId)
                         val connectTime = NewCallsManager.instance.getCallConnectTime(callInfo.telecomCallId)
                         val callInfoMap = mutableMapOf<String, Any>()
 
@@ -392,6 +408,37 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                             }
                         }
                     }
+                    MiniAppConstants.FUNCTION_CLOSE_DATA_CHANNEL -> {
+                        val dcLabel = jsRequest.params["dcLabel"]
+                        if (dcLabel == null) {
+                            sLogger.info("BootstrapJSApi async closeDC dcLabel is null")
+                            val response = JSResponse("1", "dcLabel is null", "")
+                            handler.complete(JsonUtil.toJson(response))
+                            return
+                        }
+                        val dcLabels = dcLabel as? ArrayList<*>
+                        dcLabels?.forEach { dcLabelItem ->
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    val dcLabelItemStr = dcLabelItem as String
+                                    val dc = MiniAppManager.getAppPackageManager(callInfo.telecomCallId)?.getBootstrapDC(dcLabelItemStr)
+                                    dc?.let {
+                                        if (it.state != ImsDCStatus.DC_STATE_CLOSING && it.state != ImsDCStatus.DC_STATE_CLOSED) {
+                                            it.unregisterObserver()
+                                            it.close()
+                                        }
+                                    }
+                                    MiniAppManager.getAppPackageManager(callInfo.telecomCallId)?.removeBootstrapDC(dcLabelItemStr)
+                                    NewCallAppSdkInterface.emitBootstrapDataChannelState(
+                                        dcLabelItemStr,
+                                        ImsDCStatus.DC_STATE_CLOSED.ordinal
+                                    )
+                                }
+                            }
+                        }
+                        val response = JSResponse("0", "success", "")
+                        handler.complete(JsonUtil.toJson(response))
+                    }
                     MiniAppConstants.FUNCTION_SEND_DATA -> {
                         val dcLabel = jsRequest.params["dcLabel"]
                         val data = jsRequest.params["data"]
@@ -415,6 +462,36 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                             })
                         }
                     }
+                    MiniAppConstants.FUNCTION_GET_BUFFER_AMOUNT -> {
+                        val dcLabel = jsRequest.params["dcLabel"] as? String
+                        if (dcLabel == null) {
+                            sLogger.info("BootstrapJSApi getBufferedAmount dcLabel is null")
+                            val response = JSResponse("1", "getBufferedAmount dcLabel is null", mutableMapOf<String, Long>())
+                            handler.complete(JsonUtil.toJson(response))
+                            return
+                        }
+                        val dc = MiniAppManager.getAppPackageManager(callInfo.telecomCallId)?.getBootstrapDC(dcLabel)
+                        val bufferedAmount = dc?.let {
+                            try {
+                                it.bufferedAmount()
+                            } catch (e: Exception) {
+                                sLogger.error("getBufferedAmount dcLabel:$dcLabel failed, error:${e.message}")
+                                -1L
+                            }
+                        } ?: run {
+                            -1L
+                        }
+                        sLogger.info("BootstrapJSApi async ,getBufferedAmount dcLabel:$dcLabel bufferedAmount:$bufferedAmount")
+                        if (bufferedAmount == -1L){
+                            val response = JSResponse("1", "getBufferedAmount fail", mutableMapOf<String, Long>())
+                            handler.complete(JsonUtil.toJson(response))
+                            return
+                        }
+                        val bufferedAmountMap = mutableMapOf<String, Long>()
+                        bufferedAmountMap["bufferedAmount"] = bufferedAmount
+                        val response = JSResponse("0", "success", bufferedAmountMap)
+                        handler.complete(JsonUtil.toJson(response))
+                    }
                     else -> {
                         sLogger.error("BootstrapJSApi async ,msg:$msg, handler:$handler, function:${it.function} not support")
                     }
@@ -422,6 +499,79 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
             }
         }catch (e:Exception){
             e.printStackTrace()
+        }
+    }
+
+    @android.annotation.SuppressLint("MissingPermission")
+    private fun requestLocation(handler: CompletionHandler<String?>) {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+        if (locationManager == null) {
+            handler.complete(JsonUtil.toJson(JSResponse("1", "LocationManager not available", null)))
+            return
+        }
+        if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)
+            && !locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+        ) {
+            com.ct.ertclib.dc.core.utils.common.ToastUtils.showShortToast(context, "正在打开位置设置")
+            val intent = android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            handler.complete(JsonUtil.toJson(JSResponse("1", "location service disabled", null)))
+            return
+        }
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            handler.complete(JsonUtil.toJson(JSResponse("1", "permission not granted", null)))
+            return
+        }
+        var hasRemoveUpdates = false
+        var locationListener: android.location.LocationListener? = null
+        locationListener = android.location.LocationListener { location ->
+            scope.launch(Dispatchers.Main) {
+                val locationMap = mutableMapOf<String, String>()
+                locationMap["lon"] = location.longitude.toString()
+                locationMap["lat"] = location.latitude.toString()
+                locationListener?.let {
+                    hasRemoveUpdates = true
+                    try {
+                        locationManager.removeUpdates(it)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                val response = JSResponse("0", "success", locationMap)
+                handler.complete(JsonUtil.toJson(response))
+            }
+        }
+        val criteria = android.location.Criteria()
+        criteria.accuracy = android.location.Criteria.ACCURACY_FINE
+        criteria.isAltitudeRequired = false
+        criteria.isBearingRequired = false
+        criteria.isCostAllowed = true
+        criteria.powerRequirement = android.location.Criteria.POWER_LOW
+        val bestProvider = locationManager.getBestProvider(criteria, false)
+
+        if (bestProvider != null) {
+            try {
+                locationManager.requestLocationUpdates(bestProvider, 200, 5f, locationListener)
+                scope.launch {
+                    kotlinx.coroutines.delay(3000)
+                    if (!hasRemoveUpdates) {
+                        try {
+                            locationManager.removeUpdates(locationListener)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        scope.launch(Dispatchers.Main) {
+                            handler.complete(JsonUtil.toJson(JSResponse("1", "timeout", null)))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                handler.complete(JsonUtil.toJson(JSResponse("1", e.message ?: "error", null)))
+            }
+        } else {
+            handler.complete(JsonUtil.toJson(JSResponse("1", "no provider available", null)))
         }
     }
 

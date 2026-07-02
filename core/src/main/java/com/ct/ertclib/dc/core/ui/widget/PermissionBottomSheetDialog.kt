@@ -82,13 +82,11 @@ class PermissionBottomSheetDialog(
         okButton?.setOnClickListener {
             logger.info("click ok")
             onPositiveButtonClick.invoke(permissionDataList)
-            dismiss()
         }
 
         cancelButton?.setOnClickListener {
             logger.info("click cancel")
             onNegativeButtonClick.invoke()
-            dismiss()
         }
         titleText?.text = context.resources.getString(R.string.permission_request_title, miniApp.appName)
     }

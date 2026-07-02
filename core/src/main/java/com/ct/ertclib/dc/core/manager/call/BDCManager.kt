@@ -98,14 +98,12 @@ class BDCManager(
     private val mTag: String = "BDCManager[${callInfo.telecomCallId}]"
     private val mHandlerThread = HandlerThread(mTag)
     private var mHandlerThreadQuited = false
-    private var mAskToUnlock = false
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var job1 :Job ?= null
     private var job2 :Job ?= null
 
     init {
-        mAskToUnlock = false
         mHandlerThread.start()
         mHandlerThreadQuited = false
         sLogger.info("init $mTag")
@@ -230,6 +228,7 @@ class BDCManager(
                 notifyDownloadFailed(appId = requestMessage.appId!!, null)
                 return
             } else if (MessageType.TYPE_GET_BOOTSTRAP_MINI_APP == requestMessage.messageType && decodeHttpResponse.code() == 304) {
+                setInnerADC()
                 getMiniAppList(0)
                 return
             }
@@ -243,6 +242,7 @@ class BDCManager(
                 }
                 MessageType.TYPE_GET_BOOTSTRAP_MINI_APP -> {
                     receiveBootstrapMiniApp(telecomCallId, decodeHttpResponse)
+                    setInnerADC()
                     getMiniAppList(0)
                 }
                 else -> {
@@ -649,6 +649,28 @@ class BDCManager(
         sLogger.info("$mTag, getBootstrap telecomCallId:${mDc?.telecomCallId}")
         addRequestMessageToSend(requestMessage)
     }
+
+    private fun setInnerADC(){
+        scope.launch(Dispatchers.IO) {
+            FileUtils.getLatestInstalledBootstrapPath()?.let {
+                val deferred = async {
+                    val file = File("$it/properties.json")
+                    if (file.exists()) {
+                        val propertiesString = file.readText()
+                        JsonUtil.fromJson(propertiesString, BootstrapProperties::class.java)
+                    } else {
+                        null
+                    }
+                }
+                val properties = deferred.await()
+                if (sLogger.isDebugActivated) sLogger.debug("setInnerADC properties:$properties")
+                if (properties?.supportInnerADCDevices?.contains("${Build.MANUFACTURER}&&${Build.MODEL}") == true || properties?.supportInnerADCDevices?.contains("all") == true){
+                    DCManager.instance.setBootstrapAppIdList(properties.appId)
+                }
+            }
+        }
+    }
+
     private fun getMiniAppList(index:Int, pageSize:Int = CommonConstants.MINI_APP_LIST_PAGE_SIZE) {
         val packageInfo = Utils.getApp().packageManager.getPackageInfo(Utils.getApp().packageName, 0)
         val versionName = packageInfo.versionName
