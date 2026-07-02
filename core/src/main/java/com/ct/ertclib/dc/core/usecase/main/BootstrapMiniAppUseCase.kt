@@ -58,6 +58,10 @@ class BootstrapMiniAppUseCase : IBootstrapMiniAppUseCase {
         return bootstrapDCList[label]
     }
 
+    override fun removeBootstrapDC(label: String) {
+        bootstrapDCList.remove(label)
+    }
+
     private fun dataChannelNotify(label: String, status: ImsDCStatus?) {
         if (status == null) return
         scope.launch(serialDispatcher) {

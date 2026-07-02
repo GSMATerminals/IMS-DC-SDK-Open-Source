@@ -6,5 +6,6 @@ interface IBootstrapMiniAppUseCase {
     fun onDataChannelCreated(imsDataChannel: IImsDataChannel)
     fun containsDCLabel(label: String): Boolean
     fun getBootstrapDC(label: String): IImsDataChannel?
+    fun removeBootstrapDC(label: String)
     fun release()
 }

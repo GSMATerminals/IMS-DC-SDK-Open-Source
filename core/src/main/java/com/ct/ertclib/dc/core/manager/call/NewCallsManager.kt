@@ -386,6 +386,17 @@ class NewCallsManager {
         return videoState == VideoProfile.STATE_BIDIRECTIONAL || videoState == VideoProfile.STATE_TX_ENABLED || videoState == VideoProfile.STATE_RX_ENABLED
     }
 
+    fun getCallType(telecomCallId: String): Int {
+        val videoState = mCallsMap[telecomCallId]?.details?.videoState
+        return when (videoState) {
+            VideoProfile.STATE_AUDIO_ONLY -> 0
+            VideoProfile.STATE_TX_ENABLED -> 1
+            VideoProfile.STATE_RX_ENABLED -> 2
+            VideoProfile.STATE_BIDIRECTIONAL -> 3
+            else -> 0
+        }
+    }
+
     fun getCallConnectTime(telecomCallId: String): Long {
         val call = mCallsMap[telecomCallId]
         val connectTime = call?.details?.connectTimeMillis ?: 0L

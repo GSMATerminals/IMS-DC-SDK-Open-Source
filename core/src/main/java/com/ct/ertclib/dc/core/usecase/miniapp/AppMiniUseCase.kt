@@ -345,7 +345,7 @@ class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IA
             return JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null))
         }
         val state =  miniAppView.viewModel.callInfo?.state
-        val type = miniAppView.viewModel.callInfo?.telecomCallId?.let { if(NewCallsManager.instance.isVideoCall(it)) 1 else 0 }
+        val type = miniAppView.viewModel.callInfo?.telecomCallId?.let { NewCallsManager.instance.getCallType(it) }
         val callStateMap = mutableMapOf<String, Int>()
         callStateMap["callState"] = state ?: -1
         callStateMap["callType"] = type ?: 0
@@ -916,7 +916,7 @@ class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IA
                         headMap[entry.toString()] = value.toString()
                     }
                 }
-                HttpUtils.sendPostRequest(url, headMap, paramsJson, mediaType) { result ->
+                HttpUtils.sendPostRequest(url, headMap, decodeJson, mediaType) { result ->
                     if (result == HttpUtils.REQUEST_FAILED) {
                         val jsResponse = JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, "")
                         logger.debug("getHttpResult, failed")
