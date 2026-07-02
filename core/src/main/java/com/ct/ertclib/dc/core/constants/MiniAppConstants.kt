@@ -101,6 +101,8 @@ object MiniAppConstants {
     const val FUNCTION_SET_AUDIO_DEVICE = "setAudioDevice"
 
     const val FUNCTION_GET_PLATFORM_INFO = "getPlatFormInfo"
+    const val FUNCTION_GET_SYSTEM_THEME = "getSystemTheme"
+    const val FUNCTION_GET_SYSTEM_FONT_SCALE = "getSystemFontScale"
 
     //function for screen share
     const val FUNCTION_START_SCREEN_SHARE = "startScreenShare"

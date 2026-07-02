@@ -712,6 +712,10 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         return bootstrapMiniAppUseCase.getBootstrapDC(label)
     }
 
+    fun removeBootstrapDC(label: String) {
+        bootstrapMiniAppUseCase.removeBootstrapDC(label)
+    }
+
     override fun onCallAdded(context: Context, callInfo: CallInfo) {
         if (sLogger.isDebugActivated) sLogger.debug("$mTag onCallAdded")
         val telecomCallId = callInfo.telecomCallId

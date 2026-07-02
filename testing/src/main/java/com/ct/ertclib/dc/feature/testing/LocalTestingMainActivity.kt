@@ -46,6 +46,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
+import kotlin.system.exitProcess
 
 class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
     companion object {
@@ -233,5 +234,7 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
         DCSocketManager.notifyHangUp()
         dealHangup()
         DCSocketManager.unRegisterCallObserver()
+        finishAffinity()
+        exitProcess(0)
     }
 }
