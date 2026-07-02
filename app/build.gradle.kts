@@ -104,7 +104,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             isDebuggable = true
         }
-        val release by getting {
+        getByName("release") {
             applicationIdSuffix = NCBuildType.RELEASE.applicationIdSuffix
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("debug")

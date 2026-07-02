@@ -97,7 +97,6 @@ class BootstrapDialogFragment(
                 }
                 val properties = deferred.await()
                 if (sLogger.isDebugActivated) sLogger.debug("startBootstrap properties:$properties")
-                DCManager.instance.setBootstrapAppIdList(properties?.appId)
                 // todo 处理窗口样式
             }
         }
