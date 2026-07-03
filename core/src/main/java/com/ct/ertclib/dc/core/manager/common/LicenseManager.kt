@@ -79,7 +79,9 @@ class LicenseManager {
 
     // 调用示例：LicenseManager.getInstance().verifyLicense("aa","6","eKGExEKb140FXgZqNgkP7o210sol6x6ieF9AvWvjbMef2ec7+UtggJumjOyizeNQJ8e9D2PG5Cjxv4jo/aRLMag==")
     fun verifyLicense(miniAppId: String, apiCodes: String, license: String): Boolean {
-        return VerifyHelper.Companion.getInstance().verifyLicense(miniAppId, apiCodes, license)
+        // todo 自己实现
+//        return VerifyHelper.Companion.getInstance().verifyLicense(miniAppId, apiCodes, license)
+        return true
     }
 
     fun parseImgData(img: String): String {
@@ -87,10 +89,14 @@ class LicenseManager {
     }
 
     fun verifyMiniAppPkg(zipPath: String): Boolean {
-        return VerifyHelper.Companion.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
+        // todo 自己实现
+//        return VerifyHelper.Companion.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
+        return true
     }
 
     fun verifyMiniAppFolder(folderPath: String): Boolean {
-        return VerifyHelper.Companion.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
+        // todo 自己实现
+//        return VerifyHelper.Companion.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
+        return true
     }
 }
