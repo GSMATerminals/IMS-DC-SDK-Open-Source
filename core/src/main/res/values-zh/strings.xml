@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2025-China Telecom Research Institute.
+  ~ All Rights Reserved.
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <resources>
     <string name="request_nc_permission_dialog_content">5G增强通话是指基于运营商IMS网络进行系统增强和业务创新，使得个人及企业行业的用户体验获得提升的一系列业务统称。其最显著的技术特征是在基于IMS音频、视频通道的基础上增加数据通道和融入AR等技术，依赖终端上的5G增强通话终端SDK，实现用户在通话时的交互式信息传递和互动，带来用户通话体验升级。\n使用增强通话功能需要显示在其他应用上层和读取通话的权限</string>
     <string name="request_nc_permission_dialog_privacy">隐私政策</string>
