@@ -133,7 +133,7 @@ NewCall
    ./gradlew assembleRelease 
 
 - Terminal Adaptation:
-Terminals must be adapted according to the [《5G New Calling SDK Terminal Adaptation Specification》](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) to ensure the proper functioning of all SDK features.
+Terminals must be adapted according to the [《5G New Calling SDK Terminal Adaptation Specification》](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) to ensure the proper functioning of all SDK features and you must have Admin-Rights on the Mobile Device. In most cases, if you can't get to the next step or certain menus are hidden from you, you don't have all the permissions you need.
 
 - Release:
 Terminal manufacturers integrate the SDK as a system default application and push it to adapted user terminals along with the system.
@@ -171,9 +171,9 @@ After obtaining the code, **Original Equipment Manufacturers (OEMs)** should com
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-26.2.0).
 
-2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
+2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and install **APK** on your mobile device.
 
-3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
+3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile/WiFi hotspot.
 
 4. **Enable Features:** Find and open the **"5G Enhanced Call"** app on the home screen. 
 
