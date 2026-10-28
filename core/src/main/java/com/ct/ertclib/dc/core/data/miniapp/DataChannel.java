@@ -19,19 +19,35 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
+import com.ct.ertclib.dc.core.utils.common.XmlAlias;
+import com.ct.ertclib.dc.core.utils.common.XmlAttribute;
+
+@XmlAlias("DataChannel")
 public class DataChannel {
-    private String autoAcceptDcSetup;
-    private String bandwidth;
+    @XmlAttribute
     private String dcId;
+    @XmlAlias("DcLabel")
     private String dcLabel;
-    private String maxRetr;
-    private String maxTime;
-    private String ordered;
-    private String priority;
-    private String qosHint;
+    @XmlAlias("StreamId")
     private String streamId;
+    @XmlAlias("Subprotocol")
     private String subProtocol;
+    @XmlAlias("Ordered")
+    private String ordered;
+    @XmlAlias("Priority")
+    private String priority;
+    @XmlAlias("UseCase")
     private String useCase;
+    @XmlAlias("AutoAcceptDcSetup")
+    private String autoAcceptDcSetup;
+    @XmlAlias("Bandwidth")
+    private String bandwidth;
+    @XmlAlias("QosHint")
+    private String qosHint;
+    @XmlAlias("MaxRetr")
+    private String maxRetr;
+    @XmlAlias("MaxTime")
+    private String maxTime;
 
     public String getAutoAcceptDcSetup() {
         return this.autoAcceptDcSetup;

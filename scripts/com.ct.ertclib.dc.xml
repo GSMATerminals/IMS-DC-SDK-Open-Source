@@ -21,7 +21,10 @@
 
 <permissions>
     <privapp-permissions package="com.ct.ertclib.dc">
-        <permission name="android.permission.CONTROL_INCALL_EXPERIENCE" />
-        <permission name="android.permission.PACKAGE_USAGE_STATS" />
+        <permission name="android.permission.CONTROL_INCALL_EXPERIENCE"/>
+        <permission name="android.permission.PACKAGE_USAGE_STATS"/>
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE"/>
+        <permission name="android.permission.START_TASKS_FROM_RECENTS"/>
+        <permission name="android.permission.SYSTEM_OVERLAY_WINDOW"/>
     </privapp-permissions>
 </permissions>

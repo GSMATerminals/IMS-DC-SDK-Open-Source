@@ -28,31 +28,26 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Lightweight XML serialization utility replacing XStream.
- * Supports the specific structure used by DataChannelAppInfo / DataChannelApp / DataChannel:
- * <pre>
- * &lt;DataChannelAppInfo&gt;
- *   &lt;DataChannelApp appId="..."&gt;
- *     &lt;DataChannel dcId="..."&gt;
- *       &lt;DcLabel&gt;...&lt;/DcLabel&gt;
- *       &lt;QosHint&gt;...&lt;/QosHint&gt;
- *       ...
- *     &lt;/DataChannel&gt;
- *   &lt;/DataChannelApp&gt;
- * &lt;/DataChannelAppInfo&gt;
- * </pre>
- *
- * Field-to-XML mapping rules (matching the former XStream annotations):
- * - Root class name → root tag name
- * - Fields annotated as attributes → XML attributes
- * - Fields annotated as implicit collections → repeated child elements (no wrapper tag)
- * - Other fields → child elements with tag name = field name (or alias)
+ * <p>
+ * Uses {@link XmlAlias}, {@link XmlAttribute}, {@link XmlImplicit} annotations
+ * on data classes to control the XML mapping. No external dependencies.
+ * <p>
+ * Behavior matches the former XStream usage:
+ * <ul>
+ *   <li>Class name (or {@code @XmlAlias} on class) → root tag name</li>
+ *   <li>{@code @XmlAttribute} fields → XML attributes</li>
+ *   <li>{@code @XmlImplicit} List fields → repeated child elements (no wrapper tag)</li>
+ *   <li>{@code @XmlAlias} on fields → custom child tag name</li>
+ *   <li>Other fields → child elements, tag = capitalized field name</li>
+ *   <li>null fields are skipped (not emitted)</li>
+ *   <li>Unknown elements during parsing are ignored</li>
+ * </ul>
  */
 public class XmlUtils {
 
@@ -72,7 +67,7 @@ public class XmlUtils {
             XmlPullParser parser = factory.newPullParser();
             parser.setInput(new StringReader(xml));
             return parseObject(parser, cls);
-        } catch (XmlPullParserException | IOException e) {
+        } catch (Exception e) {
             android.util.Log.e(TAG, "parseXml failed: " + e.getMessage(), e);
             return null;
         }
@@ -91,11 +86,10 @@ public class XmlUtils {
             XmlSerializer serializer = factory.newSerializer();
             StringWriter writer = new StringWriter();
             serializer.setOutput(writer);
-            serializer.startDocument("UTF-8", null);
-            serializeObject(serializer, obj, obj.getClass().getSimpleName());
+            serializeObject(serializer, obj, getClassName(obj.getClass()));
             serializer.endDocument();
             return writer.toString();
-        } catch (IOException | XmlPullParserException e) {
+        } catch (Exception e) {
             android.util.Log.e(TAG, "toXml failed: " + e.getMessage(), e);
             return "";
         }
@@ -107,14 +101,12 @@ public class XmlUtils {
     private static <T> T parseObject(XmlPullParser parser, Class<T> cls)
             throws XmlPullParserException, IOException {
         int eventType = parser.getEventType();
-        // Find the first START_TAG
         while (eventType != XmlPullParser.START_TAG && eventType != XmlPullParser.END_DOCUMENT) {
             eventType = parser.next();
         }
         if (eventType == XmlPullParser.END_DOCUMENT) {
             return null;
         }
-        // parser is now at the root START_TAG
         return (T) parseElement(parser, cls);
     }
 
@@ -122,12 +114,11 @@ public class XmlUtils {
             throws XmlPullParserException, IOException {
         try {
             Object instance = cls.getDeclaredConstructor().newInstance();
-            String tagName = parser.getName();
 
             // Process attributes
             for (Field field : getAllFields(cls)) {
                 if (isAttributeField(field)) {
-                    String attrValue = parser.getAttributeValue(null, field.getName());
+                    String attrValue = parser.getAttributeValue(null, getFieldName(field));
                     if (attrValue != null) {
                         setFieldValue(instance, field, attrValue);
                     }
@@ -142,7 +133,6 @@ public class XmlUtils {
                     Field matchedField = findFieldByTag(cls, childTag);
                     if (matchedField != null) {
                         if (isImplicitCollectionField(matchedField)) {
-                            // Parse the child element as the collection element type
                             Class<?> elementType = getCollectionElementType(matchedField);
                             Object childObj = parseElement(parser, elementType);
                             addToCollection(instance, matchedField, childObj);
@@ -154,7 +144,6 @@ public class XmlUtils {
                             setFieldValue(instance, matchedField, text);
                         }
                     } else {
-                        // Unknown element — skip (ignoreUnknownElements behavior)
                         skipSubTree(parser);
                     }
                 }
@@ -189,38 +178,38 @@ public class XmlUtils {
             if (isAttributeField(field)) {
                 Object value = getFieldValue(obj, field);
                 if (value != null) {
-                    serializer.attribute(null, field.getName(), String.valueOf(value));
+                    serializer.attribute(null, getFieldName(field), String.valueOf(value));
                 }
             }
         }
 
-        // Write child elements
+        // Write child elements (in declaration order)
         for (Field field : getAllFields(cls)) {
             if (isAttributeField(field)) continue;
             if (isImplicitCollectionField(field)) {
                 List<?> list = (List<?>) getFieldValue(obj, field);
                 if (list != null) {
-                    Class<?> elementType = getCollectionElementType(field);
-                    String elementTag = elementType.getSimpleName();
+                    String itemTag = getItemFieldName(field);
                     for (Object item : list) {
                         if (item != null) {
-                            serializeObject(serializer, item, elementTag);
+                            serializeObject(serializer, item, itemTag);
                         }
                     }
                 }
             } else if (isComplexField(field)) {
                 Object child = getFieldValue(obj, field);
                 if (child != null) {
-                    serializeObject(serializer, child, field.getName());
+                    serializeObject(serializer, child, getFieldXmlName(field));
                 }
             } else {
                 Object value = getFieldValue(obj, field);
                 if (value != null) {
-                    String tag = getXmlElementName(field);
+                    String tag = getFieldXmlName(field);
                     serializer.startTag(null, tag);
                     serializer.text(String.valueOf(value));
                     serializer.endTag(null, tag);
                 }
+                // null fields are skipped (matching XStream behavior)
             }
         }
 
@@ -242,44 +231,48 @@ public class XmlUtils {
         return fields;
     }
 
-    // ==================== Field-to-XML mapping ====================
+    // ==================== Annotation-based mapping ====================
 
-    /**
-     * Explicit field-name → XML tag-name overrides for cases where the
-     * capitalize-first-letter rule does not match the original XStream alias.
-     */
-    private static final Map<String, String> FIELD_TAG_OVERRIDES = new HashMap<>();
-    static {
-        // subProtocol field was aliased to "Subprotocol" (lowercase 'p') by XStream
-        FIELD_TAG_OVERRIDES.put("subProtocol", "Subprotocol");
+    /** Returns the XML name for a class: @XmlAlias value or simple name. */
+    private static String getClassName(Class<?> cls) {
+        XmlAlias alias = cls.getAnnotation(XmlAlias.class);
+        return alias != null ? alias.value() : cls.getSimpleName();
     }
 
-    /**
-     * Fields that should be serialized as XML attributes (not child elements).
-     * Matches the former @XStreamAsAttribute annotations.
-     */
-    private static final Map<String, Boolean> ATTRIBUTE_FIELDS = new HashMap<>();
-    static {
-        // DataChannelApp
-        ATTRIBUTE_FIELDS.put("appId", true);
-        // DataChannel
-        ATTRIBUTE_FIELDS.put("dcId", true);
+    /** Returns the XML attribute name for a field: @XmlAlias value or field name. */
+    private static String getFieldName(Field field) {
+        XmlAlias alias = field.getAnnotation(XmlAlias.class);
+        return alias != null ? alias.value() : field.getName();
     }
 
-    /**
-     * Fields that are implicit collections (no wrapper tag, repeated child elements).
-     * Matches the former @XStreamImplicit annotations.
-     */
-    private static final Map<String, Boolean> IMPLICIT_COLLECTION_FIELDS = new HashMap<>();
-    static {
-        // DataChannelApp
-        IMPLICIT_COLLECTION_FIELDS.put("dataChannelList", true);
+    /** Returns the XML element tag name for a field: @XmlAlias value or capitalized field name. */
+    private static String getFieldXmlName(Field field) {
+        XmlAlias alias = field.getAnnotation(XmlAlias.class);
+        if (alias != null) {
+            return alias.value();
+        }
+        return capitalizeFirst(field.getName());
     }
 
-    /**
-     * Complex (non-primitive, non-String, non-List) fields that should be
-     * recursively serialized as child objects.
-     */
+    /** Returns the element tag name for an implicit collection field. */
+    private static String getItemFieldName(Field field) {
+        XmlImplicit implicit = field.getAnnotation(XmlImplicit.class);
+        if (implicit != null && !implicit.itemFieldName().isEmpty()) {
+            return implicit.itemFieldName();
+        }
+        // Default: element type's class name (via @XmlAlias or simple name)
+        Class<?> elementType = getCollectionElementType(field);
+        return getClassName(elementType);
+    }
+
+    private static boolean isAttributeField(Field field) {
+        return field.isAnnotationPresent(XmlAttribute.class);
+    }
+
+    private static boolean isImplicitCollectionField(Field field) {
+        return field.isAnnotationPresent(XmlImplicit.class);
+    }
+
     private static boolean isComplexField(Field field) {
         Class<?> type = field.getType();
         return !type.isPrimitive()
@@ -297,20 +290,32 @@ public class XmlUtils {
                 && !type.equals(List.class);
     }
 
-    private static boolean isAttributeField(Field field) {
-        return ATTRIBUTE_FIELDS.getOrDefault(field.getName(), false);
-    }
-
-    private static boolean isImplicitCollectionField(Field field) {
-        return IMPLICIT_COLLECTION_FIELDS.getOrDefault(field.getName(), false);
-    }
-
-    private static String getXmlElementName(Field field) {
-        String override = FIELD_TAG_OVERRIDES.get(field.getName());
-        if (override != null) {
-            return override;
+    /**
+     * Find a field matching the XML tag name.
+     * Checks: @XmlAlias value → capitalized field name → raw field name
+     *         → implicit collection element type name.
+     */
+    private static Field findFieldByTag(Class<?> cls, String tag) {
+        for (Field field : getAllFields(cls)) {
+            if (getFieldXmlName(field).equals(tag)) {
+                return field;
+            }
+            if (field.getName().equals(tag)) {
+                return field;
+            }
+            if (isImplicitCollectionField(field)) {
+                String itemTag = getItemFieldName(field);
+                if (itemTag.equals(tag)) {
+                    return field;
+                }
+            }
         }
-        return capitalizeFirst(field.getName());
+        return null;
+    }
+
+    private static Class<?> getCollectionElementType(Field field) {
+        ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+        return (Class<?>) genericType.getActualTypeArguments()[0];
     }
 
     private static String capitalizeFirst(String name) {
@@ -318,35 +323,7 @@ public class XmlUtils {
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
 
-    /**
-     * Find a field matching the XML tag name.
-     * Checks: explicit override → capitalized field name → raw field name.
-     */
-    private static Field findFieldByTag(Class<?> cls, String tag) {
-        for (Field field : getAllFields(cls)) {
-            String xmlName = getXmlElementName(field);
-            if (xmlName.equals(tag)) {
-                return field;
-            }
-            if (field.getName().equals(tag)) {
-                return field;
-            }
-        }
-        return null;
-    }
-
-    private static Class<?> getCollectionElementType(Field field) {
-        // For our specific case, DataChannelApp.dataChannelList contains DataChannel
-        // We infer from the field name pattern
-        String fieldName = field.getName();
-        if (fieldName.equals("dataChannelList")) {
-            return com.ct.ertclib.dc.core.data.miniapp.DataChannel.class;
-        }
-        // Fallback: try generic type
-        java.lang.reflect.ParameterizedType genericType =
-                (java.lang.reflect.ParameterizedType) field.getGenericType();
-        return (Class<?>) genericType.getActualTypeArguments()[0];
-    }
+    // ==================== Field value access ====================
 
     private static void addToCollection(Object instance, Field field, Object item)
             throws Exception {

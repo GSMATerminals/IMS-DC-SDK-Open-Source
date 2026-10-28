@@ -535,6 +535,9 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
 
             // 解析XML
             val dataChannelAppInfo = XmlUtils.parseXml(description, classes, DataChannelAppInfo::class.java)
+            if (dataChannelAppInfo?.dataChannelApp?.dataChannelList == null) {
+                return description
+            }
 
             // 过滤DataChannel列表，只保留包含在labels中的dcLabel
             val filteredDataChannels = dataChannelAppInfo.dataChannelApp.dataChannelList

@@ -7,6 +7,10 @@
 Auditor: CT
 Publisher: yesh1
 publish Description:
+CtCallSDK_v26.3.0_20261028_FC
+	1.适配折叠屏、宽屏终端
+	2.竖屏手机上支持小程序自定义窗口大小位置
+	3.修复已知问题
 CtCallSDK_v26.2.0_20260609_FC
 	1.按照标准规范支持引导程序
 	2.接入DCLab，包含VOIP、DC

@@ -19,11 +19,16 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
+import com.ct.ertclib.dc.core.utils.common.XmlAttribute;
+import com.ct.ertclib.dc.core.utils.common.XmlImplicit;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataChannelApp {
+    @XmlAttribute
     private String appId;
+    @XmlImplicit
     private List<DataChannel> dataChannelList;
 
     public void addDataChannel(DataChannel dataChannel) {

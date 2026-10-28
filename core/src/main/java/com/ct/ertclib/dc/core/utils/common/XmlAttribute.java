@@ -17,20 +17,20 @@
  * limitations under the License.
  */
 
-package com.ct.ertclib.nativelibs
+package com.ct.ertclib.dc.core.utils.common;
 
-import org.junit.Test
-
-import org.junit.Assert.*
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
+ * Marks a field as an XML attribute (serialized as an attribute on the
+ * parent element rather than a child element).
+ * <p>
+ * Replaces the former {@code @XStreamAsAttribute} annotation.
  */
-class ExampleUnitTest {
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface XmlAttribute {
 }

@@ -79,6 +79,11 @@ object PermissionUtils : KoinComponent {
         Manifest.permission.VIBRATE to permissionDataList[VIBRATE_INDEX],
         Manifest.permission.RECORD_AUDIO to permissionDataList[RECORD_AUDIO_INDEX],
         Manifest.permission.MANAGE_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.WRITE_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_IMAGES to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_VIDEO to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_AUDIO to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
         Manifest.permission.ACCESS_FINE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.ACCESS_COARSE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
@@ -108,7 +113,17 @@ object PermissionUtils : KoinComponent {
                 MiniAppPermissions.MINIAPP_CAMERA -> allPermission.add(Manifest.permission.CAMERA)
                 MiniAppPermissions.MINIAPP_VIBRATE -> allPermission.add(Manifest.permission.VIBRATE)
                 MiniAppPermissions.MINIAPP_RECORD_AUDIO -> allPermission.add(Manifest.permission.RECORD_AUDIO)
-                MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> allPermission.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> {
+                    allPermission.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        allPermission.add(Manifest.permission.READ_MEDIA_IMAGES)
+                        allPermission.add(Manifest.permission.READ_MEDIA_VIDEO)
+                        allPermission.add(Manifest.permission.READ_MEDIA_AUDIO)
+                    } else {
+                        allPermission.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        allPermission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                }
                 MiniAppPermissions.MINIAPP_LOCATION -> {
                     allPermission.add(Manifest.permission.ACCESS_FINE_LOCATION)
                     allPermission.add(Manifest.permission.ACCESS_COARSE_LOCATION)

@@ -19,7 +19,11 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
+import com.ct.ertclib.dc.core.utils.common.XmlAlias;
+
+@XmlAlias("DataChannelAppInfo")
 public class DataChannelAppInfo {
+    @XmlAlias("DataChannelApp")
     private DataChannelApp dataChannelApp;
 
     public DataChannelApp getDataChannelApp() {
