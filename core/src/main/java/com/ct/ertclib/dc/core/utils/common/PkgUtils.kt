@@ -140,6 +140,45 @@ object PkgUtils {
 
     }
 
+    /**
+     * 获取app的版本号 (versionCode)
+     * @param context
+     * @return Long 或 Int (取决于Android版本)
+     */
+    fun getAppVersionCode(context: Context): Long {
+        return try {
+            val packageManager = context.packageManager
+            val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
+
+            // Android 9 (API 28) 及以上使用 long 类型
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0L
+        }
+    }
+
+    /**
+     * 获取 Android 系统 API Level (对应 osVersionCode)
+     * @return String 如 "33", "32", "31"...
+     */
+    fun getOsVersionCode(): String {
+        return Build.VERSION.SDK_INT.toString()
+    }
+
+    /**
+     * 获取 Android 系统版本名称 (对应 osVersionName)
+     * @return String 如 "Android 13", "Android 12"...
+     */
+    fun getOsVersionName(): String {
+        return "Android ${Build.VERSION.RELEASE}"
+    }
+
     fun checkAndCreatePinnedShortcuts(context:Context) {
 //        if (FlavorUtils.getChannelName() == FlavorUtils.CHANNEL_LOCAL){
 //            return

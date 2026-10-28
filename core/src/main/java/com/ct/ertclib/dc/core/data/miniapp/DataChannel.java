@@ -19,34 +19,18 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-
-@XStreamAlias("DataChannel")
 public class DataChannel {
-    @XStreamAlias("AutoAcceptDcSetup")
     private String autoAcceptDcSetup;
-    @XStreamAlias("Bandwidth")
     private String bandwidth;
-    @XStreamAsAttribute
     private String dcId;
-    @XStreamAlias("DcLabel")
     private String dcLabel;
-    @XStreamAlias("MaxRetr")
     private String maxRetr;
-    @XStreamAlias("MaxTime")
     private String maxTime;
-    @XStreamAlias("Ordered")
     private String ordered;
-    @XStreamAlias("Priority")
     private String priority;
-    @XStreamAlias("QosHint")
     private String qosHint;
-    @XStreamAlias("StreamId")
     private String streamId;
-    @XStreamAlias("Subprotocol")
     private String subProtocol;
-    @XStreamAlias("UseCase")
     private String useCase;
 
     public String getAutoAcceptDcSetup() {

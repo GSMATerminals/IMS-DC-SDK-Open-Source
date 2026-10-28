@@ -27,13 +27,23 @@ data class WindowStyle(
     @Deprecated("")
     var navigationBarColor:String?,//导航栏
     var statusBarColor:String?,//胶囊栏背景颜色
-    var statusBarTitleColor: Int = 0//胶囊栏字体和图标颜色，0:黑色，1:白色
+    var statusBarTitleColor: Int = 0,//胶囊栏字体和图标颜色，0:黑色，1:白色
+    var width: Float? = null,// 非宽屏模式下窗口宽度占屏幕宽度的百分比(0.1~1.0)，-1表示全屏(等同于1.0)，null表示未配置
+    var height: Float? = null,// 非宽屏模式下窗口高度占屏幕高度的百分比(0.1~1.0)，-1表示全屏(等同于1.0)，null表示未配置
+    var windowStart: Float? = null,// 非宽屏模式下窗口左上角X坐标占屏幕宽度的百分比(0.0~1.0)
+    var windowTop: Float? = null,// 非宽屏模式下窗口左上角Y坐标占屏幕高度的百分比(0.0~1.0)
+    var closeGuidePage: Boolean? = null// 是否关闭引导页，仅在四个窗口比例字段都配置时生效
 )  : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readByte() != 0.toByte(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readInt()
+        parcel.readInt(),
+        if (parcel.readByte() != 0.toByte()) parcel.readFloat() else null,
+        if (parcel.readByte() != 0.toByte()) parcel.readFloat() else null,
+        if (parcel.readByte() != 0.toByte()) parcel.readFloat() else null,
+        if (parcel.readByte() != 0.toByte()) parcel.readFloat() else null,
+        if (parcel.readByte() != 0.toByte()) parcel.readInt() != 0 else null
     ) {
     }
 
@@ -42,6 +52,16 @@ data class WindowStyle(
         parcel.writeString(navigationBarColor)
         parcel.writeString(statusBarColor)
         parcel.writeInt(statusBarTitleColor)
+        parcel.writeByte(if (width != null) 1 else 0)
+        width?.let { parcel.writeFloat(it) }
+        parcel.writeByte(if (height != null) 1 else 0)
+        height?.let { parcel.writeFloat(it) }
+        parcel.writeByte(if (windowStart != null) 1 else 0)
+        windowStart?.let { parcel.writeFloat(it) }
+        parcel.writeByte(if (windowTop != null) 1 else 0)
+        windowTop?.let { parcel.writeFloat(it) }
+        parcel.writeByte(if (closeGuidePage != null) 1 else 0)
+        closeGuidePage?.let { parcel.writeByte(if (it) 1 else 0) }
     }
 
     override fun describeContents(): Int {

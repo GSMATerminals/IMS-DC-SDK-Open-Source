@@ -59,6 +59,14 @@ object UsageStateUtils: KoinComponent {
         return ActivityTracker.isTopActivity("com.ct.ertclib.dc.feature.testing.netdc.ui.activity.DcDialerActivity")
     }
 
+    fun isMiniAppExpandedActivityShow(): Boolean {
+        return ActivityTracker.isTopActivity("com.ct.ertclib.dc.app.ui.activity.MiniAppExpandedActivity")
+    }
+
+    fun isMiniAppShow(): Boolean {
+        return ActivityTracker.isTopActivity("com.ct.ertclib.dc.core.utils.common.MiniAppStateActivity")
+    }
+
     @JvmStatic
     //获取当前栈顶的activity的类名，用于判断当前是否在前台
     private fun getTopClassName(context: Context): String? {

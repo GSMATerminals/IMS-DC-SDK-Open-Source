@@ -50,7 +50,7 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(files("libs\\net-release-1.0.0.aar"))
+    implementation(project(":net"))
 
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -60,8 +60,7 @@ dependencies {
     // room
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
-    compileOnly(files("${rootProject.projectDir}\\libs\\XXPermissions-18.2.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
+    api(libs.xxpermissions)
     api("com.journeyapps:zxing-android-embedded:4.3.0")
 
     implementation("io.ktor:ktor-client-core:2.3.12")

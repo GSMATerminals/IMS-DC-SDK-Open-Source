@@ -44,7 +44,6 @@ android {
             )
         }
     }
-    sourceSets["main"].jniLibs.srcDir("${rootProject.projectDir}\\libs")
     buildFeatures {
         viewBinding = true
         aidl = true
@@ -52,7 +51,7 @@ android {
 }
 
 dependencies {
-    compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
+    implementation(project(":base"))
     api(libs.koin.android)
     implementation(libs.glide)
     implementation(libs.gson)

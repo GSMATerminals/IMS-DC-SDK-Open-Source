@@ -292,30 +292,19 @@
                 android:orientation="vertical"
                 android:padding="24dp">
 
-                <!-- 通话状态 -->
-                <TextView
-                    android:id="@+id/tvCallStatus"
-                    android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/calling"
-                    android:textSize="18sp"
-                    android:textColor="@color/white"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="20dp"/>
-
                 <!-- 电话号码/联系人 -->
                 <TextView
                     android:id="@+id/tvCallPhoneNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="32sp"
+                    android:textSize="40sp"
                     android:textColor="@color/white"
                     android:textStyle="bold"
                     android:gravity="center"
                     android:layout_marginTop="30dp"
                     android:maxLines="1"
-                    android:ellipsize="marquee"/>
+                    android:ellipsize="marquee"
+                    android:letterSpacing="0.1"/>
 
                 <TextView
                     android:id="@+id/tvCallName"
@@ -335,7 +324,7 @@
                     android:textSize="24sp"
                     android:textColor="@color/white"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="40dp"/>
+                    android:layout_marginTop="20dp"/>
 
                 <View
                     android:layout_width="match_parent"

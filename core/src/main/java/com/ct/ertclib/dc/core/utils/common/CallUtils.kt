@@ -93,6 +93,38 @@ object CallUtils {
         return false
     }
 
+    @SuppressLint("MissingPermission", "NewApi")
+    fun isPassedCall(call: Call, mccMncList: String?): Boolean {
+        if (mccMncList.isNullOrEmpty()) {
+            LogUtils.debug(TAG, "mccMncList is null, pass")
+            return true
+        }
+        if ("[ALL]" == mccMncList) {
+            LogUtils.debug(TAG, "mccMncList is [ALL], pass")
+            return true
+        }
+        val subId = getSubId(call)
+        if (subId == -1) {
+            LogUtils.debug(TAG, "subId is -1, pass")
+            return true
+        }
+        val mccMnc = getMccMnc(Utils.getApp(), subId)
+        LogUtils.debug(TAG, "mccMnc:${mccMnc?.contentToString()}, mccMncList: $mccMncList")
+        mccMnc?.takeIf { it.size >= 2 }?.apply {
+            val mcc = get(0).toString()
+            var mnc = get(1).toString()
+            if (mnc.length == 1) {
+                mnc = "0$mnc"
+            }
+            val target = "$mcc-$mnc"
+            val list = mccMncList.split(",").map { it.trim() }
+            if (list.contains(target)) {
+                return true
+            }
+        }
+        return false
+    }
+
     /**
      * Get MCC/MNC of an SIM subscription
      *
@@ -175,13 +207,20 @@ object CallUtils {
             LogUtils.debug(TAG,"CallsManager getSubId - failed due to onCallAdded call is null")
             return -1
         }
-        if (!SDKPermissionUtils.checkPermissions(Utils.getApp(), Manifest.permission.READ_PHONE_STATE)) {
-            LogUtils.debug(TAG,"CallsManager getSubId - failed due to no android.permission.READ_PHONE_STATE")
-            return -1
+        return try {
+            val subId = (Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager)
+                .getSubscriptionId(call.details.accountHandle)
+            if (subId < 0) {
+                LogUtils.debug(TAG,"CallsManager getSubId - invalid subId: $subId")
+            }
+            subId
+        } catch (e: SecurityException) {
+            LogUtils.debug(TAG,"CallsManager getSubId - SecurityException: ${e.message}")
+            -1
+        } catch (e: Exception) {
+            LogUtils.debug(TAG,"CallsManager getSubId - Exception: ${e.message}")
+            -1
         }
-
-        return (Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager)
-            .getSubscriptionId(call.details.accountHandle)
     }
 
     @SuppressLint("NewApi")

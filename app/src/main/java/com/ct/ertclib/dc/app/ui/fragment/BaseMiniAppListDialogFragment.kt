@@ -23,7 +23,43 @@ import androidx.fragment.app.DialogFragment
 import com.ct.ertclib.dc.core.data.call.CallInfo
 abstract class BaseMiniAppListDialogFragment() : DialogFragment() {
 
+    /** 宽屏小窗模式标记（非宽屏默认满屏，不变） */
+    var isLargeWindow = false
 
+    /** 宽屏小窗初始坐标（Gravity.START|TOP 语义） */
+    var windowX = 0
+    var windowY = 0
+
+    /** 宽屏小窗尺寸 */
+    var windowWidth = 0
+    var windowHeight = 0
+
+    /** 悬浮球所在侧（true=左侧，false=右侧），用于小窗初始位置计算 */
+    var isLeftSide: Boolean = true
+
+    /** 用户是否已手动拖动过宽屏小窗（配置变化时保留用户位置，仅重算尺寸） */
+    var hasWindowBeenDragged: Boolean = false
+
+    /** 设置宽屏小窗初始位置（需在 dialog window 就绪后调用） */
+    fun setWindowPosition(x: Int, y: Int) {
+        windowX = x
+        windowY = y
+    }
+
+    /** 设置宽屏小窗尺寸 */
+    fun setWindowSize(w: Int, h: Int) {
+        windowWidth = w
+        windowHeight = h
+        isLargeWindow = true
+    }
+
+    /** 设置悬浮球所在侧（用于小窗贴侧定位） */
+    fun setWindowSide(leftSide: Boolean) {
+        isLeftSide = leftSide
+    }
+
+    /** 配置变化（折叠屏展开/折叠）时重新应用窗口参数。子类按需重写。 */
+    open fun reapplyWindow() {}
 
     open fun refreshAppStatus() {
     }
@@ -42,6 +78,10 @@ abstract class BaseMiniAppListDialogFragment() : DialogFragment() {
     }
 
     open fun onAudioDeviceChange() {
+
+    }
+
+    open fun onCallTypeChange(callType: Int) {
 
     }
 

@@ -22,7 +22,6 @@ package com.ct.ertclib.dc.feature.testing
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.Animatable
 import android.os.Build
 import android.os.Bundle
 import android.telecom.Call
@@ -30,7 +29,6 @@ import android.telecom.Call.STATE_RINGING
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.blankj.utilcode.util.Utils
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
@@ -47,7 +45,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import kotlin.system.exitProcess
 
@@ -69,6 +69,8 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
         window.navigationBarColor = Color.TRANSPARENT
 
         viewModel = ViewModelProvider(this)[TestingViewModel::class.java]
+        // 设置数字键盘监听
+        setupDialpadListeners()
         DCSocketManager.registerCallObserver { value ->
             when(value){
                 "added" -> {
@@ -97,18 +99,81 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
             startActivity(intent)
         }
 
-        binding.btnSimulateCall.setOnClickListener {
+        binding.btnCall.setOnClickListener {
             DCSocketManager.notifyCallAdded()
             checkPermission()
         }
 
-        binding.btnAccept.setOnClickListener {
+        binding.btnVideoCall.setOnClickListener {
+            DCSocketManager.notifyCallAdded()
+            checkPermission()
+        }
+
+        // 接听/挂断
+        binding.btnAnswer.setOnClickListener {
             DCSocketManager.notifyCallActive()
             dealActiveCall()
         }
-        binding.btnDecline.setOnClickListener {
+        binding.btnHangup.setOnClickListener {
             DCSocketManager.notifyHangUp()
             dealHangup()
+        }
+    }
+
+    /**
+     * 设置拨号键盘监听
+     */
+    private fun setupDialpadListeners() {
+        val dialButtons = listOf(
+            binding.btn0 to "0",
+            binding.btn1 to "1",
+            binding.btn2 to "2",
+            binding.btn3 to "3",
+            binding.btn4 to "4",
+            binding.btn5 to "5",
+            binding.btn6 to "6",
+            binding.btn7 to "7",
+            binding.btn8 to "8",
+            binding.btn9 to "9",
+            binding.btnStar to "*",
+            binding.btnHash to "#"
+        )
+
+        dialButtons.forEach { (button, digit) ->
+            button.setOnClickListener {
+                appendDigit(digit)
+            }
+        }
+
+        // 删除按钮
+        binding.btnDelete.setOnClickListener {
+            deleteLastDigit()
+        }
+
+        // 长按删除全部
+        binding.btnDelete.setOnLongClickListener {
+            binding.tvPhoneNumber.text = ""
+            true
+        }
+    }
+
+    /**
+     * 添加数字到号码显示
+     */
+    private fun appendDigit(digit: String) {
+        val current = binding.tvPhoneNumber.text.toString()
+        if (current.length < 20) {  // 限制长度
+            binding.tvPhoneNumber.text = current + digit
+        }
+    }
+
+    /**
+     * 删除最后一个数字
+     */
+    private fun deleteLastDigit() {
+        val current = binding.tvPhoneNumber.text.toString()
+        if (current.isNotEmpty()) {
+            binding.tvPhoneNumber.text = current.substring(0, current.length - 1)
         }
     }
 
@@ -133,17 +198,7 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
                 callInfo: CallInfo
             ) {
                 scope.launch(Dispatchers.Main) {
-                    binding.contentLayout.background = ContextCompat.getDrawable(this@LocalTestingMainActivity, R.drawable.call_background)
-                    binding.btnSetting.visibility = View.GONE
-                    binding.btnSimulateCall.visibility = View.GONE
-                    binding.layoutState.visibility = View.VISIBLE
-                    binding.ivRingingBell.visibility = View.VISIBLE
-                    binding.tvState.text = getString(R.string.ringing)
-                    val newDrawable = ContextCompat.getDrawable(this@LocalTestingMainActivity, R.drawable.ic_bell_animated)
-                    binding.ivRingingBell.setImageDrawable(newDrawable)
-                    (binding.ivRingingBell.drawable as? Animatable)?.start()
-                    binding.layoutIncomingCall.visibility = View.VISIBLE
-                    binding.btnAccept.visibility = View.VISIBLE
+                    showCallUI(callInfo)
                 }
             }
 
@@ -152,16 +207,13 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
                 callInfo: CallInfo
             ) {
                 scope.launch(Dispatchers.Main) {
-                    binding.ivRingingBell.visibility = View.GONE
-                    binding.tvState.text = getString(R.string.hangingup)
-                    binding.layoutIncomingCall.visibility = View.GONE
+                    binding.tvCallStatus.text = getString(R.string.hangingup)
+                    binding.btnAnswerContainer.visibility = View.GONE
+                    binding.btnAnswer.visibility = View.GONE
+                    binding.btnHangupContainer.visibility = View.GONE
+                    binding.btnHangup.visibility = View.GONE
                     delay(1000)
-                    binding.btnSetting.visibility = View.VISIBLE
-                    binding.btnSimulateCall.visibility = View.VISIBLE
-                    (binding.ivRingingBell.drawable as? Animatable)?.stop()
-                    binding.layoutState.visibility = View.GONE
-                    binding.btnAccept.visibility = View.VISIBLE
-                    binding.contentLayout.background = null
+                    showMainUI()
                 }
             }
 
@@ -171,17 +223,16 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
             ) {
                 scope.launch(Dispatchers.Main) {
                     if (state == Call.STATE_ACTIVE){
-                        (binding.ivRingingBell.drawable as? Animatable)?.stop()
-                        binding.layoutState.visibility = View.VISIBLE
-                        binding.ivRingingBell.visibility = View.GONE
-                        binding.tvState.text = getString(R.string.active)
-                        binding.btnAccept.visibility = View.GONE
+                        binding.tvCallStatus.text = getString(R.string.active)
+                        binding.btnAnswerContainer.visibility = View.GONE
+                        binding.btnAnswer.visibility = View.GONE
+                        binding.btnHangupContainer.visibility = View.VISIBLE
+                        binding.btnHangup.visibility = View.VISIBLE
+                        startCallTimer()
                     } else if (state == Call.STATE_DISCONNECTING){
-                        // 小程序挂断
                         DCSocketManager.notifyHangUp()
                         dealHangup()
                     } else if (state == Call.STATE_CONNECTING){
-                        // 小程序接听
                         DCSocketManager.notifyCallActive()
                         dealActiveCall()
                     }
@@ -192,12 +243,13 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
             }
 
         })
+        val current = binding.tvPhoneNumber.text.toString()
 
         val callInfo = CallInfo(
             slotId = 0,
             telecomCallId = CALL_ID,
             myNumber = "12345678901",
-            remoteNumber = "12345678902",
+            remoteNumber = current,
             state = STATE_RINGING,
             videoState = 0,
             isConference = false,
@@ -205,14 +257,42 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
             isCtCall = true
         )
 
-        // 模拟建立通话
         InCallServiceManager.instance.onBind(this@LocalTestingMainActivity,null)
         InCallServiceManager.instance.onCallAdded(callInfo,null)
+    }
 
+    private fun showMainUI() {
+        binding.mainContainer.visibility = View.VISIBLE
+        binding.callingView.visibility = View.GONE
+        binding.btnAnswer.visibility = View.GONE
+        binding.btnHangup.visibility = View.GONE
+        binding.btnAnswerContainer.visibility = View.GONE
+        binding.btnHangupContainer.visibility = View.GONE
+        binding.tvCallStatus.text = ""
+        binding.tvCallDuration.text = ""
+
+        // 恢复显示拨号键盘
+        binding.dialpadContainer.visibility = View.VISIBLE
+        binding.tvPhoneNumber.visibility = View.VISIBLE
+    }
+
+    private fun showCallUI(callInfo: CallInfo) {
+        binding.mainContainer.visibility = View.GONE
+        binding.callingView.visibility = View.VISIBLE
+
+//        binding.tvCallStatus.visibility = View.VISIBLE
+        binding.tvCallStatus.text = getString(R.string.ringing)
+        binding.tvCallPhoneNumber.text = callInfo.remoteNumber ?: ""
+        binding.tvCallName.text = ""
+        binding.tvCallDuration.text = ""
+
+        binding.btnAnswerContainer.visibility = View.VISIBLE
+        binding.btnHangupContainer.visibility = View.VISIBLE
+        binding.btnAnswer.visibility = View.VISIBLE
+        binding.btnHangup.visibility = View.VISIBLE
     }
 
     private fun dealActiveCall(){
-        // 处理接听
         scope.launch {
             NewCallsManager.instance.testNotifyCallStateChange(CALL_ID, Call.STATE_ACTIVE)
         }
@@ -220,20 +300,49 @@ class LocalTestingMainActivity : AppCompatActivity(), KoinComponent {
 
     private fun dealHangup(){
         scope.launch {
-            // 处理挂断
             NewCallsManager.instance.testNotifyCallStateChange(CALL_ID, Call.STATE_DISCONNECTED)
             TestImsDataChannelManager.closeBdc(0, CALL_ID)
-
             InCallServiceManager.instance.onCallRemoved(CALL_ID)
             InCallServiceManager.instance.onUnbind()
+            stopCallTimer()
         }
     }
+
+    private var timerJob: kotlinx.coroutines.Job? = null
+    private var callStartTime: Long = 0
+
+    private fun startCallTimer() {
+        stopCallTimer()
+        timerJob = scope.launch {
+            callStartTime = System.currentTimeMillis()
+            while (isActive) {
+                try {
+                    val duration = System.currentTimeMillis() - callStartTime
+                    val seconds = (duration / 1000) % 60
+                    val minutes = (duration / 1000) / 60
+                    withContext(Dispatchers.Main) {
+                        binding.tvCallDuration.text = String.format("%02d:%02d", minutes, seconds)
+                    }
+                    delay(1000)
+                } catch (_: Exception) {
+                    break
+                }
+            }
+        }
+    }
+
+    private fun stopCallTimer() {
+        timerJob?.cancel()
+        timerJob = null
+    }
+
     override fun onResume() {
         super.onResume()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopCallTimer()
         DCSocketManager.notifyHangUp()
         dealHangup()
         DCSocketManager.unRegisterCallObserver()

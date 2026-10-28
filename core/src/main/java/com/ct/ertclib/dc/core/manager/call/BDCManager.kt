@@ -828,6 +828,12 @@ class BDCManager(
                 hideReason = 4
             }
             hideMiniAppEntryHolder()
+        } else if (UsageStateUtils.isMiniAppExpandedActivityShow() || UsageStateUtils.isMiniAppShow()) {
+            if (hideReason != 5){
+                sLogger.info("$mTag updateMiniAppEntryHolder hide MiniAppExpandedActivity or MiniApp show")
+                hideReason = 5
+            }
+            hideMiniAppEntryHolder()
         } else {
             hideReason = 0
             miniAppManager.getMiniAppList()?.let {

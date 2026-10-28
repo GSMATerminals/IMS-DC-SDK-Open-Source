@@ -688,7 +688,6 @@ class DcDialerActivity : AppCompatActivity() {
                 }
                 binding.tvCallPhoneNumber.text = phoneNumber
                 binding.tvCallName.text = getNameFromPhoneNumber(phoneNumber)
-                binding.tvCallStatus.text = getString(R.string.calling)
                 binding.tvCallDuration.text = ""
             }
             PageState.ACTIVE -> {
@@ -698,7 +697,6 @@ class DcDialerActivity : AppCompatActivity() {
                 binding.btnHangupContainer.visibility = View.VISIBLE
                 binding.tvCallPhoneNumber.text = phoneNumber
                 binding.tvCallName.text = getNameFromPhoneNumber(phoneNumber)
-                binding.tvCallStatus.text = getString(R.string.active)
                 binding.tvCallDuration.text = "00:00"
                 startCallTimer()
                 VibratorHelper.stopVibration()
@@ -716,7 +714,6 @@ class DcDialerActivity : AppCompatActivity() {
                 }
                 binding.tvCallPhoneNumber.text = phoneNumber
                 binding.tvCallName.text = getNameFromPhoneNumber(phoneNumber)
-                binding.tvCallStatus.text = getString(R.string.ringing)
                 binding.tvCallDuration.text = ""
                 VibratorHelper.startVibration(this@DcDialerActivity, longArrayOf(1000, 500))
             }

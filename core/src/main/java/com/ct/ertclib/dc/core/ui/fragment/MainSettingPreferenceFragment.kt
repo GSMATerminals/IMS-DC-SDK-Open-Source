@@ -30,12 +30,9 @@ import com.ct.ertclib.dc.core.ui.viewmodel.SettingsViewModel
 import com.ct.ertclib.dc.core.ui.widget.SettingPreference
 import com.ct.ertclib.dc.core.ui.widget.SwitchPreference
 import com.ct.ertclib.dc.core.ui.widget.VersionPreference
-import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import com.ct.ertclib.dc.core.utils.common.PkgUtils
 import com.ct.ertclib.dc.core.utils.common.ToastUtils
-import com.ct.ertclib.dc.core.utils.extension.startLocalTestActivity
-import com.ct.ertclib.dc.core.utils.extension.startNetDCDialerActivity
 
 class MainSettingPreferenceFragment : PreferenceFragmentCompat(), Preference.OnPreferenceClickListener {
 

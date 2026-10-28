@@ -33,6 +33,7 @@ import android.os.Message
 import android.provider.Settings
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.isVisible
@@ -72,6 +73,7 @@ class MiniAppEntryHolder(private val context: Context) {
     private var floatPositionX = 0
 
     private var isMove = false
+    private var lastScreenHeight = 0
 
     var miniAppList: MiniAppList? = null
     var callInfo: CallInfo? = null
@@ -116,6 +118,7 @@ class MiniAppEntryHolder(private val context: Context) {
             floatLps = getWindowLayoutParams().apply {
                 y = ScreenUtils.getScreenHeight(context) / 2
             }
+            lastScreenHeight = ScreenUtils.getScreenHeight(context)
             miniAppEntryView = MiniAppEntryView(context)
             miniAppEntryView?.let { view ->
                 view.setOnClickListener {
@@ -142,6 +145,7 @@ class MiniAppEntryHolder(private val context: Context) {
             return
         }
         currentMode = EntryMode.DISMISS
+        handler.removeMessages(MSG_HIDE_FLOATING_BALL)
         miniAppEntryView?.let {
             if (it.isAttachedToWindow) {
                 startEntryHideAnimation {
@@ -154,6 +158,17 @@ class MiniAppEntryHolder(private val context: Context) {
     }
 
     fun refreshUI(newStyle: Int = style) {
+        // 屏幕尺寸变化时重新计算悬浮球 Y 坐标（折叠屏展开/收起）
+        val currentScreenHeight = ScreenUtils.getScreenHeight(context)
+        if (lastScreenHeight != 0 && currentScreenHeight != lastScreenHeight) {
+            floatLps?.let { lps ->
+                lps.y = currentScreenHeight / 2
+                if (miniAppEntryView?.isAttachedToWindow == true) {
+                    windowManager?.updateViewLayout(miniAppEntryView, lps)
+                }
+            }
+        }
+        lastScreenHeight = currentScreenHeight
         miniAppEntryView?.let {
             it.setFloatingBallIcon(newStyle)
             it.setFloatingHalfBallIcon(newStyle, isLeftSide(floatPositionX.toFloat()))
@@ -166,7 +181,8 @@ class MiniAppEntryHolder(private val context: Context) {
         intent.setPackage(context.packageName)
         intent.putExtra("callInfo", callInfo)
         intent.putExtra("adList", adList)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.putExtra("isLeftSide", isLeftSide(floatPositionX.toFloat()))
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
         context.startActivity(intent)
     }
 
@@ -326,5 +342,14 @@ class MiniAppEntryHolder(private val context: Context) {
 
     private fun isLeftSide(x: Float): Boolean {
         return x < ScreenUtils.getScreenWidth(context) / 2
+    }
+
+    fun setVisible(visible: Boolean) {
+        if (currentMode != EntryMode.DISPLAY) return
+        miniAppEntryView?.let {
+            if (it.isAttachedToWindow) {
+                it.visibility = if (visible) View.VISIBLE else View.GONE
+            }
+        }
     }
 }

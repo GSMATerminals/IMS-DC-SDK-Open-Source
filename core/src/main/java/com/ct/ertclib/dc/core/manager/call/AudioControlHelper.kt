@@ -136,16 +136,6 @@ class AudioControlHelper(private val context: Context) {
         }
     }
 
-    // 控制麦克风静音（对方听不到你的声音）
-    fun setMuted(muted: Boolean) {
-        audioManager.isMicrophoneMute = muted
-    }
-
-    fun isMuted(): Boolean{
-        val isMuted = audioManager.isMicrophoneMute
-        return isMuted
-    }
-
     fun getAudioDevices(): List<Map<String, String>> {
         val deviceList = mutableListOf<Map<String, String>>()
         val devices =

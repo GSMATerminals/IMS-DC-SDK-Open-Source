@@ -96,11 +96,12 @@ class SketchManager(
 
     override fun exitSketchControlWindow() {
         LogUtils.info(TAG, "exitSketchControlWindow")
-        scope.launch(Dispatchers.Main) {
-            sketchView?.clearCanvas(true)
-            removeSketchLayout()
-            windowManager = null
-        }
+        // 同步移除悬浮窗，不依赖协程调度。
+        // finishAllActivity 后协程可能无法执行，导致悬浮窗残留。
+        sketchView?.clearCanvas(true)
+        ctrlPanel?.resetPauseState()
+        removeSketchLayout()
+        windowManager = null
     }
 
     override fun setLocalWindowInformation(rectF: RectF, rotation: Int) {
@@ -188,6 +189,10 @@ class SketchManager(
                     sketchLayout?.let {
                         setSketchViewVisibility(!it.isVisible)
                     }
+                }
+
+                override fun onPauseResume(isPause: Boolean) {
+                    screenShareUseCase.pauseScreenShare(isPause)
                 }
             })
         }

@@ -19,11 +19,7 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-
-@XStreamAlias("DataChannelAppInfo")
 public class DataChannelAppInfo {
-    @XStreamAlias("DataChannelApp")
     private DataChannelApp dataChannelApp;
 
     public DataChannelApp getDataChannelApp() {

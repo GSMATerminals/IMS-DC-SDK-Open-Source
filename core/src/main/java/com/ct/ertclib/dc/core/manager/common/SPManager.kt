@@ -115,4 +115,51 @@ class SPManager {
     fun getKeyValue(key: String): String {
         return SPUtils.getInstance().getString(key)
     }
+
+    /**
+     * 清理指定通话的所有缓存数据（包括所有小程序的）
+     * @param telecomCallId 通话ID
+     */
+    fun clearAllCallCacheData(telecomCallId: String) {
+        try {
+            val keysStr = SPUtils.getInstance().getString(MINI_APP_SP_KEYS_KEY, "")
+            if (keysStr.isEmpty()) {
+                return
+            }
+
+            val keys = keysStr.split(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+            val builder = StringBuilder()
+            var hasChanges = false
+
+            keys.forEach { item ->
+                try {
+                    val parts = item.split(MINI_APP_SP_EXPIRY_SPLIT_KEY)
+                    if (parts.isNotEmpty()) {
+                        val key = parts[0]
+                        // 检查是否包含 telecomCallId + "_callCache"
+                        if (key.endsWith("${telecomCallId}_callCache")) {
+                            // 删除该缓存
+                            SPUtils.getInstance().remove(key)
+                            hasChanges = true
+                            sLogger.info("Clear call cache data: $key")
+                        } else {
+                            // 保留该缓存
+                            if (builder.isNotEmpty()) {
+                                builder.append(MINI_APP_SP_EXPIRY_ITEM_SPLIT_KEY)
+                            }
+                            builder.append(item)
+                        }
+                    }
+                } catch (e: Exception) {
+                    sLogger.error("Error processing SP expiry item: $item", e)
+                }
+            }
+
+            if (hasChanges) {
+                SPUtils.getInstance().put(MINI_APP_SP_KEYS_KEY, builder.toString())
+            }
+        } catch (e: Exception) {
+            sLogger.error("Clear all call cache data failed", e)
+        }
+    }
 }
