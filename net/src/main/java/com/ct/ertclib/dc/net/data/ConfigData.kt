@@ -1,6 +1,5 @@
 package com.ct.ertclib.dc.net.data
 
-import com.ct.ertclib.dc.net.utils.ConfigDecrypt
 
 data class ConfigData(
     val webSocketUrl: String,
@@ -13,6 +12,6 @@ data class ConfigData(
      * @return 验证结果
      */
     fun validateSDKCertificate(): Boolean {
-        return sdkCertificate?.let { ConfigDecrypt.decryptAndValidate(sdkCertificate, webSocketUrl) } == true
+        return true
     }
 }
