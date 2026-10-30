@@ -1,11 +1,13 @@
 ![logo.png](images/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
-## News[2026/06/16] 🔥
+## News[2026/10/29] 🔥
 - 支持引导程序 ( 按照3GPP、GSMA等国际标准加载引导程序，用于展示小程序列表 )
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
 - 接入DCLab ( New! 一个完全对标IMS现网的DC环境，可用于DC小程序和AS的开发测试及业务体验 )  
   <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
+- 适配折叠屏、宽屏终端  
+  <div align="center"><img src="images/foldable.png" alt="Description" width="400"/> 
 
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
@@ -103,7 +105,7 @@ NewCall
 ## 六、快速开始（构建发布）
 
 - 配置：  
-  1、DC 能力权限声明: 部分终端厂商对芯片级DC能力做了权限控制，集成方需根据目标终端厂商的具体要求，在 app 的 AndroidManifest.xml 中声明对应的权限，否则 DC 相关接口调用可能被系统拒绝；  
+  1、DC 能力权限声明: 部分终端厂商对芯片DC能力做了权限控制，集成方需根据目标终端厂商的具体要求，在 app 的 AndroidManifest.xml 中声明对应的权限，否则 DC 相关接口调用可能被系统拒绝；  
   2、License 校验与小程序包验签默认实现: LicenseManager.kt 中的 license 校验（verifyLicense）和小程序包验签（verifyMiniAppPkg、verifyMiniAppFolder）默认返回 true（即默认放行）,如需启用，需自行实现这两个功能的具体算法，包括 license 的生成和校验、小程序包的签名和验签逻辑。
 
 - 打包：目前共配置了四个渠道包：Normal(悬浮球入口版本)、Dialer(拨号盘入口版本)、Local(本地调试版本，用于本地调试)、Lab(接入了DCLab，用于调试及体验业务)
