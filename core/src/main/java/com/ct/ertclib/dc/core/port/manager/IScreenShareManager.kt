@@ -36,6 +36,16 @@ interface IScreenShareManager {
     fun stopShareScreen()
 
     /**
+     * 暂停屏幕共享（不修改 isSharing 状态，仅停止画面推送）
+     */
+    fun pauseShareScreen()
+
+    /**
+     * 恢复屏幕共享（不修改 isSharing 状态，仅恢复画面推送）
+     */
+    fun resumeShareScreen()
+
+    /**
      * 查询设备是否支持屏幕共享能力
      * @return 是否支持屏幕共享能力
      */

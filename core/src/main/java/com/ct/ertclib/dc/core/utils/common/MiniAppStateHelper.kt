@@ -50,11 +50,6 @@ class MiniAppStateHelper(
         const val EXTRA_CALL_ID = "extra_call_id"
         const val EXTRA_APP_ID = "extra_app_id"
 
-        // 启动模式标志
-        const val EXTRA_LAUNCH_MODE = "extra_launch_mode"
-        const val LAUNCH_MODE_NORMAL = 0      // 正常启动，会回调 onResume
-        const val LAUNCH_MODE_SILENT = 1      // 静默启动，不回调 onResume
-
         // 全局事件总线
         private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 64)
         val events = _events.asSharedFlow()
@@ -76,7 +71,6 @@ class MiniAppStateHelper(
 
         // 主动控制事件
         data class MoveToBack(val callId: String, val appId: String, val shouldCallback: Boolean = true) : Event()
-        data class BringToFront(val callId: String, val appId: String) : Event()
 
         // 生命周期事件
         data class Finish(val callId: String, val appId: String) : Event()
@@ -89,6 +83,7 @@ class MiniAppStateHelper(
     private val logger = Logger.getLogger("MiniAppStateHelper-$callId-$appId")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var eventCollectionJob: kotlinx.coroutines.Job? = null
+    private var isMaximizing = false
 
     interface Callback {
         fun onPause()
@@ -133,23 +128,40 @@ class MiniAppStateHelper(
         }
 
         // 正常启动，会回调 onResume
-        startActivity(launchMode = LAUNCH_MODE_NORMAL)
+        startActivity()
     }
 
-    private fun startActivity(launchMode: Int = LAUNCH_MODE_NORMAL) {
-        logger.info("MiniAppStateHelper startActivity - callId: $callId, appId: $appId, launchMode: $launchMode")
+    private fun startActivity() {
+        logger.info("MiniAppStateHelper startActivity - callId: $callId, appId: $appId,")
         try {
             val intent = Intent(context, MiniAppStateActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION)
                 putExtra(EXTRA_CALL_ID, callId)
                 putExtra(EXTRA_APP_ID, appId)
-                putExtra(EXTRA_LAUNCH_MODE, launchMode)
             }
             context.startActivity(intent)
         } catch (e: Exception) {
             logger.error("MiniAppStateHelper startActivity failed", e)
+        }
+    }
+
+    private fun bringActivityToFront() {
+        try {
+            val intent = Intent(context, MiniAppStateActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                putExtra(EXTRA_CALL_ID, callId)
+                putExtra(EXTRA_APP_ID, appId)
+            }
+            context.startActivity(intent)
+            logger.info("bringActivityToFront - Activity brought to front")
+        } catch (e: Exception) {
+            logger.error("bringActivityToFront failed", e)
+            // 兜底：重新创建
+            startActivity()
         }
     }
 
@@ -200,18 +212,27 @@ class MiniAppStateHelper(
      * 最大化 - 静默模式，不会触发 onResume 回调
      */
     fun maximizeActivity() {
-        logger.info("MiniAppStateHelper maximizeActivity - callId: $callId, appId: $appId")
+        if (isMaximizing) {
+            logger.info("maximizeActivity - already in progress, skip")
+            return
+        }
+
+        logger.info("maximizeActivity - callId: $callId, appId: $appId")
+        isMaximizing = true
 
         scope.launch {
-            val isAlive = isActivityAlive()
-            logger.info("MiniAppStateHelper maximizeActivity - isAlive: $isAlive")
+            try {
+                val isAlive = isActivityAlive()
+                logger.info("maximizeActivity - isAlive: $isAlive")
 
-            if (isAlive) {
-                tryPost(Event.Finish(callId, appId))
-                delay(200)
+                if (isAlive) {
+                    bringActivityToFront()
+                } else {
+                    startActivity()
+                }
+            } finally {
+                isMaximizing = false
             }
-            // 静默启动，不会触发 onResume 回调
-            startActivity(launchMode = LAUNCH_MODE_SILENT)
         }
     }
 
@@ -239,7 +260,6 @@ class MiniAppStateActivity : Activity() {
 
     private var callId: String? = null
     private var appId: String? = null
-    private var launchMode: Int = MiniAppStateHelper.LAUNCH_MODE_NORMAL
     private var hasResumedBefore = false
     private var shouldCallbackOnPause = true
     private var eventJob: kotlinx.coroutines.Job? = null
@@ -250,7 +270,6 @@ class MiniAppStateActivity : Activity() {
 
         callId = intent.getStringExtra(MiniAppStateHelper.EXTRA_CALL_ID) ?: ""
         appId = intent.getStringExtra(MiniAppStateHelper.EXTRA_APP_ID) ?: ""
-        launchMode = intent.getIntExtra(MiniAppStateHelper.EXTRA_LAUNCH_MODE, MiniAppStateHelper.LAUNCH_MODE_NORMAL)
 
         logger.info("MiniAppStateHelper MiniAppStateActivity onCreate - callId: $callId, appId: $appId")
 
@@ -288,14 +307,8 @@ class MiniAppStateActivity : Activity() {
                             if (!isFinishing && !isDestroyed) {
                                 // 保存 shouldCallback 标志，供 onPause 使用
                                 shouldCallbackOnPause = event.shouldCallback
-                                moveTaskToBack(false)
+                                finish()
                             }
-                        }
-                    }
-                    is MiniAppStateHelper.Event.BringToFront -> {
-                        if (event.callId == callId && event.appId == appId) {
-                            logger.info("MiniAppStateHelper MiniAppStateActivity BringToFront received, bringing to front - callId: ${event.callId}, appId: ${event.appId}")
-                            bringToFront()
                         }
                     }
                     else -> {}
@@ -304,41 +317,15 @@ class MiniAppStateActivity : Activity() {
         }
     }
 
-    private fun bringToFront() {
-        if (!isFinishing && !isDestroyed) {
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val tasks = activityManager.appTasks
-
-            for (task in tasks) {
-                val baseIntent = task.taskInfo.baseIntent
-                if (baseIntent.getStringExtra(MiniAppStateHelper.EXTRA_CALL_ID) == callId &&
-                    baseIntent.getStringExtra(MiniAppStateHelper.EXTRA_APP_ID) == appId) {
-                    task.moveToFront()
-                    return
-                }
-            }
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         overridePendingTransition(0, 0)
-        logger.info("MiniAppStateHelper MiniAppStateActivity onResume - callId: $callId, appId: $appId, launchMode: $launchMode, hasResumedBefore: $hasResumedBefore")
+        logger.info("MiniAppStateHelper MiniAppStateActivity onResume - callId: $callId, appId: $appId, hasResumedBefore: $hasResumedBefore")
 
         callId?.let { cid -> appId?.let { aid ->
-            // 决定是否应该回调 onResume
-            // 1. 正常模式 (LAUNCH_MODE_NORMAL): 总是回调
-            // 2. 静默模式 (LAUNCH_MODE_SILENT): 只有在已经 resume 过的情况下才回调（从后台恢复）
-            // 3. 首次启动且是静默模式：不回调
-            val shouldCallback = when (launchMode) {
-                MiniAppStateHelper.LAUNCH_MODE_NORMAL -> true
-                MiniAppStateHelper.LAUNCH_MODE_SILENT -> hasResumedBefore
-                else -> true
-            }
-
-            logger.info("onResume - shouldCallback: $shouldCallback")
+            logger.info("onResume - shouldCallback: $hasResumedBefore")
             MiniAppStateHelper.tryPost(
-                MiniAppStateHelper.Event.SystemResume(cid, aid, shouldCallback)
+                MiniAppStateHelper.Event.SystemResume(cid, aid, hasResumedBefore)
             )
         } }
 
@@ -363,7 +350,6 @@ class MiniAppStateActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
         logger.info("MiniAppStateHelper MiniAppStateActivity onBackPressed - callId: $callId, appId: $appId")
         callId?.let { cid -> appId?.let { aid ->
             MiniAppStateHelper.tryPost(MiniAppStateHelper.Event.SystemBackPressed(cid, aid))
@@ -384,6 +370,7 @@ class MiniAppStateActivity : Activity() {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // 保底
         finish()
         return super.onTouchEvent(event)
     }

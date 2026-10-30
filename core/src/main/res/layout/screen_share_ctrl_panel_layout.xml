@@ -55,6 +55,15 @@
         </RelativeLayout>
 
         <ImageView
+            android:id="@+id/pause_share_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_margin="20dp"
+            android:src="@drawable/sketch_ctrl_pause_selector"
+            android:visibility="visible"
+            tools:visibility="visible" />
+
+        <ImageView
             android:id="@+id/exit_board_btn"
             android:layout_width="36dp"
             android:layout_height="36dp"

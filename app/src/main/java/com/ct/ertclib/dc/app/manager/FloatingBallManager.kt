@@ -30,8 +30,8 @@ import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.AdItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -47,12 +47,14 @@ object FloatingBallManager: KoinComponent {
     private val context: Context by inject()
 
     private var scope : CoroutineScope? = null
+    private var statusFlowJob: Job? = null
+    private var styleFlowJob: Job? = null
 
     @JvmStatic
     fun init() {
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "initManager")
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        scope?.launch(Dispatchers.Main) {
+        statusFlowJob = scope?.launch(Dispatchers.Main) {
             NewCallAppSdkInterface.floatingBallStatusFlow.distinctUntilChanged().collect { floatingBallData ->
                 NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.INFO_LEVEL, TAG, "floatingBallStatusFlow floatingBallData: $floatingBallData")
                 if (floatingBallData.showStatus == SDK_FLOATING_DISPLAY) {
@@ -64,7 +66,7 @@ object FloatingBallManager: KoinComponent {
                 }
             }
         }
-        scope?.launch {
+        styleFlowJob = scope?.launch {
             NewCallAppSdkInterface.floatingBallStyle.collect { style ->
                 LogUtils.d(TAG, "floatingBallStyle style: $style")
                 refreshStyle(style)
@@ -74,11 +76,14 @@ object FloatingBallManager: KoinComponent {
 
     @JvmStatic
     fun release() {
-        scope?.launch(Dispatchers.Main) {
-            entryHolder?.dismiss()
-            entryHolder = null
-        }
-        scope = null
+        // 逐个取消协程任务，停止收集 flow，避免 release 后仍有回调创建新悬浮球
+        statusFlowJob?.cancel()
+        statusFlowJob = null
+        styleFlowJob?.cancel()
+        styleFlowJob = null
+        // 同步移除悬浮窗，确保 View 从 WindowManager 清理
+        entryHolder?.dismiss()
+        entryHolder = null
     }
 
     private fun show(callInfo: CallInfo, adList: ArrayList<AdItem>, miniAppList: MiniAppList, style: Int) {
@@ -103,6 +108,13 @@ object FloatingBallManager: KoinComponent {
     private fun refreshStyle(style: Int) {
         scope?.launch(Dispatchers.Main) {
             entryHolder?.refreshUI(style)
+        }
+    }
+
+    @JvmStatic
+    fun setEntryVisible(visible: Boolean) {
+        scope?.launch(Dispatchers.Main) {
+            entryHolder?.setVisible(visible)
         }
     }
 }

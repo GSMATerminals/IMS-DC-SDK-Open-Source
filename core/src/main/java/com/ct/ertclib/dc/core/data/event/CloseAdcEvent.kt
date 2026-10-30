@@ -19,9 +19,8 @@
 
 package com.ct.ertclib.dc.core.data.event
 
-import com.newcalllib.datachannel.V1_0.IImsDataChannel
 
-class CloseAdcEvent(override var id: Int, override var message: String,val appId:String?,val iImsDataChannel: IImsDataChannel) : Event<String>(){
+class CloseAdcEvent(override var id: Int, override var message: String,val appId:String,val telecomCallId:String,val dcLabel:String) : Event<String>(){
     companion object {
         const val CLOSE_ADC = "CLOSE_ADC"
     }

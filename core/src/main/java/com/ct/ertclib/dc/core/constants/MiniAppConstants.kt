@@ -125,6 +125,7 @@ object MiniAppConstants {
     const val FUNCTION_NOTIFY_DATA_CHANNEL = "dataChannelNotify"
     const val FUNCTION_NOTIFY_MESSAGE = "messageNotify"
     const val FUNCTION_CALL_STATE_NOTIFY = "callStateNotify"
+    const val FUNCTION_CALL_TYPE_NOTIFY = "callTypeNotify"
     const val FUNCTION_MINI_APP_NOTIFY = "miniAppStateNotify"
     const val FUNCTION_DRAWING_INO_NOTIFY = "drawingInfoNotify"
     const val FUNCTION_SKETCH_STATUS_NOTIFY = "sketchStatusNotify"

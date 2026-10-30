@@ -19,7 +19,6 @@
 
 package com.ct.ertclib.dc.core.utils.common
 
-import com.ct.ctec.utils.JsonUtil
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.google.gson.*
 import org.json.JSONObject

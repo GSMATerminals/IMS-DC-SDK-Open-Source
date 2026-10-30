@@ -164,6 +164,32 @@ class NewCallsManager {
                 }
             }
         }
+
+        override fun onDetailsChanged(call: Call?, details: Call.Details?) {
+            super.onDetailsChanged(call, details)
+            if (call != null && details != null) {
+                val callId = CallUtils.getTelecomCallId(call)
+                if (callId != null) {
+                    dispatchCallDetailsChange(callId, details)
+                }
+            }
+        }
+    }
+
+    @SuppressLint("NewApi")
+    fun dispatchCallDetailsChange(callId: String, details: Call.Details) {
+        val callInfo = getCallInfo(callId)
+        if (callInfo == null) {
+            return
+        }
+        val newVideoState = details.videoState
+        if (callInfo.videoState != newVideoState) {
+            callInfo.videoState = newVideoState
+            val newCallType = getCallType(callId)
+            sLogger.debug("callType change")
+            NewCallAppSdkInterface.emitCallTypeChangeFlow(callId, newCallType)
+
+        }
     }
 
     @SuppressLint("NewApi")
@@ -399,7 +425,6 @@ class NewCallsManager {
             else -> 0
         }
     }
-
     fun getCallConnectTime(telecomCallId: String): Long {
         val call = mCallsMap[telecomCallId]
         val connectTime = call?.details?.connectTimeMillis ?: 0L
@@ -436,12 +461,11 @@ class NewCallsManager {
 
     // 控制麦克风静音（对方听不到你的声音）
     fun setMuted(muted: Boolean) {
-        sLogger.debug("setMuted muted: $muted")
-        audioControlHelper.setMuted(muted)
+        inCallService!!.setMuted(muted)
     }
 
     fun isMuted(): Boolean{
-        val isMuted = audioControlHelper.isMuted()
+        val isMuted = inCallService!!.callAudioState?.isMuted ?: false
         sLogger.debug("isMuted: $isMuted")
         return isMuted
     }

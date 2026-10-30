@@ -28,6 +28,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.databinding.ScreenShareCtrlPanelLayoutBinding
 import com.ct.ertclib.dc.core.port.usecase.main.IScreenShareUseCase
 import com.ct.ertclib.dc.core.utils.common.LogUtils
@@ -53,6 +54,7 @@ class ScreenShareCtrlPanel : FrameLayout, KoinComponent {
     private var viewBinding: ScreenShareCtrlPanelLayoutBinding =
         ScreenShareCtrlPanelLayoutBinding.inflate(LayoutInflater.from(context), this, true)
     private var isMove = false
+    private var isPaused = false
     private var preTouchX = 0f
     private var preTouchY = 0f
     private var windowManager = context.getSystemService(WindowManager::class.java) as? WindowManager
@@ -75,6 +77,16 @@ class ScreenShareCtrlPanel : FrameLayout, KoinComponent {
         viewBinding.exitBoardBtn.setOnClickListener {
             listener?.onExit()
         }
+        viewBinding.pauseShareBtn.setOnClickListener {
+            isPaused = !isPaused
+            viewBinding.pauseShareBtn.setImageResource(
+                if (isPaused) R.drawable.sketch_ctrl_resume_selector else R.drawable.sketch_ctrl_pause_selector
+            )
+            listener?.onPauseResume(isPaused)
+        }
+        // 暂停按钮仅共享方显示，观看方隐藏
+        viewBinding.pauseShareBtn.visibility =
+            if (screenShareUseCase.isInSharing()) VISIBLE else GONE
         setMoveListener()
         LogUtils.debug(TAG, "init")
         scope.launch {
@@ -102,6 +114,15 @@ class ScreenShareCtrlPanel : FrameLayout, KoinComponent {
 
     fun setDrawRebBubbleVisible(visible: Boolean) {
         viewBinding.sketchRed.visibility = if (visible) VISIBLE else GONE
+    }
+
+    /**
+     * 重置暂停状态为未暂停，并恢复按钮图标。
+     * 在面板退出或通话结束时调用，确保下次打开面板时按钮状态正确。
+     */
+    fun resetPauseState() {
+        isPaused = false
+        viewBinding.pauseShareBtn.setImageResource(R.drawable.sketch_ctrl_pause_selector)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -152,5 +173,7 @@ class ScreenShareCtrlPanel : FrameLayout, KoinComponent {
         fun onExit()
 
         fun onDraw()
+
+        fun onPauseResume(isPause: Boolean)
     }
 }

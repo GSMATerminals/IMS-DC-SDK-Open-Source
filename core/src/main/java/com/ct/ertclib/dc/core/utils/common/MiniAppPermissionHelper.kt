@@ -23,12 +23,17 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.WindowManager
+import android.view.View
+import android.widget.Button
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppPermissions
 import com.ct.ertclib.dc.core.data.miniapp.PermissionData
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
+import com.ct.ertclib.dc.core.miniapp.ui.adapter.PermissionListAdapter
 import com.ct.ertclib.dc.core.port.usecase.mini.IPermissionUseCase
-import com.ct.ertclib.dc.core.ui.widget.PermissionBottomSheetDialog
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
@@ -126,8 +131,16 @@ object MiniAppPermissionHelper : KoinComponent {
 
         private val sLogger = Logger.getLogger(TAG)
         private lateinit var miniAppInfo: MiniAppInfo
-        private var permissionDialog: PermissionBottomSheetDialog? = null
+        private var permissionAdapter: PermissionListAdapter? = null
+        private var pendingPermissionDataList: MutableList<PermissionData>? = null
         private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+        // 视图引用（全屏授权页）
+        private var appNameTextView: TextView? = null
+        private var panelTitleView: TextView? = null
+        private var permissionRecyclerView: RecyclerView? = null
+        private var okButton: Button? = null
+        private var cancelButton: TextView? = null
 
         // 存储待处理的权限请求数据
         private var pendingSystemPermissions: MutableList<String>? = null
@@ -135,14 +148,8 @@ object MiniAppPermissionHelper : KoinComponent {
 
         override fun onCreate(savedInstanceState: Bundle?) {
             overridePendingTransition(0, 0)
-            // 设置透明主题
-            setTheme(android.R.style.Theme_Translucent_NoTitleBar)
             super.onCreate(savedInstanceState)
-
-            // 设置透明窗口
-            window.setBackgroundDrawableResource(android.R.color.white)
-            window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
-            window.setLayout(1, 1)
+            setContentView(R.layout.permission_request_activity)
 
             // 获取参数
             miniAppInfo = intent.getParcelableExtra(EXTRA_MINI_APP_INFO) ?: run {
@@ -152,9 +159,32 @@ object MiniAppPermissionHelper : KoinComponent {
             }
 
             sLogger.info("PermissionActivity created, appId: ${miniAppInfo.appId}")
+            initView()
 
             // 开始权限检查流程
             startPermissionCheck()
+        }
+
+        private fun initView() {
+            appNameTextView = findViewById(R.id.permission_activity_app_name)
+            panelTitleView = findViewById(R.id.request_permission_panel_title)
+            permissionRecyclerView = findViewById(R.id.permission_recycler_view)
+            okButton = findViewById(R.id.permission_ok_button)
+            cancelButton = findViewById(R.id.permission_cancel_button)
+
+            // 顶部展示小程序名称，让用户明确在为哪个小程序授权
+            appNameTextView?.text = miniAppInfo.appName
+
+            permissionRecyclerView?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+
+            okButton?.setOnClickListener {
+                sLogger.info("Permission page OK clicked")
+                pendingPermissionDataList?.let { handleMiniAppPermissionResult(it) }
+            }
+            cancelButton?.setOnClickListener {
+                sLogger.info("Permission page cancel clicked")
+                finishWithResult(false)
+            }
         }
 
         private fun startPermissionCheck() {
@@ -201,7 +231,7 @@ object MiniAppPermissionHelper : KoinComponent {
                         }
                         pendingMiniAppPermissions.isNotEmpty() -> {
                             // 请求小程序权限
-                            showMiniAppPermissionDialog(pendingMiniAppPermissions)
+                            showMiniAppPermissionPage(pendingMiniAppPermissions)
                         }
                         else -> {
                             // 所有权限已授权
@@ -231,7 +261,7 @@ object MiniAppPermissionHelper : KoinComponent {
                             sLogger.info("System permissions granted")
                             val pendingMini = pendingMiniAppPermissionsForSystem
                             if (!pendingMini.isNullOrEmpty()) {
-                                showMiniAppPermissionDialog(pendingMini)
+                                showMiniAppPermissionPage(pendingMini)
                             } else {
                                 finishWithResult(true)
                             }
@@ -256,31 +286,18 @@ object MiniAppPermissionHelper : KoinComponent {
                 })
         }
 
-        private fun showMiniAppPermissionDialog(pendingPermissions: MutableList<String>) {
-            sLogger.info("Showing mini app permission dialog")
+        private fun showMiniAppPermissionPage(pendingPermissions: MutableList<String>) {
+            sLogger.info("Showing mini app permission page")
             val permissionDataList = PermissionUtils.convertPermissionDataList(pendingPermissions)
+            pendingPermissionDataList = permissionDataList
 
-            permissionDialog = PermissionBottomSheetDialog(
-                this,
-                miniAppInfo,
-                permissionDataList,
-                onPositiveButtonClick = { resultList ->
-                    sLogger.info("Permission dialog result received")
-                    handleMiniAppPermissionResult(resultList)
-                },
-                onNegativeButtonClick = {
-                    sLogger.info("Permission dialog cancelled")
-                    finishWithResult(false)
-                }
-            ).apply {
-                setOnDismissListener {
-                    // 确保在 dismiss 时清理
-                    if (!isFinishing && !isDestroyed) {
-                        finishWithResult(false)
-                    }
-                }
-                show()
+            panelTitleView?.text = "“${miniAppInfo.appName}”需要使用以下权限"
+            permissionAdapter = PermissionListAdapter(this, permissionDataList) { position, isAllowed ->
+                sLogger.info("Permission selected, position: $position, isAllowed: $isAllowed")
+                permissionDataList[position].willBeGranted = isAllowed
+                permissionAdapter?.submitItem(permissionDataList[position], position)
             }
+            permissionRecyclerView?.adapter = permissionAdapter
         }
 
         private fun handleMiniAppPermissionResult(permissionDataList: List<PermissionData>) {
@@ -306,8 +323,6 @@ object MiniAppPermissionHelper : KoinComponent {
 
         private fun finishWithResult(success: Boolean) {
             sLogger.info("Finishing with result: $success")
-            permissionDialog?.dismiss()
-            permissionDialog = null
 
             if (success) {
                 callback?.onAllPermissionsGranted()
@@ -328,7 +343,8 @@ object MiniAppPermissionHelper : KoinComponent {
         override fun onDestroy() {
             super.onDestroy()
             activityScope.cancel()
-            permissionDialog = null
+            permissionAdapter = null
+            pendingPermissionDataList = null
             sLogger.debug("PermissionActivity destroyed")
         }
     }

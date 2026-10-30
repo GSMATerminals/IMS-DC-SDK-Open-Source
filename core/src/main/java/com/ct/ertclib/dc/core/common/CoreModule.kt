@@ -22,7 +22,6 @@ package com.ct.ertclib.dc.core.common
 import com.ct.ertclib.dc.core.manager.common.FileDownloadManager
 import com.ct.ertclib.dc.core.manager.common.ModelManager
 import com.ct.ertclib.dc.core.manager.context.ActivityManager
-import com.ct.ertclib.dc.core.manager.context.AppServiceManager
 import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareManager
 import com.ct.ertclib.dc.core.manager.screenshare.SketchManager
 import com.ct.ertclib.dc.core.miniapp.db.PermissionDbRepo
@@ -69,7 +68,6 @@ val coreModule = module {
     single<IScreenShareManager> { ScreenShareManager(androidContext()) }
 
     single<ISketchBoardUseCase> { SketchBoardUseCase(androidContext(), get(), get()) }
-    single<IAppServiceManager> { AppServiceManager(get(), get()) }
 
 
     single<ISketchManager> { SketchManager(androidContext(), get()) }

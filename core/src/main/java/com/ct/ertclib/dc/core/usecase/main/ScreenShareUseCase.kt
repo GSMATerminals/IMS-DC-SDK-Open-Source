@@ -119,6 +119,15 @@ class ScreenShareUseCase(
         )
     }
 
+    override fun pauseScreenShare(isPause: Boolean) {
+        LogUtils.info(TAG, "pauseScreenShare, isPause: $isPause")
+        if (isPause) {
+            screenShareManager.pauseShareScreen()
+        } else {
+            screenShareManager.resumeShareScreen()
+        }
+    }
+
     override fun isInSharing(): Boolean {
         return screenShareManager.isSharing()
     }

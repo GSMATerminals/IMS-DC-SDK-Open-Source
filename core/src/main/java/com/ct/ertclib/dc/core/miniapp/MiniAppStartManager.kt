@@ -26,6 +26,10 @@ import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
+import com.ct.ertclib.dc.core.utils.common.MiniAppPermissionHelper
+import com.ct.ertclib.dc.core.utils.common.ScreenUnlockHelper
+import com.ct.ertclib.dc.core.utils.common.ToastUtils
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.data.call.CallInfo
 import com.ct.ertclib.dc.core.data.common.Reason
 import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
@@ -83,9 +87,33 @@ object MiniAppStartManager : IMiniAppStartManager {
                 return@launch
             }
             coroutineScope.launch(Dispatchers.Main){
-                startMiniAppActivity(context, miniAppInfo, callInfo, miniAppListInfo)
-                // 回调启动成功
-                callback?.onMiniAppStarted()
+                ScreenUnlockHelper.requestUnlock(context, object : ScreenUnlockHelper.UnlockCallback {
+                    override fun onSuccess() {
+                        MiniAppPermissionHelper.checkPermissions(
+                            context = context,
+                            miniAppInfo = miniAppInfo,
+                            callback = object : MiniAppPermissionHelper.PermissionCallback {
+                                override fun onAllPermissionsGranted() {
+                                    sLogger.debug("checkPermissionsBeforeStart: all permissions granted, starting mini app")
+                                    startMiniAppActivity(context, miniAppInfo, callInfo, miniAppListInfo)
+                                    // 回调启动成功
+                                    callback?.onMiniAppStarted()
+                                }
+
+                                override fun onPermissionDenied() {
+                                    sLogger.warn("checkPermissionsBeforeStart: permission denied")
+                                    ToastUtils.showShortToast(context, R.string.permission_not_grant_tips)
+                                    callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                                }
+                            }
+                        )
+                    }
+
+                    override fun onFailed() {
+                        sLogger.warn("checkPermissionsBeforeStart: screen unlock failed")
+                        callback?.onMiniAppStartFailed(Reason.START_FAILED)
+                    }
+                })
             }
         }
     }
@@ -101,6 +129,7 @@ object MiniAppStartManager : IMiniAppStartManager {
 
         val runningMiniAppWrapper = getRunningMiniAppWrapper(miniAppInfo, callInfo)
         if (runningMiniAppWrapper != null) {
+            maybeCloseGuidePage(miniAppInfo)
             val coroutineScope = CoroutineScope(EmptyCoroutineContext)
             coroutineScope.launch(Dispatchers.Main) {
                 sLogger.debug("startMiniAppActivity runningMiniAppWrapper:$runningMiniAppWrapper")
@@ -112,7 +141,7 @@ object MiniAppStartManager : IMiniAppStartManager {
         val miniAppInfoWrapper = MiniAppInfoWrapper(miniAppInfo, callInfo, MiniAppView(context))
         mMiniAppInfoWrapperList.add(miniAppInfoWrapper)
 
-        // NewCallAppSdkInterface.emitCloseExpandedViewFlow(isClose = true)
+        maybeCloseGuidePage(miniAppInfo)
         val coroutineScope = CoroutineScope(EmptyCoroutineContext)
         coroutineScope.launch(Dispatchers.Main) {
             sLogger.debug("startMiniAppActivity addMiniAppView")
@@ -187,9 +216,6 @@ object MiniAppStartManager : IMiniAppStartManager {
     }
 
     private fun addMiniAppView(context: Context, miniAppInfoWrapper: MiniAppInfoWrapper, miniAppListInfo: MiniAppList?) {
-        // 直接让 View 自己添加到 WindowManager
-        miniAppInfoWrapper.view.attachToWindow()
-
         miniAppInfoWrapper.view.setControlListener(object : MiniAppView.ControlListener {
             override fun onToRemove() {
                 // 移除 wrapper
@@ -197,8 +223,32 @@ object MiniAppStartManager : IMiniAppStartManager {
                 sLogger.debug("Removed wrapper for app: ${miniAppInfoWrapper.miniApp.appId}, remaining count: ${mMiniAppInfoWrapperList.size}")
             }
         })
-
         miniAppInfoWrapper.view.start(miniAppInfoWrapper.miniApp, miniAppInfoWrapper.callInfo, miniAppListInfo)
         sLogger.debug("addMiniAppView success, appId: ${miniAppInfoWrapper.miniApp.appId}")
+    }
+
+    /**
+     * 仅当窗口比例四字段全部配置且 closeGuidePage 为 true 时，才关闭引导页
+     */
+    private fun maybeCloseGuidePage(miniAppInfo: MiniAppInfo) {
+        val windowStyle = miniAppInfo.appProperties?.windowStyle
+        val hasCustomWindow = windowStyle?.width != null
+                && windowStyle.height != null
+                && windowStyle.windowStart != null
+                && windowStyle.windowTop != null
+        if (hasCustomWindow && windowStyle.closeGuidePage == true) {
+            NewCallAppSdkInterface.emitStartAppCloseExpandedViewFlow(isClose = true)
+        }
+    }
+
+    /**
+     * 判断是否为宽屏（折叠屏展开态/平板等），与 MiniAppView.isLargeScreen() 逻辑一致
+     */
+    private fun isLargeScreen(context: Context): Boolean {
+        val displayMetrics = context.resources.displayMetrics
+        val width = displayMetrics.widthPixels
+        val height = displayMetrics.heightPixels
+        val aspectRatio = width.toFloat() / height.toFloat()
+        return aspectRatio > 0.7f
     }
 }

@@ -1,11 +1,13 @@
 ![logo.png](images/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
-## News[2026/06/16] 🔥
+## News[2026/10/29] 🔥
 - 支持引导程序 ( 按照3GPP、GSMA等国际标准加载引导程序，用于展示小程序列表 )
   <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
 - 接入DCLab ( New! 一个完全对标IMS现网的DC环境，可用于DC小程序和AS的开发测试及业务体验 )  
   <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
+- 适配折叠屏、宽屏终端  
+  <div align="center"><img src="images/foldable.png" alt="Description" width="400"/> 
 
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
@@ -102,25 +104,23 @@ NewCall
 
 ## 六、快速开始（构建发布）
 
+- 配置：  
+  1、DC 能力权限声明: 部分终端厂商对芯片DC能力做了权限控制，集成方需根据目标终端厂商的具体要求，在 app 的 AndroidManifest.xml 中声明对应的权限，否则 DC 相关接口调用可能被系统拒绝；  
+  2、License 校验与小程序包验签默认实现: LicenseManager.kt 中的 license 校验（verifyLicense）和小程序包验签（verifyMiniAppPkg、verifyMiniAppFolder）默认返回 true（即默认放行）,如需启用，需自行实现这两个功能的具体算法，包括 license 的生成和校验、小程序包的签名和验签逻辑。
 
 - 打包：目前共配置了四个渠道包：Normal(悬浮球入口版本)、Dialer(拨号盘入口版本)、Local(本地调试版本，用于本地调试)、Lab(接入了DCLab，用于调试及体验业务)
 
    ```bash
-   ./gradlew assembleRelease 
-
-- 终端适配：  
-  终端需遵循[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行。  
+   ./gradlew assembleRelease
 
 - 发布：  
-  终端厂商将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。
-  当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，且按照适配规范实现，原生通话界面会出现固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
+  终端厂商需遵循[《5G增强通话商用SDK终端适配规范》](./document/5G增强通话商用SDK终端适配规范.docx)进行适配，以使SDK各功能正常运行在其终端上，并将SDK作为系统默认应用集成，随系统一起推送至经过适配的用户终端。  
+  当用户通话时，如果终端集成Normal版本，原生通话界面上会以悬浮球的形式出现5G增强通话图标，点击该图标即可打开5G增强通话小程序空间；如果终端集成Dialer版本，需按照[《5G增强通话商用SDK终端适配规范》](./document/5G增强通话商用SDK终端适配规范.docx)实现，在原生通话界面增加固定入口按钮，点击该按钮即可打开5G增强通话小程序空间。
 >[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#十联系方式)
 
 ## 七、小程序开发调试
-使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序。
-- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准进行web网页开发，[《中国电信5G增强实时通信系统技术要求 IMS Data Channel JS API》](./document/中国电信5G增强实时通信系统技术要求%20IMS%20Data%20Channel%20JS%20API.docx)列举了SDK开放给小程序的所有接口，小程序开发者根据这份文档进行小程序的开发，小程序参考示例代码：[miniapp/demo/IMS_DC_Mini_app_demo_source_code](miniapp/demo/IMS_DC_Mini_app_demo_source_code)。  
-- 小程序打包：将web项目打包为离线的zip格式压缩包，即小程序包，index.html和properties.json文件需在zip压缩包的一级目录中,参考示例小程序包：[miniapp/demo/IMS_DC_Mini_app_demo.zip](miniapp/demo/IMS_DC_Mini_app_demo.zip)。  
-- 小程序本地调试：按照普通apk安装方式将Local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后从手机桌面启动“电信增强通话”app，即可配置并调试小程序。  
+- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准及[《IMS DC小程序开发文档》](./document/IMS%20DC小程序开发文档.docx)开发小程序，[jssdktest.vue](./document/jssdktest.vue)为小程序示例代码，[jssdk.js](./document/jssdk.js)为小程序开发需要集成的插件。
+- 小程序本地调试：使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序，按照普通apk安装方式将Local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后从手机桌面启动“电信增强通话”app，即可配置并调试小程序。  
 - DCLab调测：联系我们在DCLab上部署小程序和AS，由DCLab分配体验号码，请按照普通apk安装方式将Lab版本SDK安装到手机，从手机桌面启动“电信增强通话”app，即可拨号体验。
 
 ## 八、许可证
@@ -130,11 +130,11 @@ NewCall
 
 ### 1、谁应该使用该开源项目的代码
 
-OEM获取代码后，按照[《中国电信5G增强通话商用SDK终端适配规范》](./document/中国电信5G增强通话商用SDK终端适配规范.docx)进行编译集成。
+终端厂商或运营商获取代码后，按照上述 ["六、快速开始"](#六快速开始构建发布) 进行编译集成。
 
 ### 2、运营商可以做什么？
 
-- 提供支持DC的网络环境，部署小程序，使用OEM集成SDK后的终端来测试业务。
+- 提供支持DC的网络环境，部署小程序，使用终端厂商集成SDK后的终端来测试业务。
 
 - 在没有DC网络和适配终端的情况下，可以直接编译Local版本的SDK体验DC小程序。
 

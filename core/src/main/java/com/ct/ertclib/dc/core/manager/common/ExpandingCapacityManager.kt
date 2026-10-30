@@ -20,7 +20,6 @@
 package com.ct.ertclib.dc.core.manager.common
 
 import android.content.Context
-import com.ct.ctec.CtEC
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.data.common.ECBaseData
 import com.ct.ertclib.dc.core.port.expandcapacity.IExpandingCapacityListener
@@ -95,8 +94,6 @@ class ExpandingCapacityManager {
         sLogger.info("init")
         // 添加OEM拓展能力
         mProviderMap[OEM] = OemEC.instance
-        // 添加电信拓展能力
-        mProviderMap[CT] = CtEC.instance
         // todo 添加其他
 
         // 初始化

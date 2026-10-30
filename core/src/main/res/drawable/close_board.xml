@@ -34,12 +34,12 @@
         android:pathData="M24,24m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0"
         android:fillColor="#444"/>
     <path
-        android:pathData="M10,10L38,38"
+        android:pathData="M14,14L34,34"
         android:strokeWidth="2.000000"
         android:fillColor="#00000000"
         android:strokeColor="#68a7ff"/>
     <path
-        android:pathData="M10,38L38,10"
+        android:pathData="M14,34L34,14"
         android:strokeWidth="2.000000"
         android:fillColor="#00000000"
         android:strokeColor="#68a7ff"/>

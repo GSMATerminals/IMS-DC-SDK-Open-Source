@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 宽屏小窗背景：纯白圆角。阴影由 decorView 的 elevation + 圆角 outline 提供（见 BootstrapDialogFragment / BaseMiniAppListDialogFragment），
+     避免 layer-list 假阴影产生黑色硬边框。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFF"/>
+    <corners android:radius="24dp"/>
+</shape>

@@ -19,14 +19,18 @@
 
 package com.ct.ertclib.dc.core.utils.common
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ct.ertclib.dc.core.data.common.MediaInfo
 import com.ct.ertclib.dc.core.picker.VideoThumbListener
 import com.ct.ertclib.dc.core.utils.logger.Logger
+import com.hjq.permissions.OnPermissionCallback
+import com.hjq.permissions.XXPermissions
 import com.luck.picture.lib.basic.PictureSelector
 import com.luck.picture.lib.config.SelectMimeType
 import com.luck.picture.lib.entity.LocalMedia
@@ -168,45 +172,7 @@ object FilePickerHelper {
 
             when (mode) {
                 MODE_MULTIPLE -> {
-                    try {
-                        val pickerConfig = FilePickerManager
-                            .from(this)
-                            .maxSelectable(maxSelectable!!)
-
-                        if (!fileTypes.isNullOrEmpty()) {
-                            pickerConfig.filter(object : AbstractFileFilter() {
-                                override fun doFilter(listData: ArrayList<FileItemBeanImpl>): ArrayList<FileItemBeanImpl> {
-                                    return ArrayList(listData.filter { item ->
-                                        // 永远保留文件夹以便导航
-                                        if (item.isDir) return@filter true
-
-                                        fileTypes!!.any { type ->
-                                            when (type) {
-                                                "image" -> item.fileType is RasterImageFileType
-                                                "video" -> item.fileType is VideoFileType
-                                                "audio" -> item.fileType is AudioFileType
-                                                "text" -> item.fileType is TextFileType
-                                                "compressed" -> item.fileType is CompressedFileType
-                                                "pageLayout" -> item.fileType is PageLayoutFileType
-                                                "executable" -> item.fileType is ExecutableFileType
-                                                "dataBase" -> item.fileType is DataBaseFileType
-                                                "data" -> item.fileType is DataFileType
-                                                "font" -> item.fileType is FontFileType
-                                                "web" -> item.fileType is WebFileType
-                                                else -> false
-                                            }
-                                        }
-                                    })
-                                }
-                            })
-                        }
-
-                        // 3. 启动选择器
-                        pickerConfig.forResult(FilePickerManager.REQUEST_CODE)
-                    } catch (e: Exception){
-                        logger.error("Failed to start AndroidFilePicker", e)
-                        finishWithResult(null)
-                    }
+                    checkStoragePermissionAndPick()
                 }
                 MODE_CAMERA -> {
                     try {
@@ -260,6 +226,91 @@ object FilePickerHelper {
                         finishWithResult(null)
                     }
                 }
+            }
+        }
+
+        /**
+         * 检查存储权限，已授权则直接启动文件选择器，否则请求权限
+         */
+        private fun checkStoragePermissionAndPick() {
+            val neededPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                listOf(
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO,
+                    Manifest.permission.READ_MEDIA_AUDIO
+                )
+            } else {
+                listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
+            if (XXPermissions.isGranted(this, neededPermissions)) {
+                logger.debug("Storage permission already granted, starting file picker")
+                startFilePicker()
+            } else {
+                logger.debug("Requesting storage permissions: $neededPermissions")
+                XXPermissions.with(this)
+                    .permission(neededPermissions)
+                    .request(object : OnPermissionCallback {
+                        override fun onGranted(permissions: MutableList<String>, allGranted: Boolean) {
+                            if (allGranted) {
+                                logger.debug("Storage permission granted, starting file picker")
+                                startFilePicker()
+                            } else {
+                                logger.warn("Not all storage permissions granted")
+                                finishWithResult(null)
+                            }
+                        }
+
+                        override fun onDenied(permissions: MutableList<String>, never: Boolean) {
+                            logger.warn("Storage permission denied, never: $never")
+                            finishWithResult(null)
+                        }
+                    })
+            }
+        }
+
+        /**
+         * 启动 AndroidFilePicker 文件选择器
+         */
+        private fun startFilePicker() {
+            try {
+                val pickerConfig = FilePickerManager
+                    .from(this)
+                    .maxSelectable(maxSelectable!!)
+
+                if (!fileTypes.isNullOrEmpty()) {
+                    pickerConfig.filter(object : AbstractFileFilter() {
+                        override fun doFilter(listData: ArrayList<FileItemBeanImpl>): ArrayList<FileItemBeanImpl> {
+                            return ArrayList(listData.filter { item ->
+                                // 永远保留文件夹以便导航
+                                if (item.isDir) return@filter true
+
+                                fileTypes!!.any { type ->
+                                    when (type) {
+                                        "image" -> item.fileType is RasterImageFileType
+                                        "video" -> item.fileType is VideoFileType
+                                        "audio" -> item.fileType is AudioFileType
+                                        "text" -> item.fileType is TextFileType
+                                        "compressed" -> item.fileType is CompressedFileType
+                                        "pageLayout" -> item.fileType is PageLayoutFileType
+                                        "executable" -> item.fileType is ExecutableFileType
+                                        "dataBase" -> item.fileType is DataBaseFileType
+                                        "data" -> item.fileType is DataFileType
+                                        "font" -> item.fileType is FontFileType
+                                        "web" -> item.fileType is WebFileType
+                                        else -> false
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+
+                // 启动选择器
+                pickerConfig.forResult(FilePickerManager.REQUEST_CODE)
+            } catch (e: Exception) {
+                logger.error("Failed to start AndroidFilePicker", e)
+                finishWithResult(null)
             }
         }
 

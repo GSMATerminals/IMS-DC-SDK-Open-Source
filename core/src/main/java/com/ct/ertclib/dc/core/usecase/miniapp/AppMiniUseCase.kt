@@ -34,7 +34,6 @@ import com.ct.ertclib.dc.core.common.PathManager
 import com.ct.ertclib.dc.core.utils.common.UriUtils
 import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.ct.ertclib.dc.core.common.startImagePreview
-import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.constants.CommonConstants.AS_MODULE_PLATFORM_INFO_EVENT
 import com.ct.ertclib.dc.core.constants.MiniAppConstants
 import com.ct.ertclib.dc.core.constants.MiniAppConstants.ADD_CONTACT_MODE
@@ -699,6 +698,43 @@ class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IA
                     logger.error("set navigationBarColor, param wrong")
                 }
             }
+            // 窗口比例字段：四个必须同时提供，要么都有要么都没有
+            val ratioKeys = listOf("width", "height", "windowStart", "windowTop")
+            val ratioValues = ratioKeys.map { it to params[it] }
+            val providedCount = ratioValues.count { it.second != null }
+            if (providedCount != 0 && providedCount != ratioKeys.size) {
+                logger.error("setWindowStyle window params must be all provided or all omitted, got $providedCount/${ratioKeys.size}")
+            } else if (providedCount == ratioKeys.size) {
+                val wRaw = toFloatOrNull(params["width"]!!)
+                val hRaw = toFloatOrNull(params["height"]!!)
+                val xRatio = toFloatOrNull(params["windowStart"]!!)
+                val yRatio = toFloatOrNull(params["windowTop"]!!)
+                // -1 视为全屏(1.0)
+                val wRatio = if (wRaw == -1f) 1.0f else wRaw
+                val hRatio = if (hRaw == -1f) 1.0f else hRaw
+
+                if (wRatio != null && wRatio in 0.1f..1.0f
+                    && hRatio != null && hRatio in 0.1f..1.0f
+                    && xRatio != null && xRatio in 0.0f..1.0f
+                    && yRatio != null && yRatio in 0.0f..1.0f
+                ) {
+                    val windowStyle = miniAppView.viewModel.miniAppInfo?.appProperties?.windowStyle
+                    windowStyle?.width = wRatio
+                    windowStyle?.height = hRatio
+                    windowStyle?.windowStart = xRatio
+                    windowStyle?.windowTop = yRatio
+                    // closeGuidePage 仅在四字段全有时生效
+                    params["closeGuidePage"]?.let { value ->
+                        when (value) {
+                            is Boolean -> windowStyle?.closeGuidePage = value
+                            else -> logger.error("setWindowStyle closeGuidePage param wrong: expected Boolean, got ${value::class.simpleName}")
+                        }
+                    }
+                    logger.debug("setWindowStyle window params: w=$wRatio, h=$hRatio, x=$xRatio, y=$yRatio")
+                } else {
+                    logger.error("setWindowStyle window params invalid: w=$wRatio (0.1~1.0), h=$hRatio (0.1~1.0), x=$xRatio (0.0~1.0), y=$yRatio (0.0~1.0)")
+                }
+            }
             params["pageName"]?.let {
                 kotlin.runCatching {
                     scope.launch {
@@ -997,13 +1033,20 @@ class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IA
         handler.complete(getSDKInfo(miniAppView, params))
     }
 
-    // 获取SDK版本号等信息
+    // 获取SDK、系统版本号等信息
     override fun getSDKInfo(
         miniAppView: MiniAppView,
         params: Map<String, Any>,
     ) :String{
         logger.debug("getSDKInfo")
-        val response = JSResponse("0", "success", hashMapOf("version" to PkgUtils.getAppVersion(miniAppView.context)))
+        val response = JSResponse("0", "success",
+            hashMapOf(
+                "version" to PkgUtils.getAppVersion(miniAppView.context),
+                "versionCode" to PkgUtils.getAppVersionCode(miniAppView.context),
+                "osVersion" to PkgUtils.getOsVersionName(),
+                "osVersionCode" to PkgUtils.getOsVersionCode()
+            )
+        )
         return JsonUtil.toJson(response)
     }
 
@@ -1041,6 +1084,17 @@ class AppMiniUseCase(private val permissionMiniUseCase: IPermissionUseCase) : IA
         val name = NewCallAppSdkInterface.getShareType()
         val response = JSResponse("0", "success", hashMapOf("shareTypeName" to name))
         return JsonUtil.toJson(response)
+    }
+
+    private fun toFloatOrNull(value: Any): Float? {
+        return when (value) {
+            is Float -> value
+            is Double -> value.toFloat()
+            is Int -> value.toFloat()
+            is Long -> value.toFloat()
+            is String -> value.toFloatOrNull()
+            else -> null
+        }
     }
 
     private fun miniAppFilePath(miniAppView: MiniAppView, type: String): String {

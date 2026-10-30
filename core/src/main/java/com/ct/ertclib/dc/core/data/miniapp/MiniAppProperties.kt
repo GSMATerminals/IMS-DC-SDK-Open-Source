@@ -34,7 +34,8 @@ data class MiniAppProperties(
     val shouldStartRemoteApp: Boolean?,// 用户点击启动后，是否请求对端也启动小程序，shouldCreateControlADC为true时有效
     val canStartedByOthers: Boolean?,// 是否允许被本地其他小程序启动
     val allowedUrls: List<String>?,
-    val showPhoneButton: Boolean? // 是否显示通话操作按钮
+    val showPhoneButton: Boolean?, // 是否显示通话操作按钮
+    val isWideScreenAdapted: Boolean? // 是否适配了宽屏
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -47,6 +48,7 @@ data class MiniAppProperties(
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.createStringArrayList(),
+        parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte()
     )
 
@@ -62,6 +64,7 @@ data class MiniAppProperties(
         parcel.writeByte(if (canStartedByOthers == true) 1 else 0)
         parcel.writeStringList(allowedUrls)
         parcel.writeByte(if (showPhoneButton == true) 1 else 0)
+        parcel.writeByte(if (isWideScreenAdapted == true) 1 else 0)
     }
 
     override fun describeContents(): Int {

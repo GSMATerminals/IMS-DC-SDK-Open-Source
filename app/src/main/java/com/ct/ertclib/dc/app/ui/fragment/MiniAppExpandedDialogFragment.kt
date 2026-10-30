@@ -70,18 +70,31 @@ import kotlinx.coroutines.withContext
 import kotlin.math.absoluteValue
 
 
-class MiniAppExpandedDialogFragment(
-    private var miniAppList: MiniAppList,
-    private var adList: ArrayList<AdItem>,
-    private var callInfo: CallInfo?
-) :
-    BaseMiniAppListDialogFragment() {
+class MiniAppExpandedDialogFragment : BaseMiniAppListDialogFragment() {
 
     companion object {
         private const val TAG = "MiniAppExpandedDialogFragment"
         private const val EXPANDED_ITEM_SPAN_COUNT = 4
+
+        fun newInstance(
+            miniAppList: MiniAppList,
+            adList: ArrayList<AdItem>,
+            callInfo: CallInfo?
+        ): MiniAppExpandedDialogFragment {
+            val fragment = MiniAppExpandedDialogFragment()
+            val args = Bundle().apply {
+                putParcelable("miniAppList", miniAppList)
+                putParcelableArrayList("adList", adList)
+                putParcelable("callInfo", callInfo)
+            }
+            fragment.arguments = args
+            return fragment
+        }
     }
 
+    private lateinit var miniAppList: MiniAppList
+    private lateinit var adList: ArrayList<AdItem>
+    private var callInfo: CallInfo? = null
     private lateinit var viewModel: ExpandedFragmentViewModel
     private lateinit var viewBinding: ExpandedMenuDialogBinding
     private var callback: Callback? = null
@@ -96,6 +109,14 @@ class MiniAppExpandedDialogFragment(
         NewCallAppSdkInterface.printLog(NewCallAppSdkInterface.DEBUG_LEVEL, TAG, "onCreate")
         super.onCreate(savedInstanceState)
         dialog?.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        // 从 arguments 中恢复数据
+        arguments?.let {
+            miniAppList = it.getParcelable("miniAppList")!!
+            adList = it.getParcelableArrayList("adList")!!
+            callInfo = it.getParcelable("callInfo")
+        }
+
         viewModel = ViewModelProvider(this)[ExpandedFragmentViewModel::class.java]
     }
 

@@ -28,11 +28,13 @@ object ScreenShareHelper: KoinComponent {
     private val screenShareUseCase : IScreenShareUseCase by inject()
     private val sketchBoardUseCase : ISketchBoardUseCase by inject()
     private var isInit = false
+    private var isCallEnded = false
     fun init(){
         if (isInit){
             return
         }
         isInit = true
+        isCallEnded = false
         screenShareUseCase.initManager()
         sketchBoardUseCase.initManager()
     }
@@ -44,5 +46,20 @@ object ScreenShareHelper: KoinComponent {
         isInit = false
         screenShareUseCase.release()
         sketchBoardUseCase.release()
+    }
+
+    /**
+     * 通话级释放：通话结束或被保持时立即调用。
+     * 只停止屏幕共享并关闭涂鸦画板悬浮窗（通话级UI资源），
+     * 不重置 isInit，以便新通话可以重新 init。
+     * Service级底层资源释放仍由 release() 在 onUnbind 延迟链路中处理。
+     */
+    fun releaseForCallEnd() {
+        if (!isInit || isCallEnded){
+            return
+        }
+        isCallEnded = true
+        screenShareUseCase.stopScreenShare(true)
+        sketchBoardUseCase.closeSketchBoard(true)
     }
 }

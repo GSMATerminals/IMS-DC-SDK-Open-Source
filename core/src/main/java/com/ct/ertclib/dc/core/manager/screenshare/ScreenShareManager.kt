@@ -71,6 +71,32 @@ class ScreenShareManager(private val context: Context) : IScreenShareManager, Ko
         isSharing = false
     }
 
+    override fun pauseShareScreen() {
+        LogUtils.info(TAG, "pauseShareScreen")
+        if (screenShareService == null) {
+            LogUtils.warn(TAG, "pauseShareScreen failed, screenShareService is null")
+            return
+        }
+        kotlin.runCatching {
+            screenShareService?.stopNativeScreenShare()
+        }.onFailure {
+            LogUtils.error(TAG, "pauseShareScreen failure: $it")
+        }
+    }
+
+    override fun resumeShareScreen() {
+        LogUtils.info(TAG, "resumeShareScreen")
+        if (screenShareService == null) {
+            LogUtils.warn(TAG, "resumeShareScreen failed, screenShareService is null")
+            return
+        }
+        kotlin.runCatching {
+            screenShareService?.startNativeScreenShare(screenShareStatusListener)
+        }.onFailure {
+            LogUtils.error(TAG, "resumeShareScreen failure: $it")
+        }
+    }
+
     override fun requestScreenShareAbility(): Boolean {
         val result = try {
             screenShareService?.requestNativeScreenShareAbility() ?: false

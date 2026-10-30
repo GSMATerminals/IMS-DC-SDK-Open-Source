@@ -26,6 +26,7 @@ import android.telecom.Call
 import android.telecom.InCallService
 import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.Utils
+import com.ct.ertclib.dc.core.R
 import com.ct.ertclib.dc.core.common.NewCallAppSdkInterface
 import com.ct.ertclib.dc.core.common.sdkpermission.IPermissionCallback
 import com.ct.ertclib.dc.core.common.sdkpermission.SDKPermissionHelper
@@ -54,6 +55,17 @@ class InCallServiceImpl : InCallService() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCallAdded(call: Call?) {
         sLogger.info("onCallAdded call:${call}")
+        if (call == null){
+            sLogger.info("onCallAdded return, because call is null")
+            return
+        }
+        // 判断是否是SDK支持的mccmnc,'["460-03","460-05", "460-11", "460-12"]'、["ALL"]
+        val mccMncListString = Utils.getApp().getString(R.string.ims_data_channel_service_mccmnc)
+        val isPassedCall = CallUtils.isPassedCall(call,mccMncListString)
+        if (!isPassedCall){
+            sLogger.info("onCallAdded return, because isPassedCall is false")
+            return
+        }
         val permissionHelper = SDKPermissionHelper(Utils.getApp(),object : IPermissionCallback {
             @RequiresApi(Build.VERSION_CODES.Q)
             override fun onAgree() {

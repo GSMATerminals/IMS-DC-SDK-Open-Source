@@ -30,7 +30,6 @@ import com.ct.ertclib.dc.core.data.miniapp.MiniAppList
 import com.ct.ertclib.dc.core.data.model.MiniAppInfo
 import com.ct.ertclib.dc.core.manager.call.NewCallsManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
-import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareHelper
 import com.ct.ertclib.dc.core.miniapp.MiniAppManager
 import com.ct.ertclib.dc.core.miniapp.db.MiniAppDbRepo
 import com.ct.ertclib.dc.core.port.call.ICallStateListener
@@ -121,7 +120,6 @@ class MiniAppViewModel : KoinComponent {
     fun init() {
         registerDCCallBack()
         registerParentToMiniCallback()
-        ScreenShareHelper.init()
     }
 
     // ==================== 音频控制 ====================
@@ -346,15 +344,14 @@ class MiniAppViewModel : KoinComponent {
     }
 
     fun closeDC(label: String) {
-        sLogger.debug("closeDC label:$label")
-        createDCLabelList.remove(label)
-        openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, label) }?.let {
-            onDataChannelStateChanged(it, ImsDCStatus.DC_STATE_CLOSED, 0)
-            if (it.state != ImsDCStatus.DC_STATE_CLOSING && it.state != ImsDCStatus.DC_STATE_CLOSED) {
-                it.unregisterObserver()
-                it.close()
+        sLogger.debug("closeDC label:$label openDCList:${openDCList}")
+        openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, label) }?.let { exist ->
+            exist.unregisterObserver()
+            if (exist.state != ImsDCStatus.DC_STATE_CLOSING && exist.state != ImsDCStatus.DC_STATE_CLOSED) {
+                exist.close()
             }
         }
+        removeCacheADC(label)
         onCallHandler?.invoke(
             MiniAppConstants.FUNCTION_NOTIFY_DATA_CHANNEL,
             arrayOf(JsonUtil.toJson(mapOf("dcLabel" to label, "imsDCStatus" to ImsDCStatus.DC_STATE_CLOSED.ordinal)))
@@ -369,12 +366,13 @@ class MiniAppViewModel : KoinComponent {
         onFinish?.invoke()
     }
 
-    private fun onDataChannelStateChanged(dc: IImsDataChannel, status: ImsDCStatus?, errorCode: Int) {
-        sLogger.info("onDataChannelStateChanged")
-        if (status == ImsDCStatus.DC_STATE_CLOSED) {
-            StateFlowManager.emitCloseAdcEvent(
-                CloseAdcEvent(0, CloseAdcEvent.CLOSE_ADC, miniAppInfo?.appId, dc)
-            )
+    private fun removeCacheADC(label: String) {
+        createDCLabelList.remove(label)
+        StateFlowManager.emitCloseAdcEvent(
+            CloseAdcEvent(0, CloseAdcEvent.CLOSE_ADC, miniAppInfo?.appId+"", miniAppInfo?.callId+"",label)
+        )
+        openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, label) }?.let { exist ->
+            openDCList.remove(exist)
         }
     }
 
@@ -407,11 +405,6 @@ class MiniAppViewModel : KoinComponent {
 
         override fun onDataChannelStateChange(status: ImsDCStatus?, errCode: Int) {
             sLogger.debug("ImsDCObserverImpl onDataChannelStateChange status:$status, label:$label")
-            if (status == ImsDCStatus.DC_STATE_CLOSED) {
-                StateFlowManager.emitCloseAdcEvent(
-                    CloseAdcEvent(0, CloseAdcEvent.CLOSE_ADC, miniAppInfo?.appId, dc)
-                )
-            }
             onDataChannelStateChange(dc)
         }
 
@@ -433,13 +426,12 @@ class MiniAppViewModel : KoinComponent {
     private fun onDataChannelStateChange(dc: IImsDataChannel?) {
         if (dc == null) return
         val state = dc.state
+        if (state == ImsDCStatus.DC_STATE_CLOSED) {
+            removeCacheADC(dc.dcLabel)
+        }
         val exist = openDCList.firstOrNull { DCUtils.compareDCLabel(it.dcLabel, dc.dcLabel) }
         if (ImsDCStatus.DC_STATE_OPEN == state && exist == null) {
             openDCList.add(dc)
-        }
-        if (ImsDCStatus.DC_STATE_CLOSED == state && exist != null) {
-            openDCList.remove(exist)
-            createDCLabelList.remove(exist.dcLabel)
         }
         viewModelScope.launch(Dispatchers.Main) {
             val map = mapOf("dcLabel" to dc.dcLabel, "imsDCStatus" to state.ordinal)
@@ -452,7 +444,6 @@ class MiniAppViewModel : KoinComponent {
 
     fun onCleared() {
         stopPlayVoice()
-        ScreenShareHelper.release()
         unregisterDCCallBack()
         unregisterParentToMiniCallback()
         viewModelScope.cancel()

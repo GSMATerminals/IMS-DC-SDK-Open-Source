@@ -31,6 +31,12 @@ interface IScreenShareUseCase {
 
     fun setPrivacyModeEnabled(isEnable: Boolean)
 
+    /**
+     * 暂停/恢复屏幕共享
+     * @param isPause true表示暂停屏幕共享，false表示恢复屏幕共享
+     */
+    fun pauseScreenShare(isPause: Boolean)
+
     fun isInSharing(): Boolean
 
     fun initManager()
