@@ -21,6 +21,11 @@
 <manifest xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.START_TASKS_FROM_RECENTS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.CONTROL_INCALL_EXPERIENCE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -152,6 +157,8 @@
 
         <activity android:name=".utils.common.MiniAppStateActivity"
             android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode|density"
+            android:screenOrientation="locked"
             android:theme="@style/MiniAppStateActivityStyle"/>
 
         <activity android:name=".utils.common.MiniAppPermissionHelper$PermissionActivity"/>

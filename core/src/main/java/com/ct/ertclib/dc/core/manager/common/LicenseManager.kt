@@ -18,12 +18,6 @@
  */
 
 package com.ct.ertclib.dc.core.manager.common
-
-import com.blankj.utilcode.util.Utils
-import com.ct.ertclib.dc.core.utils.common.FlavorUtils
-import com.ct.ertclib.nativelibs.VerifyHelper
-import java.io.InputStreamReader
-
 class LicenseManager {
 
     enum class ApiCode(val apiCode: String) {
@@ -39,7 +33,6 @@ class LicenseManager {
     }
 
     companion object{
-        private var cachedPublicKey: String? = null
         private var instance: LicenseManager?= null
         private val sLock = Object()
 
@@ -54,49 +47,22 @@ class LicenseManager {
         }
     }
 
-    private val pkgKey: String by lazy {
-        cachedPublicKey ?: loadPublicKeyFromAssets().also {
-            cachedPublicKey = it
-        }
-    }
-
-    private fun loadPublicKeyFromAssets(): String {
-        return try {
-            val keyFileName = if (FlavorUtils.CHANNEL_Lab == FlavorUtils.getChannelName() || FlavorUtils.CHANNEL_LOCAL == FlavorUtils.getChannelName()){
-                "net_public_verify"
-            } else {
-                "public_verify"
-            }
-            Utils.getApp().assets.open(keyFileName).use { inputStream ->
-                InputStreamReader(inputStream).use { reader ->
-                    reader.readText().trim()
-                }
-            }
-        } catch (_: Exception) {
-            return ""
-        }
-    }
-
-    // 调用示例：LicenseManager.getInstance().verifyLicense("aa","6","eKGExEKb140FXgZqNgkP7o210sol6x6ieF9AvWvjbMef2ec7+UtggJumjOyizeNQJ8e9D2PG5Cjxv4jo/aRLMag==")
+    /**
+     * 调用示例：LicenseManager.getInstance().verifyLicense("aa","6","eKGExEKb140FXgZqNgkP7o210sol6x6ieF9AvWvjbMef2ec7+UtggJumjOyizeNQJ8e9D2PG5Cjxv4jo/aRLMag==")
+     * API License分发和验证、小程序包的签名和验签，这两个功能的内部实现应该由使用者私有实现
+     */
     fun verifyLicense(miniAppId: String, apiCodes: String, license: String): Boolean {
-        // todo 自己实现
-//        return VerifyHelper.Companion.getInstance().verifyLicense(miniAppId, apiCodes, license)
+        // todo 开发者自己实现
         return true
     }
 
-    fun parseImgData(img: String): String {
-        return VerifyHelper.Companion.getInstance().parseImg(img)
-    }
-
     fun verifyMiniAppPkg(zipPath: String): Boolean {
-        // todo 自己实现
-//        return VerifyHelper.Companion.getInstance().verifyMiniAppPkg(zipPath, pkgKey)
+        // todo 开发者自己实现
         return true
     }
 
     fun verifyMiniAppFolder(folderPath: String): Boolean {
-        // todo 自己实现
-//        return VerifyHelper.Companion.getInstance().verifyMiniAppFolder(folderPath, pkgKey)
+        // todo 开发者自己实现
         return true
     }
 }

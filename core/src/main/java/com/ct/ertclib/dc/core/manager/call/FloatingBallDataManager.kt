@@ -55,6 +55,7 @@ object FloatingBallDataManager {
     private fun findDisplayData(): FloatingBallData? {
         // 优先返回 FLOATING_DISPLAY 状态的数据
         return floatingBallDataMap.values.find { it.callInfo.isInCall() }
+            ?: floatingBallDataMap.values.find { it.callInfo.isRinging() }
     }
 
     private fun shouldRefresh(newData: FloatingBallData): Boolean {

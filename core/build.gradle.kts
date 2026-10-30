@@ -65,17 +65,12 @@ android {
         }
     }
 
-    sourceSets["main"].jniLibs.srcDir("${rootProject.projectDir}\\libs")
-
 }
 
 dependencies {
-    compileOnly(files("${rootProject.projectDir}\\libs\\ctec-release-1.0.0.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\base-release-1.0.0.aar"))
-    implementation(project(":nativelibs"))
+    implementation(project(":base"))
     implementation(project(":oemec"))
     api(libs.appcompat)
-    implementation(files("${rootProject.projectDir}\\libs\\xstream-1.4.9.jar"))
     implementation(libs.localbroadcastmanager)
     implementation(libs.okhttp)
     // room
@@ -97,11 +92,10 @@ dependencies {
 
     api(libs.koin.android)
     implementation (libs.androidx.preference.ktx)
-    compileOnly(files("${rootProject.projectDir}\\libs\\XXPermissions-18.2.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\Common-4.1.12.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\FilePicker-4.1.12.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\reflect_helper-release.aar"))
-    compileOnly(files("${rootProject.projectDir}\\libs\\AndroidFilePicker-release.aar"))
+    api(libs.xxpermissions)
+    implementation(libs.reflect.helper)
+    implementation(libs.filepicker)
+    implementation(libs.android.file.picker)
     api(libs.androidutils)
 
     testImplementation(libs.junit4)

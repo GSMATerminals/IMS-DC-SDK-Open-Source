@@ -61,12 +61,12 @@
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:windowDisablePreview">true</item>
 
-        <!-- 状态栏和导航栏颜色（需要 API 21+） -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+<!--        &lt;!&ndash; 状态栏和导航栏颜色（需要 API 21+） &ndash;&gt;-->
+<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
+<!--        <item name="android:navigationBarColor">@android:color/transparent</item>-->
 
-        <!-- 透明状态栏和导航栏背景 -->
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+<!--        &lt;!&ndash; 透明状态栏和导航栏背景 &ndash;&gt;-->
+<!--        <item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
 
         <!-- 完全禁用动画 -->
         <item name="android:windowAnimationStyle">@null</item>

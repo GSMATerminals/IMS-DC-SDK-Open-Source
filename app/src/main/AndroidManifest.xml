@@ -68,10 +68,9 @@
             android:name=".ui.activity.MiniAppExpandedActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode"
-            android:screenOrientation="behind"
-            android:taskAffinity=""
-            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|screenLayout|smallestScreenSize|uiMode|density"
+            android:screenOrientation="locked"
+            android:launchMode="singleInstance"
             android:theme="@style/TransparentWindowStyle"
             android:permission="${getFeaturePermissionName}">
             <intent-filter>

@@ -33,15 +33,17 @@
         app:layout_constraintTop_toTopOf="parent"
         />
 
+    <!-- 内容区：宽屏下最大宽度 900dp 并居中，窄屏下自动撑满全宽 -->
     <FrameLayout
         android:id="@+id/settings_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constrainedHeight="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_layout" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar_layout"
+        app:layout_constraintWidth_max="480dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

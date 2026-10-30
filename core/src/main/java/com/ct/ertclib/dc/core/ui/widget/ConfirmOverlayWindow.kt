@@ -110,8 +110,14 @@ class ConfirmOverlayWindow(private val context: Context) {
 
             format = PixelFormat.TRANSLUCENT
 
-            // 设置宽高 - 与原Dialog一致：宽度MATCH_PARENT，高度WRAP_CONTENT
-            width = WindowManager.LayoutParams.MATCH_PARENT
+            // 计算合适的宽度：最大 360dp，同时不超过屏幕宽度的 80%
+            val density = context.resources.displayMetrics.density
+            val screenWidth = context.resources.displayMetrics.widthPixels
+
+            val maxWidthDp = 600  // 最大宽度 600dp
+            val maxWidthPx = (maxWidthDp * density).toInt()
+
+            width = minOf(maxWidthPx, screenWidth)
             height = WindowManager.LayoutParams.WRAP_CONTENT
             gravity = Gravity.CENTER
 

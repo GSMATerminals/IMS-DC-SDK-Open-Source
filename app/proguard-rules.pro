@@ -195,9 +195,6 @@
 -keep class com.bumptech.glide.** { *;}
 -dontwarn com.bumptech.glide.**
 
--keep class com.thoughtworks.xstream.** { *;}
--dontwarn com.thoughtworks.xstream.**
-
 
 -dontwarn kotlinx.**
 -dontnote kotlinx.serialization.SerializationKt

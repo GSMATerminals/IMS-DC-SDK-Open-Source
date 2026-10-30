@@ -48,6 +48,7 @@ import com.ct.ertclib.dc.core.data.miniapp.DataChannel
 import com.ct.ertclib.dc.core.data.miniapp.DataChannelApp
 import com.ct.ertclib.dc.core.data.miniapp.DataChannelAppInfo
 import com.ct.ertclib.dc.core.manager.call.DCManager
+import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareHelper
 import com.ct.ertclib.dc.core.utils.logger.Logger
 import com.ct.ertclib.dc.core.utils.common.FileUtils
 import com.ct.ertclib.dc.core.data.model.SupportScene
@@ -77,7 +78,9 @@ import com.newcalllib.datachannel.V1_0.IImsDataChannel
 import com.newcalllib.datachannel.V1_0.ImsDCStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -167,6 +170,7 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
     @Volatile
     private var mCallState: Int = 0
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var callTypeChangeJob: Job? = null
     private val asInfoUseCase: IAsInfoUseCase by inject()
     private val bootstrapMiniAppUseCase: IBootstrapMiniAppUseCase by inject()
 
@@ -179,6 +183,17 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         mMiniAppPMMap[telecomCallId] = this
         if (sLogger.isDebugActivated) {
             sLogger.debug("$mTag init")
+        }
+
+        // 监听通话类型变化（音视频切换），自动关闭不支持当前场景的小程序
+        callTypeChangeJob = scope.launch {
+            NewCallAppSdkInterface.callTypeChangeFlow.collect { (changedCallId, _) ->
+                if (changedCallId != callInfo.telecomCallId) return@collect
+                if (sLogger.isDebugActivated) {
+                    sLogger.debug("$mTag callTypeChanged, stop unsupported scene apps")
+                }
+                stopUnsupportedSceneApps()
+            }
         }
     }
 
@@ -275,6 +290,8 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         mAutoloadPreCallMiniApp = null
         didInCallAutoLoad = false
         didPreCallAutoLoad = false
+        callTypeChangeJob?.cancel()
+        callTypeChangeJob = null
     }
 
     private fun handleStartMiniApp(appId: String) {
@@ -629,6 +646,25 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         }
     }
 
+    /**
+     * 音视频切换时，关闭不支持当前场景的已打开小程序。
+     * 只通知本端关闭，不通知对端；切回原场景时需用户手动重新打开。
+     */
+    private fun stopUnsupportedSceneApps() {
+        if (mRunningAppMap.isEmpty()) return
+        val iterator = mRunningAppMap.entries.iterator()
+        while (iterator.hasNext()) {
+            val (appId, miniAppInfo) = iterator.next()
+            if (!supportScene(miniAppInfo)) {
+                if (sLogger.isDebugActivated) {
+                    sLogger.debug("$mTag stopUnsupportedSceneApps: appId=$appId no longer supported, stopping")
+                }
+                miniAppStartManager?.stopMiniApp(Utils.getApp(), miniAppInfo.callId, appId)
+                iterator.remove()
+            }
+        }
+    }
+
     fun registerMiniAppListLoadedListener(miniAppListLoadedCallback: IMiniAppListLoadedCallback) {
         if (sLogger.isDebugActivated) {
             sLogger.debug("registerMiniAppListLoadedListener")
@@ -748,8 +784,12 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
         }
         if (state == Call.STATE_DISCONNECTING || state == Call.STATE_DISCONNECTED) {
             stopMiniApps()
+            // 通话断开时立即释放屏幕共享和涂鸦画板（通话级UI资源），
+            ScreenShareHelper.releaseForCallEnd()
         } else if (state == Call.STATE_HOLDING && mCallState == Call.STATE_ACTIVE){
-            //在呼叫保持状态下，不做任何处理
+            // 通话被保持时（例如来了新电话并接听），立即结束屏幕共享，
+            // 原通话的屏幕共享UI不应继续显示。
+            ScreenShareHelper.releaseForCallEnd()
         } else if (state == Call.STATE_ACTIVE) {
             // asInfoUseCase.createDC()
             startAutoLoadInCallApp()
@@ -775,12 +815,15 @@ class MiniAppManager(private val callInfo: CallInfo,private val miniAppStartMana
 
         var modifiedDescription = description
         if (!isSupportQosHit(description)) {
-            val appQosHint = if (mStartAppMap[appId]?.qosHint?.contains(",") == true) {
+            var appQosHint = if (mStartAppMap[appId]?.qosHint?.contains(",") == true) {
                 mStartAppMap[appId]?.qosHint?.split(",")?.first()
             } else {
                 mStartAppMap[appId]?.qosHint
             }
-            appQosHint?.let {
+            if (appQosHint.isNullOrEmpty()){
+                appQosHint = ""
+            }
+            appQosHint.let {
                 val beginIndex = description.indexOf(QOS_HINT_HEAD)
                 val lastIndex = description.indexOf(QOS_HINT_TAIL) + QOS_HINT_TAIL.length
                 if (lastIndex < description.length) {

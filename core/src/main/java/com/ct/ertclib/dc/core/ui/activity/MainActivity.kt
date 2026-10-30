@@ -23,6 +23,7 @@ import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Canvas
@@ -88,17 +89,14 @@ class MainActivity : NoManagedBaseToolBarActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshStatus(this@MainActivity)
-        val telecomManager = this.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-        val isInCall = if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_PHONE_STATE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        // isInCall 需 BIND_TELECOM_CONNECTION_SERVICE 权限，非特权渠道未授予会抛 SecurityException
+        val isInCall = try {
+            (this.getSystemService(Context.TELECOM_SERVICE) as TelecomManager).isInCall
+        } catch (e: SecurityException) {
+            LogUtils.warn(TAG, "isInCall not permitted: ${e.message}")
             false
-        } else {
-            // can be in dialing, ringing, active or holding states
-            telecomManager.isInCall
         }
+
         adapter?.isInCall = isInCall
     }
 

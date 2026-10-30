@@ -19,35 +19,35 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.ct.ertclib.dc.core.utils.common.XmlAlias;
+import com.ct.ertclib.dc.core.utils.common.XmlAttribute;
 
-@XStreamAlias("DataChannel")
+@XmlAlias("DataChannel")
 public class DataChannel {
-    @XStreamAlias("AutoAcceptDcSetup")
-    private String autoAcceptDcSetup;
-    @XStreamAlias("Bandwidth")
-    private String bandwidth;
-    @XStreamAsAttribute
+    @XmlAttribute
     private String dcId;
-    @XStreamAlias("DcLabel")
+    @XmlAlias("DcLabel")
     private String dcLabel;
-    @XStreamAlias("MaxRetr")
-    private String maxRetr;
-    @XStreamAlias("MaxTime")
-    private String maxTime;
-    @XStreamAlias("Ordered")
-    private String ordered;
-    @XStreamAlias("Priority")
-    private String priority;
-    @XStreamAlias("QosHint")
-    private String qosHint;
-    @XStreamAlias("StreamId")
+    @XmlAlias("StreamId")
     private String streamId;
-    @XStreamAlias("Subprotocol")
+    @XmlAlias("Subprotocol")
     private String subProtocol;
-    @XStreamAlias("UseCase")
+    @XmlAlias("Ordered")
+    private String ordered;
+    @XmlAlias("Priority")
+    private String priority;
+    @XmlAlias("UseCase")
     private String useCase;
+    @XmlAlias("AutoAcceptDcSetup")
+    private String autoAcceptDcSetup;
+    @XmlAlias("Bandwidth")
+    private String bandwidth;
+    @XmlAlias("QosHint")
+    private String qosHint;
+    @XmlAlias("MaxRetr")
+    private String maxRetr;
+    @XmlAlias("MaxTime")
+    private String maxTime;
 
     public String getAutoAcceptDcSetup() {
         return this.autoAcceptDcSetup;

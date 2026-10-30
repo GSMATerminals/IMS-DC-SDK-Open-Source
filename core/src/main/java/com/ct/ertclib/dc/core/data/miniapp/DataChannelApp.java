@@ -19,16 +19,16 @@
 
 package com.ct.ertclib.dc.core.data.miniapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.ct.ertclib.dc.core.utils.common.XmlAttribute;
+import com.ct.ertclib.dc.core.utils.common.XmlImplicit;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataChannelApp {
-    @XStreamAsAttribute
+    @XmlAttribute
     private String appId;
-    @XStreamImplicit
+    @XmlImplicit
     private List<DataChannel> dataChannelList;
 
     public void addDataChannel(DataChannel dataChannel) {

@@ -65,6 +65,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.text.isWhitespace
+import android.Manifest
+import android.app.Activity
+import android.os.Build
+import com.hjq.permissions.OnPermissionCallback
+import com.hjq.permissions.XXPermissions
 
 class BootstrapJSApi(private val context: Context, private var miniAppListInfo: MiniAppList, private var callInfo: CallInfo) {
 
@@ -124,6 +129,45 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
         job = null
     }
 
+    /**
+     * 检查权限，若未授予则通过 XXPermissions 弹窗申请；
+     * 授权后执行 onGranted，拒绝则向 JS 返回接口调用失败。
+     */
+    private fun requestPermissionAndExecute(
+        permission: String,
+        handler: CompletionHandler<String?>,
+        onGranted: () -> Unit
+    ) {
+        if (XXPermissions.isGranted(context, permission)) {
+            onGranted()
+            return
+        }
+        val activity = context as? Activity
+        if (activity == null) {
+            sLogger.error("requestPermissionAndExecute context is not an Activity, cannot request permission")
+            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
+            return
+        }
+        scope.launch(Dispatchers.Main) {
+            XXPermissions.with(activity)
+                .permission(permission)
+                .request(object : OnPermissionCallback {
+                    override fun onGranted(permissions: MutableList<String>, allGranted: Boolean) {
+                        if (allGranted) {
+                            onGranted()
+                        } else {
+                            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
+                        }
+                    }
+
+                    override fun onDenied(permissions: MutableList<String>, doNotAskAgain: Boolean) {
+                        sLogger.warn("Permission denied: $permission, doNotAskAgain: $doNotAskAgain")
+                        handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
+                    }
+                })
+        }
+    }
+
     @JavascriptInterface
     fun async(msg: Any, handler: CompletionHandler<String?>) {
         try {
@@ -156,12 +200,26 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         handler.complete(JsonUtil.toJson(JSResponse("0", "success", "")))
                     }
                     MiniAppConstants.FUNCTION_GET_AUDIO_DEVICES -> {
-                        val devices = NewCallsManager.instance.getAudioDevices()
-                        handler.complete(JsonUtil.toJson(JSResponse("0", "success", devices)))
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            requestPermissionAndExecute(Manifest.permission.BLUETOOTH_CONNECT, handler) {
+                                val devices = NewCallsManager.instance.getAudioDevices()
+                                handler.complete(JsonUtil.toJson(JSResponse("0", "success", devices)))
+                            }
+                        } else {
+                            val devices = NewCallsManager.instance.getAudioDevices()
+                            handler.complete(JsonUtil.toJson(JSResponse("0", "success", devices)))
+                        }
                     }
                     MiniAppConstants.FUNCTION_GET_CURRENT_AUDIO_DEVICE -> {
-                        val device = NewCallsManager.instance.getCurrentAudioDevice()
-                        handler.complete(JsonUtil.toJson(JSResponse("0", "success", device)))
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            requestPermissionAndExecute(Manifest.permission.BLUETOOTH_CONNECT, handler) {
+                                val device = NewCallsManager.instance.getCurrentAudioDevice()
+                                handler.complete(JsonUtil.toJson(JSResponse("0", "success", device)))
+                            }
+                        } else {
+                            val device = NewCallsManager.instance.getCurrentAudioDevice()
+                            handler.complete(JsonUtil.toJson(JSResponse("0", "success", device)))
+                        }
                     }
                     MiniAppConstants.FUNCTION_GET_SYSTEM_THEME -> {
                         val currentNightMode = context.resources.configuration.uiMode and UI_MODE_NIGHT_MASK
@@ -178,13 +236,22 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         requestLocation(handler)
                     }
                     MiniAppConstants.FUNCTION_SET_AUDIO_DEVICE -> {
-                        val name = jsRequest.params["name"] as? String
-                        val type = jsRequest.params["type"] as? String
-                        if (type != null || name != null) {
-                            val result = NewCallsManager.instance.setAudioDevice(name, type)
-                            handler.complete(JsonUtil.toJson(JSResponse("0", "success", result)))
+                        val doSetAudioDevice = {
+                            val name = jsRequest.params["name"] as? String
+                            val type = jsRequest.params["type"] as? String
+                            if (type != null || name != null) {
+                                val result = NewCallsManager.instance.setAudioDevice(name, type)
+                                handler.complete(JsonUtil.toJson(JSResponse("0", "success", result)))
+                            } else {
+                                handler.complete(JsonUtil.toJson(JSResponse("1", "name and type are null", "")))
+                            }
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            requestPermissionAndExecute(Manifest.permission.BLUETOOTH_CONNECT, handler) {
+                                doSetAudioDevice()
+                            }
                         } else {
-                            handler.complete(JsonUtil.toJson(JSResponse("1", "name and type are null", "")))
+                            doSetAudioDevice()
                         }
                     }
 
@@ -194,7 +261,6 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         sLogger.info("getMiniAppListInfo index:$index, num:$num")
                         val localApps = miniAppListInfo.applications
                         val beginIndex = miniAppListInfo.beginIndex
-                        sLogger.debug("getMiniAppListInfo cached beginIndex:$beginIndex, localApps size:${localApps?.size}, localApps:$localApps")
                         if (localApps != null && index >= beginIndex && index + num <= beginIndex + MINI_APP_LIST_PAGE_SIZE) {
                             sLogger.info("getMiniAppListInfo from local cache")
                             val relativeIndex = index - beginIndex
@@ -222,7 +288,8 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         val runningAppList = startingAppList?.map {
                             mapOf("appid" to it.appId, "appName" to it.appName, "appIcon" to it.appIcon, "startTime" to it.startTime)
                         }
-                        handler.complete(JsonUtil.toJson(JSResponse("0", "success", runningAppList)))
+                        val resultData = mapOf("applications" to runningAppList)
+                        handler.complete(JsonUtil.toJson(JSResponse("0", "success", resultData)))
                     }
                     MiniAppConstants.FUNCTION_START_APP -> {
                         jsRequest.params["appType"]?.let { appType ->
@@ -276,40 +343,44 @@ class BootstrapJSApi(private val context: Context, private var miniAppListInfo: 
                         handler.complete(JsonUtil.toJson(jsResponse))
                     }
                     MiniAppConstants.FUNCTION_GET_CONTACT_NAME -> {
-                        val number = jsRequest.params[GET_CONTACT_NAME_NUMBER_PARAM]?.toString()
-                        sLogger.debug("getContactName, number: $number")
-                        if (number.isNullOrEmpty()){
-                            sLogger.warn("getContactName, param number is null, return")
-                            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
-                        } else {
-                            val name = CallUtils.getContactName(context, number)
-                            if (name.isNullOrEmpty()){
-                                sLogger.warn("getContactName, failed, return")
+                        requestPermissionAndExecute(Manifest.permission.READ_CONTACTS, handler) {
+                            val number = jsRequest.params[GET_CONTACT_NAME_NUMBER_PARAM]?.toString()
+                            sLogger.debug("getContactName, number: $number")
+                            if (number.isNullOrEmpty()){
+                                sLogger.warn("getContactName, param number is null, return")
                                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
                             } else {
-                                val nameMap = mutableMapOf<String, String>()
-                                nameMap["name"] = name
-                                val response = JSResponse("0", "success", nameMap)
-                                handler.complete(JsonUtil.toJson(response))
+                                val name = CallUtils.getContactName(context, number)
+                                if (name.isNullOrEmpty()){
+                                    sLogger.warn("getContactName, failed, return")
+                                    handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
+                                } else {
+                                    val nameMap = mutableMapOf<String, String>()
+                                    nameMap["name"] = name
+                                    val response = JSResponse("0", "success", nameMap)
+                                    handler.complete(JsonUtil.toJson(response))
+                                }
                             }
                         }
                     }
                     MiniAppConstants.FUNCTION_GET_CONTACT_PHOTO -> {
-                        val number = jsRequest.params[GET_CONTACT_NAME_NUMBER_PARAM]?.toString()
-                        sLogger.debug("getContactPhoto, number: $number")
-                        if (number.isNullOrEmpty()){
-                            sLogger.warn("getContactPhoto, param number is null, return")
-                            handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
-                        } else {
-                            val photo = CallUtils.getContactPhoto(context, number)
-                            if (photo.isNullOrEmpty()){
-                                sLogger.warn("getContactPhoto, failed, return")
+                        requestPermissionAndExecute(Manifest.permission.READ_CONTACTS, handler) {
+                            val number = jsRequest.params[GET_CONTACT_NAME_NUMBER_PARAM]?.toString()
+                            sLogger.debug("getContactPhoto, number: $number")
+                            if (number.isNullOrEmpty()){
+                                sLogger.warn("getContactPhoto, param number is null, return")
                                 handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
                             } else {
-                                val photoMap = mutableMapOf<String, String>()
-                                photoMap["photo"] = photo
-                                val response = JSResponse("0", "success", photoMap)
-                                handler.complete(JsonUtil.toJson(response))
+                                val photo = CallUtils.getContactPhoto(context, number)
+                                if (photo.isNullOrEmpty()){
+                                    sLogger.warn("getContactPhoto, failed, return")
+                                    handler.complete(JsonUtil.toJson(JSResponse(RESPONSE_FAILED_CODE, RESPONSE_FAILED_MESSAGE, null)))
+                                } else {
+                                    val photoMap = mutableMapOf<String, String>()
+                                    photoMap["photo"] = photo
+                                    val response = JSResponse("0", "success", photoMap)
+                                    handler.complete(JsonUtil.toJson(response))
+                                }
                             }
                         }
                     }

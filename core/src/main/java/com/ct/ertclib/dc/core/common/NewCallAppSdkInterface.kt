@@ -81,9 +81,10 @@ object NewCallAppSdkInterface {
     const val WARN_LEVEL = "warn_level"
     const val INFO_LEVEL = "info_level"
 
-    val closeExpandedViewFlow = MutableSharedFlow<Boolean>()
+    val startAppCloseExpandedViewFlow = MutableSharedFlow<Boolean>()
 
     val callInfoEventFlow = MutableSharedFlow<CallInfo>()
+    val callTypeChangeFlow = MutableSharedFlow<Pair<String, Int>>()
 
     val floatingBallStyle : MutableStateFlow<Int> = MutableStateFlow(STYLE_DEFAULT)
 
@@ -249,6 +250,13 @@ object NewCallAppSdkInterface {
     }
 
     @JvmStatic
+    fun emitCallTypeChangeFlow(callId: String, callType: Int) {
+        scope.launch {
+            callTypeChangeFlow.emit(Pair(callId, callType))
+        }
+    }
+
+    @JvmStatic
     fun emitAppStatusEventFlow(appId: String?) {
         scope.launch {
             appStatusFlow.emit(appId)
@@ -275,9 +283,9 @@ object NewCallAppSdkInterface {
      * 发送关闭小程序面板事件
      */
     @JvmStatic
-    fun emitCloseExpandedViewFlow(isClose: Boolean) {
+    fun emitStartAppCloseExpandedViewFlow(isClose: Boolean) {
         scope.launch {
-            closeExpandedViewFlow.emit(isClose)
+            startAppCloseExpandedViewFlow.emit(isClose)
         }
     }
 
@@ -370,15 +378,6 @@ object NewCallAppSdkInterface {
     fun startSettingsActivity(context: Context) {
         LogUtils.debug(TAG, "startSettingsActivity")
         context.startSettingsActivity()
-    }
-
-    /**
-     * 解析base64格式图片中隐写的内容
-     */
-    @JvmStatic
-    fun parseImgData(img:String):String {
-        LogUtils.debug(TAG, "parseImgData")
-        return LicenseManager.getInstance().parseImgData(img)
     }
 
     /**

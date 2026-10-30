@@ -27,11 +27,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.SPUtils
 import com.ct.ertclib.dc.core.ui.activity.WebActivity
 import com.ct.ertclib.dc.core.constants.CommonConstants
 import com.ct.ertclib.dc.core.data.common.PolicyValue
+import com.ct.ertclib.dc.core.utils.common.FlavorUtils
 import com.ct.ertclib.dc.core.utils.common.JsonUtil
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 import kotlinx.coroutines.CoroutineScope
@@ -83,28 +85,29 @@ object SDKPermissionUtils {
         if (!hasUsageStatsPermission(context)){
             list.add(Manifest.permission.PACKAGE_USAGE_STATS)
         }
-        if (!checkPermissions(context, Manifest.permission.READ_PHONE_STATE)){
-            list.add(Manifest.permission.READ_PHONE_STATE)
-        }
-        if (!checkPermissions(context, Manifest.permission.READ_CONTACTS)){
-            list.add(Manifest.permission.READ_CONTACTS)
-        }
-        if (!checkPermissions(context, Manifest.permission.BLUETOOTH_CONNECT)){
-            list.add(Manifest.permission.BLUETOOTH_CONNECT)
+        val channel = FlavorUtils.getChannelName()
+        if (channel == FlavorUtils.CHANNEL_NORMAL || channel == FlavorUtils.CHANNEL_DIALER) {
+            // 若未授予特权READ_PRIVILEGED_PHONE_STATE，则回退到 READ_PHONE_STATE 以便运行时申请
+            LogUtils.info(TAG, "getNotGrantedPermissions checkPermissions")
+            if (!hasPrivilegedPhoneState(context) && !checkPermissions(context, Manifest.permission.READ_PHONE_STATE)) {
+                LogUtils.info(TAG, "getNotGrantedPermissions hasPrivilegedPhoneState add checkPermissions READ_PHONE_STATE are false, need READ_PHONE_STATE")
+                list.add(Manifest.permission.READ_PHONE_STATE)
+            }
         }
 
-        // 兼容 Android 13+ 存储权限
-        // 获取桌面背景需要用到
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!checkPermissions(context, Manifest.permission.READ_MEDIA_IMAGES)) {
-                list.add(Manifest.permission.READ_MEDIA_IMAGES)
-            }
-        } else {
-            if (!checkPermissions(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                list.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-        }
         return list.toTypedArray()
+    }
+
+    fun hasPrivilegedPhoneState(context: Context): Boolean {
+        return try {
+            @Suppress("DEPRECATION")
+            val subscriberId = (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).subscriberId
+            subscriberId != null
+        } catch (e: SecurityException) {
+            false
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // 保存需要立即生效

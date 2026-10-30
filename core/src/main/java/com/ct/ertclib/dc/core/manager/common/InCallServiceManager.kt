@@ -105,16 +105,18 @@ class InCallServiceManager: KoinComponent {
         scope.launch {
             // 这里不要立即执行，等onCallRemoved回调都执行完毕再执行这里,这里的所有操作必须允许重复执行
             delay(700)
-            DCManager.instance.onCallServiceUnbind(Utils.getApp())
-            NewCallAppSdkInterface.emitCallServiceState(NewCallAppSdkInterface.CALL_SERVICE_STOP)
-            MiniAppManager.release()
+            if (NewCallsManager.instance.isCallEmpty()){
+                DCManager.instance.onCallServiceUnbind(Utils.getApp())
+                NewCallAppSdkInterface.emitCallServiceState(NewCallAppSdkInterface.CALL_SERVICE_STOP)
+                MiniAppManager.release()
 
-            NewCallsManager.instance.onCallServiceUnBind()
-            ScreenUtils.unRegisterListener()
-            NewCallAppSdkInterface.release()
+                NewCallsManager.instance.onCallServiceUnBind()
+                ScreenUtils.unRegisterListener()
+                NewCallAppSdkInterface.release()
 
-            // 只会结束主进程中的所有Activity，是合理的
-            activityManager.finishAllActivity()
+                // 只会结束主进程中的所有Activity，是合理的
+                activityManager.finishAllActivity()
+            }
         }
     }
 

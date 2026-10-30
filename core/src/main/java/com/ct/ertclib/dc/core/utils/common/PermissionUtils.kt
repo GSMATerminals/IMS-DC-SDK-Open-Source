@@ -79,9 +79,13 @@ object PermissionUtils : KoinComponent {
         Manifest.permission.VIBRATE to permissionDataList[VIBRATE_INDEX],
         Manifest.permission.RECORD_AUDIO to permissionDataList[RECORD_AUDIO_INDEX],
         Manifest.permission.MANAGE_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.WRITE_EXTERNAL_STORAGE to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_IMAGES to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_VIDEO to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
+        Manifest.permission.READ_MEDIA_AUDIO to permissionDataList[MANAGE_EXTERNAL_STORAGE_INDEX],
         Manifest.permission.ACCESS_FINE_LOCATION to permissionDataList[LOCATION_INDEX],
         Manifest.permission.ACCESS_COARSE_LOCATION to permissionDataList[LOCATION_INDEX],
-        Manifest.permission.READ_PHONE_STATE to permissionDataList[CALL_STATE_INDEX],
         Manifest.permission.READ_CONTACTS to permissionDataList[READ_CONTACTS_INDEX],
         Manifest.permission.ACCESS_WIFI_STATE to permissionDataList[ACCESS_WIFI_INDEX],
         Manifest.permission.BLUETOOTH_SCAN to permissionDataList[BLUETOOTH_INDEX],
@@ -109,12 +113,24 @@ object PermissionUtils : KoinComponent {
                 MiniAppPermissions.MINIAPP_CAMERA -> allPermission.add(Manifest.permission.CAMERA)
                 MiniAppPermissions.MINIAPP_VIBRATE -> allPermission.add(Manifest.permission.VIBRATE)
                 MiniAppPermissions.MINIAPP_RECORD_AUDIO -> allPermission.add(Manifest.permission.RECORD_AUDIO)
-                MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> allPermission.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> {
+                    allPermission.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        allPermission.add(Manifest.permission.READ_MEDIA_IMAGES)
+                        allPermission.add(Manifest.permission.READ_MEDIA_VIDEO)
+                        allPermission.add(Manifest.permission.READ_MEDIA_AUDIO)
+                    } else {
+                        allPermission.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        allPermission.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                }
                 MiniAppPermissions.MINIAPP_LOCATION -> {
                     allPermission.add(Manifest.permission.ACCESS_FINE_LOCATION)
                     allPermission.add(Manifest.permission.ACCESS_COARSE_LOCATION)
                 }
-                MiniAppPermissions.MINIAPP_GET_CALL_STATE -> allPermission.add(Manifest.permission.READ_PHONE_STATE)
+                // 获取通话状态不映射到系统权限：数据源为内存 callInfo 状态与 IMS DC 回调，
+                // 仅走小程序自定义授权页 + 使用记录，避免多余的系统权限弹窗。
+                MiniAppPermissions.MINIAPP_GET_CALL_STATE -> { /* 不触发系统运行时权限 */ }
                 MiniAppPermissions.MINIAPP_READ_CONTACTS -> allPermission.add(Manifest.permission.READ_CONTACTS)
                 MiniAppPermissions.MINIAPP_ACCESS_WIFI -> allPermission.add(Manifest.permission.ACCESS_WIFI_STATE)
                 MiniAppPermissions.MINIAPP_BLUETOOTH -> {
@@ -127,27 +143,6 @@ object PermissionUtils : KoinComponent {
         return allPermission
     }
 
-    //将单个系统权限转换成单个miniApp Permission
-    fun convertToSingleMiniAppPermissions(permission: String): String {
-        return when (permission) {
-            Manifest.permission.CAMERA -> MiniAppPermissions.MINIAPP_CAMERA
-            Manifest.permission.VIBRATE -> MiniAppPermissions.MINIAPP_VIBRATE
-            Manifest.permission.RECORD_AUDIO -> MiniAppPermissions.MINIAPP_RECORD_AUDIO
-            Manifest.permission.MANAGE_EXTERNAL_STORAGE -> MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION -> {
-                MiniAppPermissions.MINIAPP_LOCATION
-            }
-
-            Manifest.permission.READ_PHONE_STATE -> MiniAppPermissions.MINIAPP_GET_CALL_STATE
-            Manifest.permission.READ_CONTACTS -> MiniAppPermissions.MINIAPP_READ_CONTACTS
-            Manifest.permission.ACCESS_WIFI_STATE -> MiniAppPermissions.MINIAPP_ACCESS_WIFI
-            Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT -> {
-                MiniAppPermissions.MINIAPP_BLUETOOTH
-            }
-            else -> ""
-        }
-    }
-
     //将单个小程序权限转换成对应的系统权限
     fun convertToSingleSystemPermissions(permission: String): String {
         return when (permission) {
@@ -156,7 +151,7 @@ object PermissionUtils : KoinComponent {
             MiniAppPermissions.MINIAPP_RECORD_AUDIO -> Manifest.permission.RECORD_AUDIO
             MiniAppPermissions.MINIAPP_EXTERNAL_STORAGE -> Manifest.permission.MANAGE_EXTERNAL_STORAGE
             MiniAppPermissions.MINIAPP_LOCATION -> Manifest.permission.ACCESS_FINE_LOCATION
-            MiniAppPermissions.MINIAPP_GET_CALL_STATE -> Manifest.permission.READ_PHONE_STATE
+            MiniAppPermissions.MINIAPP_GET_CALL_STATE -> MiniAppPermissions.MINIAPP_GET_CALL_STATE
             MiniAppPermissions.MINIAPP_READ_CONTACTS -> Manifest.permission.READ_CONTACTS
             MiniAppPermissions.MINIAPP_ACCESS_WIFI -> Manifest.permission.ACCESS_WIFI_STATE
             MiniAppPermissions.MINIAPP_BLUETOOTH -> Manifest.permission.BLUETOOTH_SCAN
@@ -165,34 +160,7 @@ object PermissionUtils : KoinComponent {
     }
 
     fun getPermissionData(permissionName: String): PermissionData? {
-        return systemPermissionDataMap[permissionName]
-    }
-
-    //根据系统权限获取对应的权限名称
-    fun convertToSystemPermissionData(permissions: List<String>): MutableList<PermissionData> {
-        val permissionDataList = mutableListOf<PermissionData>()
-        permissions.forEach {
-            val permissionData = systemPermissionDataMap[it]
-            permissionData?.let {
-                if (!permissionDataList.contains(permissionData)) {
-                    permissionDataList.add(permissionData)
-                }
-            }
-        }
-        return  permissionDataList
-    }
-
-    //将系统权限列表转换成单个miniApp Permission列表
-    @JvmStatic
-    fun convertToMiniAppPermissions(permissions: List<String>): MutableList<String> {
-        val allPermission = mutableListOf<String>()
-        permissions.forEach { permission ->
-            val miniAppPermission = convertToSingleMiniAppPermissions(permission)
-            if (!allPermission.contains(miniAppPermission) && miniAppPermission.isNotEmpty()) {
-                allPermission.add(miniAppPermission)
-            }
-        }
-        return allPermission
+        return systemPermissionDataMap[permissionName] ?: permissionDataMap[permissionName]
     }
 
     //基于permission list构造recyclerView需要的permissionData list
@@ -202,6 +170,7 @@ object PermissionUtils : KoinComponent {
         permissions.forEach {
             permissionDataMap[it]?.let { data ->
                 if (!permissionDataList.contains(data)) {
+                    data.willBeGranted = true
                     permissionDataList.add(data)
                 }
             }
@@ -257,34 +226,5 @@ object PermissionUtils : KoinComponent {
             }
         }
         return map
-    }
-
-    fun checkOverlayPermission(context: Context) {
-        if (!Settings.canDrawOverlays(context)) {
-            // 悬浮窗授权，这里各个终端情况不一样
-            val brand = PkgUtils.brand()
-            LogUtils.debug(TAG, "brand:$brand")
-            when(brand){
-                PkgUtils.SAMSUNG -> {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.data = Uri.fromParts("package", context.packageName, null)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.putExtra(":settings:fragment_args_key", "system_alert_window");
-                    context.startActivity(intent)
-                }
-
-                PkgUtils.XIAOMI -> {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri())
-                    intent.setClassName("com.android.settings","com.android.settings.SubSettings")
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.putExtra(":settings:show_fragment", "com.android.settings.applications.appinfo.DrawOverlayDetails");
-                    context.startActivity(intent)
-                }
-                else -> {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${context.packageName}".toUri())
-                    context.startActivity(intent)
-                }
-            }
-        }
     }
 }

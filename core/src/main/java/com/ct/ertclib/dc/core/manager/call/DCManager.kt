@@ -37,7 +37,9 @@ import com.ct.ertclib.dc.core.data.miniapp.DataChannelApp
 import com.ct.ertclib.dc.core.data.miniapp.DataChannelAppInfo
 import com.ct.ertclib.dc.core.manager.common.DialerEntryManager
 import com.ct.ertclib.dc.core.manager.common.ExpandingCapacityManager
+import com.ct.ertclib.dc.core.manager.common.SPManager
 import com.ct.ertclib.dc.core.manager.common.StateFlowManager
+import com.ct.ertclib.dc.core.manager.screenshare.ScreenShareHelper
 import com.ct.ertclib.dc.core.port.dc.IAdverseDcCreateListener
 import com.ct.ertclib.dc.core.port.dc.IBootstrapDcCreateListener
 import com.ct.ertclib.dc.core.utils.common.DCUtils
@@ -126,10 +128,11 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
         DCServiceManager.bindDcService(context)
         ExpandingCapacityManager.instance.init(context)
         DialerEntryManager.instance.init(context)
+        ScreenShareHelper.init()
         job1 = scope.launch {
             StateFlowManager.closeAdcEventFlow.distinctUntilChanged().collect { event ->
                 if (event.message == CloseAdcEvent.CLOSE_ADC) {
-                    val adcKey = getAdcKey(event.iImsDataChannel.telecomCallId, event.iImsDataChannel.dcLabel)
+                    val adcKey = getAdcKey(event.telecomCallId, event.dcLabel)
                     mAdcMap.remove(adcKey)
                     sLogger.debug("CloseAdcEvent onEvent remove $adcKey")
                 }
@@ -161,6 +164,9 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
         if (mIsDataChannelServiceConnected) {
             DCServiceManager.setDcCallback(null, callInfo.slotId, telecomCallId)
             mImsDcCallbackMap.remove(getImsDcCallbackKey(callInfo.slotId,callInfo.telecomCallId))
+        }
+        scope.launch(Dispatchers.IO) {
+            SPManager.instance.clearAllCallCacheData(telecomCallId)
         }
     }
 
@@ -351,6 +357,7 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
         ExpandingCapacityManager.instance.release(context)
         DialerEntryManager.instance.release(context)
         FloatingBallDataManager.release()
+        ScreenShareHelper.release()
     }
 
     fun createApplicationDataChannels(
@@ -528,6 +535,9 @@ class DCManager: ICallStateListener, ImsDcServiceConnectionCallback {
 
             // 解析XML
             val dataChannelAppInfo = XmlUtils.parseXml(description, classes, DataChannelAppInfo::class.java)
+            if (dataChannelAppInfo?.dataChannelApp?.dataChannelList == null) {
+                return description
+            }
 
             // 过滤DataChannel列表，只保留包含在labels中的dcLabel
             val filteredDataChannels = dataChannelAppInfo.dataChannelApp.dataChannelList

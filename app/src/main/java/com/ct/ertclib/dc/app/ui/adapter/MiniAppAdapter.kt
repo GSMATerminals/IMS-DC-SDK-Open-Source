@@ -83,29 +83,6 @@ class MiniAppAdapter(
             stableItemList.clear()
             itemViewMap.clear()
             newData?.forEach { miniAppInfo ->
-                if (miniAppInfo.appName == NewCallAppSdkInterface.YI_SHARE_APP_NAME && !miniAppInfo.appIcon.isNullOrEmpty()){
-                    // 拆分翼分享小程序的子功能
-                    val parseInfo = NewCallAppSdkInterface.parseImgData(miniAppInfo.appIcon!!)
-                    if (parseInfo.isNotEmpty()){
-                        val list = parseInfo.split("&")
-                        if (list.isNotEmpty()){
-                            list.forEach {
-                                if (it.length > 2){
-                                    val name = it.dropLast(2)
-                                    val iconIndex = it.takeLast(2)
-                                    var resId: Int = fileShareIconMap[iconIndex] ?: -1
-                                    if (resId == -1){
-                                        resId = R.drawable.icon_fileshare_yi
-                                    }
-                                    stableItemList.add(StableExpandedItem(name, resId){
-                                        NewCallAppSdkInterface.saveShareType(name)
-                                        handleStartApp(miniAppInfo)
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
                 miniAppList.add(miniAppInfo)
             }
             scope.launch(Dispatchers.Main){

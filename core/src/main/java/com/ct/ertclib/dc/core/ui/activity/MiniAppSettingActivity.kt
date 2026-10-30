@@ -25,6 +25,7 @@ import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_APP_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_CALL_ID
 import com.ct.ertclib.dc.core.constants.CommonConstants.PARAMS_VERSION_CODE
 import com.ct.ertclib.dc.core.databinding.LayoutSettingBinding
+import com.ct.ertclib.dc.core.miniapp.MiniAppStartManager
 import com.ct.ertclib.dc.core.ui.fragment.SettingPreferenceFragment
 import com.ct.ertclib.dc.core.utils.common.LogUtils
 
@@ -59,5 +60,14 @@ class MiniAppSettingActivity: BaseToolBarActivity() {
 
     override fun getTooBarTitle(): String {
         return resources.getString(R.string.setting_preference_title)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LogUtils.info(TAG, "onDestroy, restoring mini app float window")
+        // 设置页销毁后恢复浮窗显示
+        if (appId.isNotEmpty() && callId.isNotEmpty()) {
+            MiniAppStartManager.getRunningMiniApp(callId, appId)?.show()
+        }
     }
 }
