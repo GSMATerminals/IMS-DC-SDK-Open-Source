@@ -147,7 +147,6 @@ NewCall
 - Release:
 
   Terminal manufacturers must comply with the [5G New Calling SDK Terminal Adaptation Specification](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) to adapt their terminals so that all SDK functions run properly on them, and must integrate the SDK as a system default application and push it together with the system to adapted user terminals.
-
   When a user is on a call, if the terminal integrates the Normal version, the 5G New Calling icon will appear as a floating ball on the native call interface; clicking the icon opens the 5G New Calling IMS D  Application space. If the terminal integrates the Dialer version, it must implement the functionality in accordance with the [5G New Calling SDK Terminal Adaptation Specification](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) by adding a fixed entry button on the native call interface; clicking the button opens the IMS DC Application space.
 
 >[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#x-contact)
@@ -176,9 +175,9 @@ After obtaining the code, terminal manufacturers or operators shall carry out co
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-26.2.0).
 
-2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
+2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and install **APK** on your mobile device.
 
-3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
+3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile/WiFi hotspot.
 
 4. **Enable Features:** Find and open the **"DCLocal"** app on the home screen. 
 
