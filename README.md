@@ -3,13 +3,13 @@ Note: This document aims to help developers understand the architectural design 
 
 ## News[2026/10/29] 🔥
 - Support Root Application ( The Root Application is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
-  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
+  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/></div> 
   
 - Access DCLab (New! A DC environment fully equivalent to the IMS commercial network for IMS Data Channel Application and AS development, testing, and service experience.)
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
+  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/></div>  
   
 - Adapt to foldable-screen and wide-screen terminals
-<div align="center"><img src="images/foldable.png" alt="Description" width="400"/> 
+<div align="center"><img src="images/foldable.png" alt="Description" width="400"/></div> 
 
 # 5G New Calling Terminal SDK
 - 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.
