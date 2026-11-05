@@ -203,7 +203,7 @@ After obtaining the code, terminal manufacturers or operators shall carry out co
 
 2. **Get number:** Contact us to obtain the QR code for the experience number.
 
-3. **Start App:** Find the "DCLocal" app on your phone's home screen, open it, and scan the QR code.
+3. **Start App:** Find the "DCLab" app on your phone's home screen, open it, and scan the QR code.
 
 4. **Dial:** Dial the experience number to use the existing DC services available on DCLab.
 
