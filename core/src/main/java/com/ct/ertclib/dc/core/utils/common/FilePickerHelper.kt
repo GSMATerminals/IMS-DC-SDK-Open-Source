@@ -324,10 +324,14 @@ object FilePickerHelper {
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             super.onActivityResult(requestCode, resultCode, data)
             if (requestCode == FilePickerManager.REQUEST_CODE && !isResultHandled){
-                isResultHandled = true
                 when (resultCode) {
                     RESULT_OK -> {
                         val list = FilePickerManager.obtainData(release = true)
+                        if (list.isNullOrEmpty()) {
+                            logger.warn("FilePickerManager.obtainData returned null or empty")
+                            finishWithResult(null)
+                            return
+                        }
                         logger.debug("FileList (${list.size}): ${list.joinToString(", ")}")
                         val mediaInfoList = ArrayList<MediaInfo>()
                         for (absPath in list) {
@@ -386,6 +390,11 @@ object FilePickerHelper {
         }
 
         private fun finishWithResult(mediaInfoList: List<MediaInfo>?) {
+            if (isResultHandled) {
+                logger.debug("finishWithResult already handled, skip")
+                return
+            }
+            isResultHandled = true
             onResult(mediaInfoList)
             window.decorView.post({
                 if (!isFinishing && !isDestroyed) {

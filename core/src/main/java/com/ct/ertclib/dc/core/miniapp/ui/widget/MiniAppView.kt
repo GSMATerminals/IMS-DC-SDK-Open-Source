@@ -933,7 +933,9 @@ class MiniAppView @JvmOverloads constructor(
             // 如果当前处于最小化状态，保持最小化（不恢复 alpha 和触摸状态）
             if (isMinimized) {
                 params.alpha = 0f
-                params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                params.flags = params.flags or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             }
 
             updateViewLayout()
@@ -983,7 +985,9 @@ class MiniAppView @JvmOverloads constructor(
                 params.x = -params.width
                 params.y = -params.height
                 params.alpha = 0f
-                params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                params.flags = params.flags or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 
                 updateViewLayout()
                 sLogger.debug("View moved off-screen, saved: ($savedX, $savedY)")
