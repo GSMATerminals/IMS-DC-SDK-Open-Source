@@ -84,6 +84,9 @@ class MiniAppView @JvmOverloads constructor(
 
         /** 半屏自定义窗口贴底时的顶部圆角半径（dp） */
         private const val HALF_SCREEN_TOP_RADIUS_DP = 16
+
+        /** 宽屏浮窗模式下触摸结束后延迟释放焦点的毫秒数 */
+        private const val FOCUS_RELEASE_DELAY_MS = 3000L
     }
 
     private val sLogger: Logger = Logger.getLogger(TAG)
@@ -117,6 +120,30 @@ class MiniAppView @JvmOverloads constructor(
 
     // 缓存宽屏状态
     private var isLargeScreenCached = false
+
+    /**
+     * 宽屏浮窗模式下当前是否持有焦点。
+     * 宽屏模式无伴生 Activity，需要通过触摸动态获取/释放焦点。
+     */
+    private var isFloatingFocusable = false
+
+    /**
+     * 延迟释放浮窗焦点的 Runnable。
+     * 用户停止操作浮窗后延迟一段时间再加回 FLAG_NOT_FOCUSABLE，
+     * 避免频繁切换焦点影响 WebView 输入和软键盘。
+     */
+    private val releaseFocusRunnable = Runnable {
+        if (isFloatingFocusable && !isMinimized && isAttachedToWindow) {
+            layoutParams?.let { params ->
+                if (params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE == 0) {
+                    params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    updateViewLayout()
+                    isFloatingFocusable = false
+                    sLogger.debug("Floating window focus released after touch ended")
+                }
+            }
+        }
+    }
 
     init {
         initView()
@@ -412,7 +439,10 @@ class MiniAppView @JvmOverloads constructor(
                     gravity = Gravity.START or Gravity.TOP
                     x = displayMetrics.widthPixels - width - rightMarginPx
                     y = (displayMetrics.heightPixels - height) / 2
-                    flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    // 宽屏浮窗不占满屏幕且无伴生 Activity，默认不持有焦点，
+                    // 用户触摸窗口内时动态获取（见 dispatchTouchEvent）。
+                    flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 
                 } else {
                     // 单屏手机/折叠屏折叠状态
@@ -479,6 +509,8 @@ class MiniAppView @JvmOverloads constructor(
     fun detachFromWindow() {
         if (!isAttachedToWindow) return
 
+        handler.removeCallbacks(releaseFocusRunnable)
+
         try {
             windowManager?.removeView(this)
             isAttachedToWindow = false
@@ -501,6 +533,49 @@ class MiniAppView @JvmOverloads constructor(
                 sLogger.error("Failed to update view layout", e)
             }
         }
+    }
+
+    /**
+     * 宽屏浮窗模式下获取窗口焦点（移除 FLAG_NOT_FOCUSABLE）。
+     * 用户触摸浮窗内时调用，使 WebView 能接收键盘输入和弹出软键盘。
+     */
+    private fun acquireFloatingFocus() {
+        if (!isAttachedToWindow || !isLargeScreen()) return
+        layoutParams?.let { params ->
+            if (params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0) {
+                params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                updateViewLayout()
+                isFloatingFocusable = true
+                sLogger.debug("Floating window focus acquired on touch")
+            }
+        }
+    }
+
+    /**
+     * 宽屏浮窗模式下延迟释放窗口焦点（加回 FLAG_NOT_FOCUSABLE）。
+     * 触摸结束后延迟一段时间再释放，避免 WebView 点击/软键盘弹出被中断。
+     * 如果延迟期间用户再次触摸，会取消挂起的释放。
+     */
+    private fun releaseFloatingFocusDelayed() {
+        if (!isAttachedToWindow || !isLargeScreen()) return
+        handler.removeCallbacks(releaseFocusRunnable)
+        handler.postDelayed(releaseFocusRunnable, FOCUS_RELEASE_DELAY_MS)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        // 仅宽屏浮窗模式（无伴生 Activity）需要动态焦点管理
+        if (ev != null && !isMinimized && isLargeScreen()) {
+            when (ev.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    handler.removeCallbacks(releaseFocusRunnable)
+                    acquireFloatingFocus()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    releaseFloatingFocusDelayed()
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     /**
@@ -879,7 +954,7 @@ class MiniAppView @JvmOverloads constructor(
 
                 // 恢复显示（如果之前被最小化）
                 params.alpha = 1f
-                params.flags = (params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                params.flags = (params.flags and (WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE).inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
 
                 // 应用圆角
                 applyFloatCornerRadius()
@@ -906,7 +981,7 @@ class MiniAppView @JvmOverloads constructor(
                     params.y = (displayMetrics.heightPixels * windowStyle.windowTop!!).toInt()
 
                     params.alpha = 1f
-                    params.flags = (params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    params.flags = (params.flags and (WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE).inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
 
                     // 半屏自定义窗口应用半屏圆角
                     applyHalfScreenCornerRadius()
@@ -923,7 +998,7 @@ class MiniAppView @JvmOverloads constructor(
 
                     // 恢复显示
                     params.alpha = 1f
-                    params.flags = (params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    params.flags = (params.flags and (WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE).inv()) or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
 
                     // 移除圆角
                     removeCornerRadius()
@@ -936,6 +1011,11 @@ class MiniAppView @JvmOverloads constructor(
                 params.flags = params.flags or
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            }
+
+            // 宽屏浮窗模式下，如果用户没有正在操作窗口，保持 FLAG_NOT_FOCUSABLE
+            if (isLargeScreen() && !isMinimized && !isFloatingFocusable) {
+                params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             }
 
             updateViewLayout()
@@ -999,6 +1079,9 @@ class MiniAppView @JvmOverloads constructor(
     private fun viewToMaximize() {
         scope.launch(Dispatchers.Main) {
             isMinimized = false
+            // 恢复后用户尚未触摸窗口，重置浮窗焦点状态
+            isFloatingFocusable = false
+            handler.removeCallbacks(releaseFocusRunnable)
             // 重新根据当前屏幕尺寸计算窗口参数（折叠屏可能在最小化期间展开/收起）
             val isLarge = isLargeScreen()
             handleScreenModeChange(isLarge)
@@ -1125,6 +1208,10 @@ class MiniAppView @JvmOverloads constructor(
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         sLogger.debug("dispatchKeyEvent${event?.keyCode}")
+        // 宽屏浮窗模式不拦截返回键，让系统自行处理（关闭外部 App 等）
+        if (isLargeScreen() && event?.keyCode == KeyEvent.KEYCODE_BACK) {
+            return super.dispatchKeyEvent(event)
+        }
         if (event?.keyCode == KeyEvent.KEYCODE_BACK) {
             backPressed()
             return false
