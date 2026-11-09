@@ -3,13 +3,13 @@ Note: This document aims to help developers understand the architectural design 
 
 ## News[2026/10/29] 🔥
 - Support Root Application ( The Root Application is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
-  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
+  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/></div>  
   
 - Access DCLab (New! A DC environment fully equivalent to the IMS commercial network for IMS Data Channel Application and AS development, testing, and service experience.)
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
+  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/></div>  
   
 - Adapt to foldable-screen and wide-screen terminals
-<div align="center"><img src="images/foldable.png" alt="Description" width="400"/> 
+<div align="center"><img src="images/foldable.png" alt="Description" width="400"/></div> 
 
 # 5G New Calling Terminal SDK
 - 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.
@@ -147,6 +147,7 @@ NewCall
 - Release:
 
   Terminal manufacturers must comply with the [5G New Calling SDK Terminal Adaptation Specification](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) to adapt their terminals so that all SDK functions run properly on them, and must integrate the SDK as a system default application and push it together with the system to adapted user terminals.
+
   When a user is on a call, if the terminal integrates the Normal version, the 5G New Calling icon will appear as a floating ball on the native call interface; clicking the icon opens the 5G New Calling IMS D  Application space. If the terminal integrates the Dialer version, it must implement the functionality in accordance with the [5G New Calling SDK Terminal Adaptation Specification](./document/5G%20New%20Calling%20SDK%20Terminal%20Adaptation%20Specification.docx) by adding a fixed entry button on the native call interface; clicking the button opens the IMS DC Application space.
 
 >[**:star2:If you encounter any issues during terminal integration and adaptation, please feel free to contact us. We will provide comprehensive technical support!**](#x-contact)
@@ -175,9 +176,9 @@ After obtaining the code, terminal manufacturers or operators shall carry out co
 
 1. **Download Files:** Download the **local_release APK** and **IMS DC Application `.zip` package** from the [open-source website](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/tag/release-26.2.0).
 
-2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and install **APK** on your mobile device.
+2. **Prepare and Install:** Copy the **IMS DC Application `.zip` package** to the phone's SD card directory and and install **APK** on your mobile device.
 
-3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile/WiFi hotspot.
+3. **Network Setup:** Connect two phones to the same Local Area Network (LAN); this can be achieved using a mobile hotspot.
 
 4. **Enable Features:** Find and open the **"DCLocal"** app on the home screen. 
 
@@ -203,7 +204,7 @@ After obtaining the code, terminal manufacturers or operators shall carry out co
 
 2. **Get number:** Contact us to obtain the QR code for the experience number.
 
-3. **Start App:** Find the "DCLocal" app on your phone's home screen, open it, and scan the QR code.
+3. **Start App:** Find the "DCLab" app on your phone's home screen, open it, and scan the QR code.
 
 4. **Dial:** Dial the experience number to use the existing DC services available on DCLab.
 
