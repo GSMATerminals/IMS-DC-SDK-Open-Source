@@ -1,3 +1,8 @@
+> ⚠️ **IMPORTANT REPOSITORY MIGRATION NOTICE**  
+> We have recently rewritten the Git history of this repository to remove large legacy files.  
+> If you are an existing contributor and your `git pull` fails or shows massive conflicts, **please do not force merge**.  
+> Please back up your local changes and **re-clone the repository**. We apologize for the inconvenience.  
+  
 ![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
 

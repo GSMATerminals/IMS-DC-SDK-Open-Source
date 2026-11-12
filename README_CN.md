@@ -1,3 +1,8 @@
+> ⚠️ **重要仓库迁移通知**  
+> 近期我们清理了仓库中的历史大文件并重写了 Git 提交历史。  
+> 如果您是原有的贡献者，在执行 `git pull` 时遇到报错或大量冲突，**请勿强行合并 (force merge)**。  
+> 请备份您本地的更改，并**重新 Clone 仓库**。给您带来的不便，敬请谅解。  
+  
 ![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
