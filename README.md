@@ -1,15 +1,15 @@
-![logo.png](images/logo.png)   
+![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
 
 ## News[2026/10/29] 🔥
 - Support Root Application ( The Root Application is loaded in compliance with international standards (e.g., 3GPP, GSMA) to present the IMS Data Channel Application list. )
-  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/></div> 
+  <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/Bootstrap.gif" alt="Description" width="200"/></div> 
   
 - Access DCLab (New! A DC environment fully equivalent to the IMS commercial network for IMS Data Channel Application and AS development, testing, and service experience.)
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/></div>  
+  <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/dclab.gif" alt="Description" width="400"/></div>  
   
 - Adapt to foldable-screen and wide-screen terminals
-<div align="center"><img src="images/foldable.png" alt="Description" width="400"/></div> 
+<div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/foldable.png" alt="Description" width="400"/></div> 
 
 # 5G New Calling Terminal SDK
 - 5G New Calling adds a data channel (i.e., IMS Data Channel) on top of the IMS audio and video channels, integrating AR, AI, and other technologies to enable interactive information exchange during calls.
@@ -20,19 +20,19 @@ Note: This document aims to help developers understand the architectural design 
   
   - **Doodle Together(Left:Sender Right:Receiver)**
   
-    <div align="center"><img src="images/DoodleTogether(Initiator).gif" alt="Description" width="200" /> <img src="images/DoodleTogether(Receiver).gif" alt="Description" width="200" /></div> 
+    <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/DoodleTogether-Initiator.gif" alt="Description" width="200" /> <img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/DoodleTogether-Receiver.gif" alt="Description" width="200" /></div> 
   
     **Doodle Together** supports features such as scribbling with brushes, sending emojis, and displaying special effects. It also allows users to adjust the brush type, thickness, and color according to their preferences. This application effectively enhances the interactive experience between call participants, making communication more intuitive and understanding more precise.
   
   - **File Sharing(Left:Sender Right:Receiver)**
   
-    <div align="center"><img src="images/Yi Share(Initiator).gif" alt="Description" width="200" /> <img src="images/Yi Share(Receiver).gif" alt="Description" width="200" /></div> 
+    <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/YiShare-Initiator.gif" alt="Description" width="200" /> <img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/YiShare-Receiver.gif" alt="Description" width="200" /></div> 
   
     **File Sharing** enables two parties in 5G New Calling to share real-time information such as locations and files without switching applications, streamlining both conversation and information exchange in one seamless experience.
   
   - **Customer Service Line**
   
-     <div align="center"><img src="images/10000_EN.gif" alt="Description" width="250" /></div> 
+     <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/10000.gif" alt="Description" width="250" /></div> 
   
     **Custom Service Line** is a toB application exclusively designed for the 5G New Calling DC service. Compared with the traditional 10000 service, which only supports voice prompts and keypad operations in a single interactive mode, the 5G New Calling **Custom Service Line** leverages a visual UI interface to enable touch-screen interaction, significantly enhancing operational flexibility and service accessibility for users.
 
@@ -64,7 +64,7 @@ While complying with international standards such as 3GPP and GSMA, the SDK also
 - Access DCLab to provide developers with a DC business development and debugging environment that is fully aligned with the live network interface capabilities.
 
 ## II. Architecture Design
-![SDK架构.png](images/SDK架构.png)
+![SDK架构.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/SDK.png)
 
 - Inherits InCallService: The SDK obtains call information by inheriting InCallService (https://developer.android.google.cn/reference/android/telecom/InCallService), closely associating with call state. It starts running when a call is established and releases resources when the call ends. Refer to SDK code: [core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt](core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt).  
 
@@ -188,7 +188,7 @@ After obtaining the code, terminal manufacturers or operators shall carry out co
 - Tap **Create** (top-right) to enter the **Edit MiniApp** page.
 - Tap **PLEASE CHOOSE MINIAPP PACKAGE** and choose the `.zip` file from Step 2.
 - Fill in the required information(refer to the image below) and tap **SAVE**. (Note: This step simulates the process of deploying a IMS DC Application over a network).
-<div align="center"><img src="images/Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
+<div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
 
 **Establish Connection:**
 
