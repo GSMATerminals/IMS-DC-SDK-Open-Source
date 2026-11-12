@@ -1,13 +1,13 @@
-![logo.png](images/logo.png)   
+![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
 ## News[2026/10/29] 🔥
 - 支持引导程序 ( 按照3GPP、GSMA等国际标准加载引导程序，用于展示小程序列表 )
-  <div align="center"><img src="images/Bootstrap.gif" alt="Description" width="200"/>  
+  <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/Bootstrap.gif" alt="Description" width="200"/>  
 - 接入DCLab ( New! 一个完全对标IMS现网的DC环境，可用于DC小程序和AS的开发测试及业务体验 )  
-  <div align="center"><img src="images/dclab.gif" alt="Description" width="400"/>  
+  <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/dclab.gif" alt="Description" width="400"/>  
 - 适配折叠屏、宽屏终端  
-  <div align="center"><img src="images/foldable.png" alt="Description" width="400"/> 
+  <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/foldable.png" alt="Description" width="400"/> 
 
 # 5G增强通话终端SDK
 - 5G增强通话是在IMS音频、视频通道的基础上增加数据通道（即IMS Data Channel）并融入AR、AI等技术，实现在通话时进行交互式信息传递。 
@@ -18,19 +18,19 @@
 
   - **翼起涂鸦（左：发起方 右：接收方）**
 
-    <div align="center"><img src="images/翼起涂鸦（发起方）.gif" alt="Description" width="200"/> <img src="images/翼起涂鸦（接收方）.gif" alt="Description" width="200"/></div>
+    <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/DoodleTogether-Initiator-CN.gif" alt="Description" width="200"/> <img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/DoodleTogether-Receiver-CN.gif" alt="Description" width="200"/></div>
   
   ​    "翼起涂鸦"DC小程序支持画笔涂鸦，发送表情符号和显示特效等功能。它还允许用户根据自己的喜好调整画笔的类型、粗细和颜色。这款应用有效提升通话双方的互动体验，让沟通更直观、理解更精准。
   
   - **翼分享（左：发起方 右：接收方）**
   
-    <div align="center"><img src="images/翼分享（发起方）.gif" alt="Description" width="200" /><img src="images/翼分享（接收方）.gif" alt="Description" width="200"/></div>
+    <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/YiShare-Initiator-CN.gif" alt="Description" width="200" /><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/YiShare-Receiver-CN.gif" alt="Description" width="200"/></div>
   
        "翼分享"DC小程序支持通话双方在5G增强通话中，无需切换应用，即可实时互相分享位置、文件等信息，通话与信息交互一步到位。
   
   - **10000号客服小程序**
   
-      <div align="center"><img src="images/10000_CN.gif" alt="Description" width="250"/></div>
+      <div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/10000-CN.gif" alt="Description" width="250"/></div>
   
   ​    "10000号客服小程序"是专为5G增强通话DC业务打造的toB应用。相较于传统10000号仅支持语音播报、按键操作的单一交互模式，5G增强通话10000号服务可借助可视化UI界面实现触屏交互，大幅提升用户操作的灵活性与服务使用的便捷性。
 
@@ -49,7 +49,7 @@ SDK在遵循3GPP、GSMA等国际标准的同时，还实现了如下功能特性
 - 接入DCLab，为开发者提供完全对标现网接口能力的DC业务开发调试环境。
 
 ## 二、架构设计
-![SDK架构CN.png](images/SDK架构CN.png)   
+![SDK架构CN.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/SDK-CN.png)   
 - 继承InCallService：SDK通过继承InCallService（ https://developer.android.google.cn/reference/android/telecom/InCallService ）获取通话信息，与通话状态紧关联，在通话建立的时候开始运行，在通话结束的时候释放资源，查阅SDK代码：[core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt](core/src/main/java/com/ct/ertclib/dc/core/service/InCallServiceImpl.kt)。  
 - TS.71 IDL接口：SDK与终端之间的接口，SDK通过这些接口获取小程序列表、下载小程序包，根据小程序指示创建IMS Data Channel、接受和发送数据，查阅SDK代码：[core/src/main/aidl/com/newcalllib/datachannel/V1_0](core/src/main/aidl/com/newcalllib/datachannel/V1_0)。  
 - 拓展能力接口：为推进5G增强通话终端SDK的统一，即终端上只运行一个SDK，同时满足运营商为各自平台小程序提供特色能力的需求，SDK设计了拓展能力接口，允许不同运营商、终端厂商以AAR包形式引入的各自私有的特色能力，供小程序调用。  
@@ -150,7 +150,7 @@ NewCall
 
 5、点击右上角配置按钮进入小程序仓库页面，再点击右上角新增按钮，进入编辑小程序页面，点击选择小程序安装包，选择第2步的拷贝的zip包，填写小程序相关信息（如下图所示），填好点击保存（注：该步为模拟网络部署小程序的操作）。
 
-<div align="center"><img src="images/Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
+<div align="center"><img src="https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/Edit-MiniApp.jpg" alt="Edit-MiniApp" width="200" /></div>
 
 6、在小程序仓库页面，一端选择server，待显示IP后点击启动，另一端选择client，填入server端显示的IP，点击启动。两端都回到上一页面，即本地调试页面。
 
