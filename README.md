@@ -1,3 +1,8 @@
+> ⚠️ **IMPORTANT REPOSITORY MIGRATION NOTICE**  
+> We have recently rewritten the Git history of this repository to remove large legacy files.  
+> If you are an existing contributor and your `git pull` fails or shows massive conflicts, **please do not force merge**.  
+> Please back up your local changes and **re-clone the repository**. We apologize for the inconvenience.  
+  
 ![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 Note: This document aims to help developers understand the architectural design of the 5G New Calling Terminal SDK, facilitating rapid secondary development or direct compilation and use based on this project, and guiding the development and debugging of 5G New Calling Application.
 
@@ -153,7 +158,7 @@ NewCall
 
 
 ## VII. IMS Data Channel Application Development & Debugging
-- IMS DC Application development: Developers must develop IMS DC Application in accordance with web standards such as HTML5, CSS3, and ES6, as well as the [IMS DC Application Development Document](./document/IMS DC Application Development Document.docx). [jssdktest.vue](https://./document/jssdktest.vue) is sample application code, and [jssdk.js](https://./document/jssdk.js) is the plug-in that must be integrated for IMS DC Application development.
+- IMS DC Application development: Developers must develop IMS DC Application in accordance with web standards such as HTML5, CSS3, and ES6, as well as the [IMS DC Application Development Document](./miniappdevelop/IMS%20DC%20Application%20Development%20Document.docx). [jssdktest.vue](./miniappdevelop/jssdktest.vue) is sample application code, and [jssdk.js](./miniappdevelop/jssdk.js) is the plug-in that must be integrated for IMS DC Application development.
 - Local IMS DC Application debugging: Use the Local (local debugging version) SDK. It does not depend on the IMS Data Channel network environment and does not require terminal adaptation, so application can be debugged on ordinary Android terminals. Install the Local version SDK on the phone in the same way as a normal APK, push the application zip package to the phone's sdcard, and then launch the "DCLocal" app from the phone's home screen to configure and debug the application.
 - DCLab Integration Testing: To begin, contact our team to deploy the IMS Data Channel Application and AS on DCLab. An experience number will be allocated by DCLab. Please install the Lab-version SDK APK onto your device via the standard APK installation process. Once installed, launch the "DCLab" app from the home screen to place test calls and explore the functionalities.
 

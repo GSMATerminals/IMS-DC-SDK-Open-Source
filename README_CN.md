@@ -1,3 +1,8 @@
+> ⚠️ **重要仓库迁移通知**  
+> 近期我们清理了仓库中的历史大文件并重写了 Git 提交历史。  
+> 如果您是原有的贡献者，在执行 `git pull` 时遇到报错或大量冲突，**请勿强行合并 (force merge)**。  
+> 请备份您本地的更改，并**重新 Clone 仓库**。给您带来的不便，敬请谅解。  
+  
 ![logo.png](https://github.com/GSMATerminals/IMS-DC-SDK-Open-Source/releases/download/media-assets-v1/logo.png)   
 注：本文旨在帮助开发人员理解5G增强通话终端SDK的架构设计，便于开发人员快速基于本项目进行二次开发或直接编译使用，以及指导5G增强通话小程序的开发调试。
 
@@ -119,7 +124,7 @@ NewCall
 >[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#十联系方式)
 
 ## 七、小程序开发调试
-- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准及[《IMS DC小程序开发文档》](./document/IMS%20DC小程序开发文档.docx)开发小程序，[jssdktest.vue](./document/jssdktest.vue)为小程序示例代码，[jssdk.js](./document/jssdk.js)为小程序开发需要集成的插件。
+- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准及[《IMS DC小程序开发文档》](./miniappdevelop/IMS%20DC小程序开发文档.docx)开发小程序，[jssdktest.vue](./miniappdevelop/jssdktest.vue)为小程序示例代码，[jssdk.js](./miniappdevelop/jssdk.js)为小程序开发需要集成的插件。
 - 小程序本地调试：使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序，按照普通apk安装方式将Local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后从手机桌面启动“电信增强通话”app，即可配置并调试小程序。  
 - DCLab调测：联系我们在DCLab上部署小程序和AS，由DCLab分配体验号码，请按照普通apk安装方式将Lab版本SDK安装到手机，从手机桌面启动“电信增强通话”app，即可拨号体验。
 

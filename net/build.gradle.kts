@@ -73,9 +73,9 @@ dependencies {
 
     // room
     kapt(libs.androidx.room.compiler)
-    api("io.ktor:ktor-client-core:2.3.12")
-    api("io.ktor:ktor-client-cio:2.3.12")
-    api("io.ktor:ktor-client-websockets:2.3.12")
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.cio)
+    api(libs.ktor.client.websockets)
 
-    api("io.livekit:livekit-android:2.25.2")
+    api(libs.livekit.android)
 }

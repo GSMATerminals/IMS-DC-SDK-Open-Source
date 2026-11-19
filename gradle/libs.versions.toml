@@ -2,8 +2,9 @@
 agp = "8.9.0"
 androidDesugarJdkLibs = "1.2.2"
 koinAndroid = "3.2.0"
-ktorClientWebrtc = "2.3.12"
-ktorClientCio = "2.3.12"
+ktorClientWebrtc = "2.3.13"
+ktorClientCio = "2.3.13"
+livekitAndroid = "2.25.2"
 org-jetbrains-kotlin-android = "1.8.0"
 core-ktx = "1.8.0"
 junit4 = "4.13.2"
@@ -17,7 +18,7 @@ ksp = "1.8.0-1.0.8"
 androidxComposeBom = "2023.06.01"
 androidxComposeCompiler = "1.5.0"
 constraintlayout = "2.1.4"
-gson = "2.8.6"
+gson = "2.8.9"
 glide = "4.16.0"
 glideTransformations = "4.3.0"
 androidutils = "1.31.1"
@@ -36,7 +37,7 @@ room = "2.4.2"
 lucksiege-pictureselector = "v3.11.1"
 lucksiege-camerax = "v3.10.0"
 zelory-compressor = "3.0.1"
-compress = "1.18"
+compress = "1.26.0"
 broccoli = "1.0.0"
 commons-io = "2.11.0"
 workRuntimeKtx = "2.9.0"
@@ -50,6 +51,9 @@ filepicker = "4.1.12"
 androidFilePicker = "1.0.1"
 
 [libraries]
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientWebrtc" }
+livekit-android = { module = "io.livekit:livekit-android", version.ref = "livekitAndroid" }
+ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorClientWebrtc" }
 xxpermissions = { group = "com.github.getActivity", name = "XXPermissions", version.ref = "xxpermissions"}
 reflect-helper = {group = "com.gitee.gggl", name="reflect_helper", version.ref = "reflectHelper"}
 filepicker = { group = "com.github.gzu-liyujiang.AndroidPicker", name = "FilePicker", version.ref = "filepicker" }

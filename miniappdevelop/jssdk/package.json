@@ -1,0 +1,31 @@
+{
+  "name": "jssdk",
+  "version": "1.0.13",
+  "type": "module",
+  "main": "./dist/jssdk.umd.js",
+  "module": "./dist/jssdk.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/jssdk.es.js",
+      "require": "./dist/jssdk.umd.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.0.0",
+    "fs-extra": "^11.4.0",
+    "terser": "^5.49.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^5.0.3"
+  },
+  "dependencies": {
+  }
+}

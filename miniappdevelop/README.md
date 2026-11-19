@@ -1,0 +1,4 @@
+# JSSDK
+EN: [jssdk](jssdk) encapsulates the APIs provided by the terminal SDK. Running npm run build compiles and generates the [jssdk.js](jssdk.js) library file. [jssdk.js](jssdk.js) provides a plugin-based invocation method, and IMS DC Application developers integrate and develop IMS DC Application in accordance with the [IMS DC Application Development Document](IMS%20DC%20Application%20Development%20Document.docx), [jssdktest.vue](jssdktest.vue) provides example code.  
+
+CN: [jssdk](jssdk) 封装了终端SDK的提供的API，通过npm run build可编译生成[jssdk.js](jssdk.js)库文件，[jssdk.js](jssdk.js)提供插件化的调用方式，DC小程序开发者按照[《IMS DC Application Development Document》](IMS%20DC小程序开发文档.docx)集成并开发DC小程序，[jssdktest.vue](jssdktest.vue)提供了示例代码。
