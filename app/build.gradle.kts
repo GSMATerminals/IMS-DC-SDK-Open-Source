@@ -153,10 +153,6 @@ android {
 
 dependencies {
 
-    implementation(fileTree("${rootProject.projectDir}\\libs") {
-        include("*.aar")  // 只匹配 .aar 文件
-    })
-
     implementation(project(":core"))
 
     implementation(libs.apache.compress)
