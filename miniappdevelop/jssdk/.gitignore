@@ -1,0 +1,56 @@
+# ==================== 依赖 ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==================== 构建产物 ====================
+dist/
+jssdk/
+*.local
+
+# ==================== 编辑器 ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==================== 操作系统 ====================
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# ==================== TypeScript ====================
+*.tsbuildinfo
+
+# ==================== 环境变量 ====================
+.env
+.env.local
+.env.*.local
+
+# ==================== 测试 ====================
+coverage/
+.nyc_output/
+
+# ==================== 临时文件 ====================
+*.log
+*.tmp
+*.temp
+.cache/
+
+# ==================== 其他 ====================
+*.tgz
+*.zip
+*.rar
+*.7z

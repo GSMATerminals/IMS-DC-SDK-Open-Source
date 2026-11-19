@@ -124,7 +124,7 @@ NewCall
 >[**:star2:终端集成适配中如遇到任何问题，请与我们联系，我们将提供全面的技术支撑！！！**](#十联系方式)
 
 ## 七、小程序开发调试
-- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准及[《IMS DC小程序开发文档》](./document/IMS%20DC小程序开发文档.docx)开发小程序，[jssdktest.vue](./document/jssdktest.vue)为小程序示例代码，[jssdk.js](./document/jssdk.js)为小程序开发需要集成的插件。
+- 小程序开发：开发者需遵循HTML5、CSS3、ES6等web标准及[《IMS DC小程序开发文档》](./miniappdevelop/IMS%20DC小程序开发文档.docx)开发小程序，[jssdktest.vue](./miniappdevelop/jssdktest.vue)为小程序示例代码，[jssdk.js](./miniappdevelop/jssdk.js)为小程序开发需要集成的插件。
 - 小程序本地调试：使用Local(本地调试版本)SDK，无需依赖IMS Data Channel的网络环境，无需终端适配，即可在普通Android终端上调试小程序，按照普通apk安装方式将Local版本SDK安装到手机，并将小程序zip包推至手机sdcard中，然后从手机桌面启动“电信增强通话”app，即可配置并调试小程序。  
 - DCLab调测：联系我们在DCLab上部署小程序和AS，由DCLab分配体验号码，请按照普通apk安装方式将Lab版本SDK安装到手机，从手机桌面启动“电信增强通话”app，即可拨号体验。
 
