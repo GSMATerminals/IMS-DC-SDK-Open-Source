@@ -1,7 +1,14 @@
 version = 1
 
 [[annotations]]
-path = ["document/**","miniappdevelop/**"]
-precedence = "aggregate"
+path = ["miniappdevelop/**"]
 SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "Copyright 2025-China Telecom Research Institute. All Rights Reserved."
+
+[[annotations]]
+path = [
+    "document/**",
+    "miniappdevelop/*.docx",
+]
+SPDX-License-Identifier = "CC-BY-4.0"
 SPDX-FileCopyrightText = "Copyright 2025-China Telecom Research Institute. All Rights Reserved."
