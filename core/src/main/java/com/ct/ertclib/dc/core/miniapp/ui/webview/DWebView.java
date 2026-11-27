@@ -164,7 +164,6 @@ public class DWebView extends WebView {
             }
 
             Object retData;
-            method.setAccessible(true);
             try {
                 if (asyn) {
                     final String cb = callback;
@@ -301,108 +300,109 @@ public class DWebView extends WebView {
     }
 
     @Keep
-    private void addInternalJavascriptObject() {
-        addJavascriptObject(new Object() {
-
-            @Keep
-            @JavascriptInterface
-            public boolean hasNativeMethod(Object args) throws JSONException {
-                JSONObject jsonObject = (JSONObject) args;
-                String methodName = jsonObject.getString("name").trim();
-                String type = jsonObject.getString("type").trim();
-                String[] nameStr = parseNamespace(methodName);
-                Object jsb = javaScriptNamespaceInterfaces.get(nameStr[0]);
-                if (jsb != null) {
-                    Class<?> cls = jsb.getClass();
-                    boolean asyn = false;
-                    Method method = null;
+    public class InternalJsObject {
+        @Keep
+        @JavascriptInterface
+        public boolean hasNativeMethod(Object args) throws JSONException {
+            JSONObject jsonObject = (JSONObject) args;
+            String methodName = jsonObject.getString("name").trim();
+            String type = jsonObject.getString("type").trim();
+            String[] nameStr = parseNamespace(methodName);
+            Object jsb = javaScriptNamespaceInterfaces.get(nameStr[0]);
+            if (jsb != null) {
+                Class<?> cls = jsb.getClass();
+                boolean asyn = false;
+                Method method = null;
+                try {
+                    method = cls.getMethod(nameStr[1],
+                            new Class[]{Object.class, CompletionHandler.class});
+                    asyn = true;
+                } catch (Exception e) {
                     try {
-                        method = cls.getMethod(nameStr[1],
-                                new Class[]{Object.class, CompletionHandler.class});
-                        asyn = true;
-                    } catch (Exception e) {
-                        try {
-                            method = cls.getMethod(nameStr[1], new Class[]{Object.class});
-                        } catch (Exception ex) {
-
-                        }
-                    }
-                    if (method != null) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                            JavascriptInterface annotation = method.getAnnotation(JavascriptInterface.class);
-                            if (annotation == null) {
-                                return false;
-                            }
-                        }
-                        if ("all".equals(type) || (asyn && "asyn".equals(type) || (!asyn && "syn".equals(type)))) {
-                            return true;
-                        }
+                        method = cls.getMethod(nameStr[1], new Class[]{Object.class});
+                    } catch (Exception ex) {
 
                     }
                 }
-                return false;
-            }
-
-            @Keep
-            @JavascriptInterface
-            public String closePage(Object object) throws JSONException {
-                runOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (javascriptCloseWindowListener == null
-                                || javascriptCloseWindowListener.onClose()) {
-                            Context context = getContext();
-                            if (context instanceof Activity) {
-                                ((Activity)context).onBackPressed();
-                            }
+                if (method != null) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        JavascriptInterface annotation = method.getAnnotation(JavascriptInterface.class);
+                        if (annotation == null) {
+                            return false;
                         }
                     }
-                });
-                return null;
-            }
+                    if ("all".equals(type) || (asyn && "asyn".equals(type) || (!asyn && "syn".equals(type)))) {
+                        return true;
+                    }
 
-            @Keep
-            @JavascriptInterface
-            public void disableJavascriptDialogBlock(Object object) throws JSONException {
-                JSONObject jsonObject = (JSONObject) object;
-                alertBoxBlock = !jsonObject.getBoolean("disable");
+                }
             }
+            return false;
+        }
 
-            @Keep
-            @JavascriptInterface
-            public void dsinit(Object jsonObject) {
-                DWebView.this.dispatchStartupQueue();
-            }
-
-            @Keep
-            @JavascriptInterface
-            public void returnValue(final Object obj){
-                runOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        JSONObject jsonObject = (JSONObject) obj;
-                        Object data = null;
-                        try {
-                            int id = jsonObject.getInt("id");
-                            boolean isCompleted = jsonObject.getBoolean("complete");
-                            OnReturnValue handler = handlerMap.get(id);
-                            if (jsonObject.has("data")) {
-                                data = jsonObject.get("data");
-                            }
-                            if (handler != null) {
-                                handler.onValue(data);
-                                if (isCompleted) {
-                                    handlerMap.remove(id);
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+        @Keep
+        @JavascriptInterface
+        public String closePage(Object object) throws JSONException {
+            runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (javascriptCloseWindowListener == null
+                            || javascriptCloseWindowListener.onClose()) {
+                        Context context = getContext();
+                        if (context instanceof Activity) {
+                            ((Activity)context).onBackPressed();
                         }
                     }
-                });
-            }
+                }
+            });
+            return null;
+        }
 
-        }, "_dsb");
+        @Keep
+        @JavascriptInterface
+        public void disableJavascriptDialogBlock(Object object) throws JSONException {
+            JSONObject jsonObject = (JSONObject) object;
+            alertBoxBlock = !jsonObject.getBoolean("disable");
+        }
+
+        @Keep
+        @JavascriptInterface
+        public void dsinit(Object jsonObject) {
+            DWebView.this.dispatchStartupQueue();
+        }
+
+        @Keep
+        @JavascriptInterface
+        public void returnValue(final Object obj){
+            runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject jsonObject = (JSONObject) obj;
+                    Object data = null;
+                    try {
+                        int id = jsonObject.getInt("id");
+                        boolean isCompleted = jsonObject.getBoolean("complete");
+                        OnReturnValue handler = handlerMap.get(id);
+                        if (jsonObject.has("data")) {
+                            data = jsonObject.get("data");
+                        }
+                        if (handler != null) {
+                            handler.onValue(data);
+                            if (isCompleted) {
+                                handlerMap.remove(id);
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
+
+    @Keep
+    private void addInternalJavascriptObject() {
+        addJavascriptObject(new InternalJsObject(), "_dsb");
     }
 
     private void _evaluateJavascript(String script) {
