@@ -31,6 +31,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 /**
  * Lightweight XML serialization utility replacing XStream.
@@ -223,7 +225,6 @@ public class XmlUtils {
         Class<?> current = cls;
         while (current != null && current != Object.class) {
             for (Field f : current.getDeclaredFields()) {
-                f.setAccessible(true);
                 fields.add(f);
             }
             current = current.getSuperclass();
@@ -327,12 +328,11 @@ public class XmlUtils {
 
     private static void addToCollection(Object instance, Field field, Object item)
             throws Exception {
-        field.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<Object> list = (List<Object>) field.get(instance);
+        List<Object> list = (List<Object>) getFieldValue(instance, field);
         if (list == null) {
             list = new ArrayList<>();
-            field.set(instance, list);
+            setFieldValue(instance, field, list);
         }
         if (item != null) {
             list.add(item);
@@ -341,14 +341,32 @@ public class XmlUtils {
 
     private static void setFieldValue(Object instance, Field field, Object value)
             throws Exception {
-        field.setAccessible(true);
-        field.set(instance, value);
+        if (Modifier.isPublic(field.getModifiers())) {
+            field.set(instance, value);
+            return;
+        }
+        String setterName = "set" + capitalizeFirst(field.getName());
+        Method setter = instance.getClass().getMethod(setterName, field.getType());
+        setter.invoke(instance, value);
     }
 
     private static Object getFieldValue(Object instance, Field field) {
         try {
-            field.setAccessible(true);
-            return field.get(instance);
+            if (Modifier.isPublic(field.getModifiers())) {
+                return field.get(instance);
+            }
+            String capName = capitalizeFirst(field.getName());
+            Method getter;
+            if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                try {
+                    getter = instance.getClass().getMethod("is" + capName);
+                } catch (NoSuchMethodException e) {
+                    getter = instance.getClass().getMethod("get" + capName);
+                }
+            } else {
+                getter = instance.getClass().getMethod("get" + capName);
+            }
+            return getter.invoke(instance);
         } catch (Exception e) {
             return null;
         }
