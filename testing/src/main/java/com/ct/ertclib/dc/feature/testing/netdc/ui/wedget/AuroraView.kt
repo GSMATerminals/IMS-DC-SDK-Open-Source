@@ -76,9 +76,10 @@ class AuroraView @JvmOverloads constructor(
     private fun initNoise() {
         val noiseSize = 256
         val noiseArray = IntArray(noiseSize * noiseSize)
+        val secureRandom = java.security.SecureRandom()
 
         for (i in noiseArray.indices) {
-            val gray = (Math.random() * 30 + 20).toInt()
+            val gray = secureRandom.nextInt(30) + 20
             noiseArray[i] = Color.argb(8, gray, gray, gray)
         }
 

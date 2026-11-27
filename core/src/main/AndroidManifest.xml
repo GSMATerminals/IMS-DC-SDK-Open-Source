@@ -186,7 +186,8 @@
             android:name="com.ct.ertclib.dc.core.providers.CtSDKProvider"
             android:authorities="${sdkProviderAuthority}"
             android:exported="true"
-            android:permission="${providerPermissionName}" />
+            android:readPermission="${providerPermissionName}"
+            android:writePermission="${providerPermissionName}" />
 
     </application>
 
